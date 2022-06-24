@@ -99,6 +99,7 @@ form{
 }
 ::ng-deep .mat-vertical-stepper-header {
   padding: 23px 5px;
+  height: 0px !important;
 }
 
 ::ng-deep .esri-widget--button {

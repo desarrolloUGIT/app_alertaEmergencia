@@ -8,6 +8,7 @@ import { HomePageRoutingModule } from './home-routing.module';
 import { MatStepperModule } from '@angular/material/stepper';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
@@ -20,6 +21,7 @@ import { MatInputModule } from '@angular/material/input';
     MatStepperModule,
     MatFormFieldModule,
     MatInputModule,
+    HttpClientModule
   ],
   declarations: [HomePage]
 })

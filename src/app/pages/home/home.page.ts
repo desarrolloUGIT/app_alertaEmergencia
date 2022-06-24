@@ -7,6 +7,7 @@ import Map from '@arcgis/core/Map';
 import MapView from '@arcgis/core/views/MapView';
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { UsuarioService } from '../../services/usuario.service';
+import { HttpClient } from '@angular/common/http';
 
 const template = {
   title: "Resumen",
@@ -65,15 +66,20 @@ export class HomePage implements OnInit,AfterViewInit {
   currentQuery : string;
   coordenadas: any;
   basemap = 'streets-vector'
-  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService) {}
+  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public _http:HttpClient) {}
 
   ngOnInit(){
     this.initailize()
-    this._us.doGet().subscribe(res=>{
-      console.log('Resultado->',res)
+    this._http.get('../../../assets/usuario.xml').subscribe((res:any)=>{
+     console.log(JSON.stringify((res)))
     },err=>{
-      console.log('error->',err)
+      console.log(this._us.xmlToJson(err.error.text))
     })
+    // this._us.doGet().subscribe(res=>{
+    //   console.log('Resultado->',res)
+    // },err=>{
+    //   console.log('error->',err)
+    // })
   }
   ngAfterViewInit(): void {
     this.initailize()
