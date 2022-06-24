@@ -1,27 +1,119 @@
+ion-content {
+  --color: #fff;
+  --background:none;
+  background: url(../../assets/img/background-img.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
+  background-size: cover;
+  background-position: center;
+}
+
+ion-toolbar{
+  --background: #062A4E;
+  color:white;
+}
+ion-title{
+  font-weight: normal !important;
+}
+form{
+  background-color: transparent;
+}
+
 #container {
   text-align: center;
-
-  position: absolute;
+  height: 200px;
+  width: 100%;
   left: 0;
   right: 0;
-  top: 50%;
-  transform: translateY(-50%);
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+.custom-button {
+  top: 100px;
+  margin: 8px 0px 0 15px;
+  position: absolute;
+  left: 24px;
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-
-  color: #8c8c8c;
-
-  margin: 0;
+.custom-button2 {
+  top: 6px;
+  margin: 8px 0px 0 15px;
+  position: absolute;
+  right: 30px;
 }
 
-#container a {
-  text-decoration: none;
+.custom-button>div {
+  background-color: #6FA5DC !important;
+  color: #ffffff !important;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  transition: all 0.3s;
+  border: solid 1px rgba(110, 110, 110, .3)
+}
+
+.custom-button2>div {
+  background-color: #6FA5DC !important;
+  color: #ffffff !important;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  transition: all 0.3s;
+  border: solid 1px rgba(110, 110, 110, .3)
+}
+
+
+.coordenadas {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.coordenadas>span {
+  min-width: 160px !important;
+  background-color: rgba(0, 108, 183, 0.5);
+  color: #FFF;
+  border-radius: 15px;
+}
+
+
+::ng-deep .esri-attribution {
+  display: none;
+}
+
+::ng-deep .mat-vertical-content-container {
+  margin-left: 17px !important;
+
+}
+::ng-deep .mat-vertical-stepper-header {
+  padding: 23px 5px;
+}
+
+::ng-deep .esri-widget--button {
+  background-color: #6FA5DC !important;
+  color: #ffffff !important;
+  margin-bottom: 3px !important;
+  width: 25px !important;
+  height: 25px !important;
+}
+
+::ng-deep .esri-ui-corner .esri-component {
+  background: transparent !important;
+  box-shadow: none;
+}
+
+::ng-deep .mat-stepper-vertical {
+  background-color: transparent !important;
 }
