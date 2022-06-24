@@ -1,7 +1,7 @@
 ion-content {
   --color: #fff;
   --background:none;
-  background: url(../../assets/img/background-img.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
+  background: url(../../../assets/img/background-img.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
   background-size: cover;
   background-position: center;
 }
@@ -42,8 +42,8 @@ form{
 .custom-button>div {
   background-color: #6FA5DC !important;
   color: #ffffff !important;
-  width: 25px;
-  height: 25px;
+  width: 35px;
+  height: 35px;
   padding: 0;
   margin-bottom: 3px;
   cursor: pointer;
@@ -58,8 +58,8 @@ form{
 .custom-button2>div {
   background-color: #6FA5DC !important;
   color: #ffffff !important;
-  width: 25px;
-  height: 25px;
+  width: 35px;
+  height: 35px;
   padding: 0;
   margin-bottom: 3px;
   cursor: pointer;
@@ -105,8 +105,8 @@ form{
   background-color: #6FA5DC !important;
   color: #ffffff !important;
   margin-bottom: 3px !important;
-  width: 25px !important;
-  height: 25px !important;
+  width: 35px !important;
+  height: 35px !important;
 }
 
 ::ng-deep .esri-ui-corner .esri-component {

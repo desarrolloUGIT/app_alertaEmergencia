@@ -6,7 +6,7 @@ import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import Map from '@arcgis/core/Map';
 import MapView from '@arcgis/core/views/MapView';
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-// import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService } from '../../services/usuario.service';
 
 const template = {
   title: "Resumen",
@@ -65,15 +65,15 @@ export class HomePage implements OnInit,AfterViewInit {
   currentQuery : string;
   coordenadas: any;
   basemap = 'streets-vector'
-  constructor(private _formBuilder: FormBuilder) {}
+  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService) {}
 
   ngOnInit(){
     this.initailize()
-    // this._us.doGet().subscribe(res=>{
-    //   console.log('Resultado->',res)
-    // },err=>{
-    //   console.log('error->',err)
-    // })
+    this._us.doGet().subscribe(res=>{
+      console.log('Resultado->',res)
+    },err=>{
+      console.log('error->',err)
+    })
   }
   ngAfterViewInit(): void {
     this.initailize()
