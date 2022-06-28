@@ -5,8 +5,10 @@ import { UsuarioService } from './services/usuario.service';
 import { Router } from '@angular/router';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
-import { SplashScreen } from '@awesome-cordova-plugins/splash-screen/ngx';
+// import { SplashScreen } from '@awesome-cordova-plugins/splash-screen/ngx';
 import { StatusBar } from '@awesome-cordova-plugins/status-bar/ngx';
+import { Plugins } from '@capacitor/core'
+const { SplashScreen } = Plugins;
 
 @Component({
   selector: 'app-root',
@@ -27,7 +29,7 @@ export class AppComponent {
     public storage: NativeStorage,
     public loadctrl: LoadingController,
     public alertController: AlertController,
-    private splashScreen: SplashScreen,
+    // private splashScreen: SplashScreen,
     private statusBar: StatusBar,
   ) {
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
@@ -61,8 +63,10 @@ export class AppComponent {
 
   initializeApp() {
     this.platform.ready().then(() => {
-      this.statusBar.styleDefault();
-      this.splashScreen.hide();
+      this.statusBar.overlaysWebView(true);
+      this.statusBar.backgroundColorByHexString('#000000');
+
+      // this.splashScreen.hide();
       this.registerBackButton()
     });
   }

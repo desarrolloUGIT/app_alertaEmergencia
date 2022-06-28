@@ -4,6 +4,13 @@ ion-content {
     background: url(../../../assets/img/background-img.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+    --background-attachment: fixed!important;
+    .main.inner-scroll.scroll-y.overscroll{
+        --background-attachment: fixed!important;
+    }
+    --padding-top: var(--ion-safe-area-top);
+      padding-bottom:0!important;
   }
 div{
     width: 100%;
@@ -47,5 +54,5 @@ h4{
 }
 .botoninicia{
     --background:#006CB5;  
-    --background-activated:#ffa515ce;
+    --background-activated:#006CB5ce;
 }
