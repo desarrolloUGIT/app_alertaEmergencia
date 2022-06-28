@@ -1,0 +1,16 @@
+ion-content {
+    --color: #fff;
+    --background:none;
+    background: url(../../../assets/img/background-img.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
+    background-size: cover;
+    background-position: center;
+  }
+
+  div{
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }

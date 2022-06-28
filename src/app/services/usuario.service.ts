@@ -3,19 +3,105 @@ import { Http, HttpOptions } from '@capacitor-community/http';
 import { from } from 'rxjs';
 import * as xml2js from 'xml2js';
 import * as xml2json from 'xml2json';
+import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
+import { Platform, ToastController } from '@ionic/angular';
+import { Network } from '@awesome-cordova-plugins/network/ngx';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
+  usuario = {
+    DEFSITE:'',
+    GROUPUSER:'',
+    LOGINID:'',
+    PERSON:{
+      CARGOCOMP:'',
+      DFLTAPP:'',
+      DISPLAYNAME:'',
+      DPTOUNI:'',
+      INSTITUCION:'',
+      PERSONID:'',
+      PROFESION:'',
+      STATEPROVINCE:'',
+      TIPOBOD:null
+    },
+    STATUS:'',
+    USERID:''
+   }
+  conexion;
+  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController ) { }
 
-  constructor() { }
 
-  doGet(){
+  // getIdentity(){
+  //   var id_user1 = (localStorage.getItem('id_user'));
+  //   if(id_user1){
+  //       this.id_user = id_user1;
+  //   }else{
+  //       this.id_user = null;
+  //   }
+  //   this.storage.getItem("id_user").then(id_user=>{
+  //     if(id_user){
+  //       this.id_user = id_user;
+  //       }
+  //     });
+    
+  //   return this.id_user;
+  // }
+
+  // getToken(){
+  //   let token1 = localStorage.getItem('token');
+  //   if(token1 != "undefined"){
+  //       this.token = token1;
+  //   }else{
+  //       this.token = null;
+  //   }
+  //   this.storage.getItem("token").then(token=>{
+  //     if(token){
+  //       this.token = token;
+  //       }
+  //     });
+    
+  //   return this.token
+  // }
+
+ cargar_storage(){
+    let promesa = new Promise((resolve,reject )=>{
+      // this.platform.ready().then(()=>{
+        if(this.platform.is("capacitor")){
+          //dispositivo
+          this.storage.getItem("conexion").then(conexion=>{
+            if(conexion){
+              this.conexion = conexion;
+              }
+            });
+          this.storage.getItem("usuario").then(usuario=>{
+            if(usuario){
+              this.usuario = JSON.parse(usuario);
+              resolve('');
+              }
+          }).catch(()=>{
+            reject('');
+          })     
+        }else{
+        //desktop
+          this.usuario = JSON.parse(localStorage.getItem("usuario"));
+          this.conexion = localStorage.getItem("conexion");
+          resolve(null);
+        }
+    })
+    return promesa
+  }
+
+  login(user?){
+    // var data = {
+    //   user:user? user.user : 'maximo.emrdv',
+    //   password:user? user.password : 'Dfg.Cvb#47'
+    // }
     var data = {
       user:'maximo.emrdv',
-      password:'Dfg.Cvb#47'
+      password: 'Dfg.Cvb#47'
     }
     var headers = {
       'Authorization': '',
@@ -33,49 +119,36 @@ export class UsuarioService {
   }
 
 
-  xmlToJson(xml2) {
-    // Create the return object
-    // var obj = {};
-    // console.log(xml.nodeType)
-    // if (xml.nodeType == 1) { // element
-    //   // do attributes
-    //   if (xml.attributes.length > 0) {
-    //   obj["@attributes"] = {};
-    //     for (var j = 0; j < xml.attributes.length; j++) {
-    //       var attribute = xml.attributes.item(j);
-    //       obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
-    //     }
-    //   }
-    // } else if (xml.nodeType == 3) { // text
-    //   obj = xml.nodeValue;
-    // }
-
-    const parser = new xml2js.Parser({ strict: false, trim: true });
-    parser.parseString(xml2, (err, result) => {
-      console.log(result);
-    });
-    
-    
-    // do children
-    // console.log(xml)
-    // if (xml.hasChildNodes()) {
-    //   for(var i = 0; i < xml.childNodes.length; i++) {
-    //     var item = xml.childNodes.item(i);
-    //     var nodeName = item.nodeName;
-    //     if (typeof(obj[nodeName]) == "undefined") {
-    //       obj[nodeName] = this.xmlToJson(item);
-    //     } else {
-    //       if (typeof(obj[nodeName].push) == "undefined") {
-    //         var old = obj[nodeName];
-    //         obj[nodeName] = [];
-    //         obj[nodeName].push(old);
-    //       }
-    //       obj[nodeName].push(this.xmlToJson(item));
-    //     }
-    //   }
-    // }
-
-
-    // return obj;
+  xmlToJson(data) {
+    var promise = new Promise((resolve,request)=>{
+      const parser = new xml2js.Parser({ strict: false, trim: true });
+      data = JSON.stringify(data).replace(/\n  /g,'')
+      parser.parseString(data, (err, result) => {
+        if(result){
+          resolve(result)
+        }else{
+          request(err)
+        }
+      });
+    })
+    return promise;
   };
+
+
+  saveStorage(res){
+    this.storage.setItem('id_user', res.user._id);
+    this.storage.setItem('token', res.token);
+    this.storage.setItem('email', res.user.email);
+    this.storage.setItem('role', res.user.role);
+    this.storage.setItem('layout', 'list');
+    this.storage.setItem('conexion', 'si');
+    localStorage.setItem('id_user', res.user._id);
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('email', res.user.email);
+    localStorage.setItem('layout', 'list');
+    localStorage.setItem('role', res.user.role);
+    localStorage.setItem('conexion', 'si');
+    this.cargar_storage()
+  }
+
 }

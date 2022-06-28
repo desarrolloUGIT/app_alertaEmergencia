@@ -70,11 +70,6 @@ export class HomePage implements OnInit,AfterViewInit {
 
   ngOnInit(){
     this.initailize()
-    this._http.get('../../../assets/usuario.xml').subscribe((res:any)=>{
-     console.log(JSON.stringify((res)))
-    },err=>{
-      console.log(this._us.xmlToJson(err.error.text))
-    })
     // this._us.doGet().subscribe(res=>{
     //   console.log('Resultado->',res)
     // },err=>{
