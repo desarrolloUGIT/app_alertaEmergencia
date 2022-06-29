@@ -14,6 +14,7 @@ export class SplashPage implements OnInit {
     private nativePageTransitions: NativePageTransitions,public alertctrl:AlertController,public _mc:MenuController) { }
 
   ngOnInit() {
+    this._mc.enable(false,'first')
   }
 
   async salir() {

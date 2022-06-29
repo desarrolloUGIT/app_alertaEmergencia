@@ -18,6 +18,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 export class AppComponent {
   loader;
   connectSubscription;
+  usuario;
   constructor(
     public network: Network,
     private platform: Platform,
@@ -32,19 +33,32 @@ export class AppComponent {
     // private splashScreen: SplashScreen,
     private statusBar: StatusBar,
   ) {
+    this.initializeApp()
+    console.log('acaaaa')
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
-      // console.log('network was disconnected :-(');
+      console.log('aca desconectado')
+
       this.presentToast('Sin conexión ...')
       this.storage.setItem('conexion', 'no');
       localStorage.setItem('conexion','no')
       this._us.cargar_storage().then(()=>{})
-      
     });
     this.observadorConectado()
+    this._us.message.subscribe(res=>{
+      this._us.cargar_storage().then(()=>{
+        if(this._us.usuario){
+          this._mc.enable(true,'first')
+          this.usuario = this._us.usuario
+        }
+      }).catch(()=>{
+        this._mc.enable(false,'first')
+      })
+    })
   }
 
   observadorConectado(){
     this.connectSubscription = this.network.onConnect().subscribe(() => {
+      console.log('aca conectado')
       this._us.cargar_storage().then(()=>{        
         if(this._us.conexion == 'no' || !this._us.conexion){
           this.presentToast('Conexión establecida')
@@ -70,6 +84,15 @@ export class AppComponent {
   initializeApp() {
     this.platform.ready().then(() => {
       this.splash()
+      this._mc.enable(false,'first')
+      this._us.cargar_storage().then(()=>{
+        if(this._us.usuario){
+          this._mc.enable(true,'first')
+          this.usuario = this._us.usuario
+        }
+      }).catch(()=>{
+        this._mc.enable(false,'first')
+      })
       // this.statusBar.overlaysWebView(true);
       // this.statusBar.backgroundColorByHexString('#000000');
 
@@ -86,6 +109,11 @@ export class AppComponent {
     toast.present();
   }
 
+  async presentLoader(msg) {
+    this.loader = await this.loadctrl.create({message: msg,mode:'ios',duration:3000});
+    await this.loader.present();
+  }
+
   cambiarPag(page:string){
     this._mc.toggle();
     if(this.router.url != '/'+page){
@@ -98,17 +126,56 @@ export class AppComponent {
     }
   }
 
-  cerrarSesion(){
-    // this._us.cerrarSesion().then(()=>{
-    //   let options: NativeTransitionOptions ={
-    //     direction:'left',
-    //     duration:500
-    //   }
-    //   this.nativePageTransitions.flip(options);
-    //   this._mc.toggle()
-    //   this._mc.enable(false)
-    //   this.navCtrl.navigateRoot('/login')
-    // })
+  async cerrarSesion(){
+    const alert = await this.alertController.create({
+      header: 'Cerrar Sesión',
+      message: '¿Estas segur@ de cerrar sesión?',
+      mode:'ios',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: (blah) => {
+          }
+        }, {
+          text: 'Si, cerrar',
+          id: 'confirm-button',
+          handler: () => {
+            this.presentLoader('Cerrando sesión').then(()=>{
+              setTimeout(()=>{
+                this._us.cerrarSesion().then(()=>{
+                  let options: NativeTransitionOptions ={
+                    direction:'left',
+                    duration:500
+                  }
+                  // this.loader.dismiss()
+                  this.nativePageTransitions.flip(options);
+                  this._mc.toggle()
+                  this._mc.enable(false)
+                  this.navCtrl.navigateRoot('/login')
+                })
+              },3000)
+            }).catch(()=>{
+              this._us.cerrarSesion().then(()=>{
+                let options: NativeTransitionOptions ={
+                  direction:'left',
+                  duration:500
+                }
+                this.nativePageTransitions.flip(options);
+                this._mc.toggle()
+                this._mc.enable(false)
+                this.navCtrl.navigateRoot('/login')
+              })
+            })
+           
+          }
+        }
+      ]
+    });
+    await alert.present();
+    
+   
   }
 
   registerBackButton() {

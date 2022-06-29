@@ -1,3 +1,31 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ion-menu side="start" menuId="first" type="overlay" contentId="main" mode="ios">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Start Menu</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content [fullscreen]="true" [forceOverscroll]="false" style="--background: #093F75;">
+      <div style="width: 100%;text-align: center;padding-top: 5%;">
+        <img src="assets/img/worker.png" alt="worker" style="width: 50%;">
+        <div *ngIf="usuario" style="color: white;font-weight: bold;">
+          {{usuario.PERSON.PERSONID}}
+          <br>
+          {{usuario.DEFSITE}}
+        </div>
+      </div>
+      <ion-list class="animated fadeInLeft" style="margin-top: 5%;background: #7f7f7f59;" lines="none">
+        <ion-item style="margin-bottom: 2%;margin-top: 2%;" detail (click)="cambiarPag('home')">
+          <ion-icon name="home" ></ion-icon>
+          <span style="margin-left: 3%;">Home</span>
+        </ion-item>
+        <ion-item style="margin-bottom: 2%;margin-top: 2%;" detail (click)="cambiarPag('help')">
+          <ion-icon name="help-circle" ></ion-icon>
+          <span style="margin-left: 3%;">Ayuda</span>
+        </ion-item>
+      </ion-list>
+      <ion-item lines="none" class="animated fadeInLeft" style="margin-top: 20%;--background: #D54444;color: white;font-weight: bold;" (click)="cerrarSesion()"><ion-icon name="log-out-outline"></ion-icon>&nbsp;&nbsp;Cerrar sesión</ion-item>
+    </ion-content>
+  </ion-menu>
+  <ion-router-outlet id="main"></ion-router-outlet>
 </ion-app>

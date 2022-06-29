@@ -64,9 +64,16 @@ export class LoginPage implements OnInit {
           if(res){
             this._us.xmlToJson(res).then((result:any)=>{
               let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
+                var grupo = '';
+                path.GROUPUSER.forEach((g,i)=>{
+                  grupo+=g.GROUPNAME[0]
+                  if((i+1) < path.GROUPUSER.length){
+                    grupo+=','
+                  }
+                })
                this._us.usuario = {
                 DEFSITE:path.DEFSITE[0],
-                GROUPUSER:path.GROUPUSER.forEach(g=>{this._us.usuario.GROUPUSER+=g.GROUPNAME[0]}),
+                GROUPUSER:grupo,
                 LOGINID:path.LOGINID[0],
                 PERSON:{
                   CARGOCOMP:path.PERSON[0].CARGOCOMP[0],
@@ -82,16 +89,17 @@ export class LoginPage implements OnInit {
                 STATUS:path.STATUS[0]['_'],
                 USERID:path.USERID[0]
                }
-                console.log('aca por capacitor -> ',this._us.usuario)
+                // console.log('aca por capacitor -> ',this._us.usuario)
                 this._us.saveStorage(this._us.usuario)
                 this._us.cargar_storage().then(()=>{
-                // this._mc.enable(true,'first')
+                this._mc.enable(true,'first')
                 this.loader.dismiss()
                 let options: NativeTransitionOptions ={
                   direction:'left',
                   duration:300
                 }
                 this.nativePageTransitions.flip(options);    
+                this._us.nextmessage('usuario_logeado') 
                 this.navctrl.navigateRoot('/home')
               })
              })
@@ -110,10 +118,18 @@ export class LoginPage implements OnInit {
           console.log('archivo xml-> ',JSON.stringify((res)))
          },err=>{
            this._us.xmlToJson(err.error.text).then((result:any)=>{
+            // console.log(result)
             let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
+            var grupo = '';
+            path.GROUPUSER.forEach((g,i)=>{
+              grupo+=g.GROUPNAME[0]
+              if((i+1) < path.GROUPUSER.length){
+                grupo+=','
+              }
+            })
              this._us.usuario = {
               DEFSITE:path.DEFSITE[0],
-              GROUPUSER:path.GROUPUSER.forEach(g=>{this._us.usuario.GROUPUSER+=g.GROUPNAME[0]}),
+              GROUPUSER:grupo,
               LOGINID:path.LOGINID[0],
               PERSON:{
                 CARGOCOMP:path.PERSON[0].CARGOCOMP[0],
@@ -129,16 +145,17 @@ export class LoginPage implements OnInit {
               STATUS:path.STATUS[0]['_'],
               USERID:path.USERID[0]
              }
-             console.log('json de acrchivo xml-> ',this._us.usuario)
+            //  console.log('json de acrchivo xml-> ',this._us.usuario)
                 this._us.saveStorage(this._us.usuario)
                 this._us.cargar_storage().then(()=>{
-                // this._mc.enable(true,'first')
+                this._mc.enable(true,'first')
                 this.loader.dismiss()
                 let options: NativeTransitionOptions ={
                   direction:'left',
                   duration:300
                 }
-                this.nativePageTransitions.flip(options);    
+                this.nativePageTransitions.flip(options);   
+                this._us.nextmessage('usuario_logeado') 
                 this.navctrl.navigateRoot('/home')
               })
            })

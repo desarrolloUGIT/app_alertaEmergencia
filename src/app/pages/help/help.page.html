@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar mode="ios">
+    <ion-buttons slot="start" >
+      <ion-menu-button style="color: white;" ></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Ayuda</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content force-overscroll="false">
+  <div style="width: 100%;text-align: center;margin-bottom: 5%;">
+    <img src="assets/img/newbie.png" alt="" style="width: 30%;">
+  </div>
+  <ion-accordion-group mode="ios" style="margin-bottom: 5%;">
+    <ion-accordion value="first">
+      <ion-item slot="header" color="light">
+        <ion-icon name="bookmark"></ion-icon>
+        <ion-label>Acerca de la APP</ion-label>
+      </ion-item>
+      <div class="ion-padding contenido" slot="content">
+        Aplicación construida para el Ministerio de Obras Públicas y diseñada para registrar y/o georreferenciar eventos de emergencias ocurridos sobre la infraestructura de responsabilidad ministerial.<br>
+        Permite la captura de localizaciones, mediante el uso de un dispositivo móvil y a través de la aplicación de dos métodos posibles de levantamiento; El primero, es de manera directa en terreno, utilizando el GPS del aparato y el segundo es indirecto, permitiendo al usuario navegar manualmente por el mapa hasta la localización requerida e ingresar la nueva captura.<br>
+        Ha sido construida por la DGOP, en conjunto con profesionales del área emergencia y UGIT de cada dirección, con la finalidad de incorporar la georreferencia a los eventos de emergencia.
+      </div>
+    </ion-accordion>
+    <ion-accordion value="second">
+      <ion-item slot="header" color="light">
+        <ion-icon name="information-circle"></ion-icon>
+        <ion-label>Nivel de Operatividad y Gravedad de una Emergencia</ion-label>
+      </ion-item>
+      <div class="ion-padding contenido" slot="content">
+        Atendida la gravedad (nivel de destrucción o daño), operatividad (continuidad del servicio) e importancia (efecto económico) de una emergencia de responsabilidad MOP, los funcionarios encargados de los Servicios operativos dependiente deberán evaluar y clasificar una emergencia en el SIEMOP teniendo presente lo siguiente
+      </div>
+    </ion-accordion>
+    <ion-accordion value="third">
+      <ion-item slot="header" color="light">
+        <ion-icon name="cog"></ion-icon>
+        <ion-label>Los estados de Operatividad</ion-label>
+      </ion-item>
+      <div class="ion-padding contenido" slot="content">
+        <b>No Operativo</b>: Significa que la obra no puede cumplir las funciones que debe realizar, por ejemplo: una compuerta que no puede ser abierta o cerrada.<br><br>
+        <b>Operativo</b>: Significa que no se vio afectada su funcionalidad pero si su infraestructura, por ejemplo daño a la casa de válvula, y se aplica una medida paliativa para transferir por bomba desde el embalse al canal. <br><br>
+        <b>Operativo con Restricción</b>: Es cuando el funcionamiento de la infraestructura sigue operando pero con restricciones de su capacidad normal, por ejemplo un embalse que producto de un terremoto se fisura la parte superior del muro, por
+            lo cual el embalse no puede ser llenado a su máxima capacidad. Otro ejemplo sila bocatoma se ve tapada por sedimento que debe ser removido, provocando una disminución del caudal
+      </div>
+    </ion-accordion>
+    <ion-accordion value="four">
+      <ion-item slot="header" color="light">
+        <ion-icon name="nuclear"></ion-icon>
+        <ion-label>El Nivel de Gravedad</ion-label>
+      </ion-item>
+      <div class="ion-padding contenido" slot="content">
+        <b>Leve:</b> Tipo de emergencia que produce daño menor y de bajos costos. Es abordable con los propios recursos y personal de la Oficina o Provincia. En algunos casos se utiliza apoyo de personal y maquinaria de empresas contratistas,
+        que consideran en su contrato tales usos, para poder superarla. Prácticamente no tiene impacto en la comunidad usuaria. Excepcionalmente puede evolucionar o escalar a emergencia de categoría: moderada.<br><br>
+
+        <b>Grave</b>: Emergencia que provoca daño de importancia en obras. Generalmente comprometerá significativos recursos de las Direcciones Regionales, como por ejemplo; maquinaria de contratos específicos (Globales) que mantienen los
+        Servicios, en parte para dar solución transitoria a la emergencia. Eventualmente puede evolucionar o escalar a emergencia de categoría muy grave. De impacto económico y social fuerte o importante para la comunidad de usuarios, por
+        la magnitud de la obra dañada o por sus efectos específicos posteriores. De acuerdo al tipo de evento o fenómeno natural, generalmente afecta a más de un sector, Comuna o Provincia.<br><br>
+
+        <b>Muy Grave</b>: Emergencia que implica destrucción, colapso o daños mayores en obras y en que no es factible su puesta en servicio sin recursos adicionales extraordinarios, por ejemplo; contratos específicos con empresas privadas
+        mediante la autorización en Decreto de Emergencia. Su impacto es de tal magnitud que las obras, muchas veces, quedan fuera de servicio por cierto período de tiempo, suficiente como para agravar su efecto en la comunidad de usuarios.
+        Este tipo de emergencia tiene gran repercusión social y efectos en las personas: pérdida de vidas o graves lesiones e importantes pérdidas económicas. El evento o fenómeno natural, generalmente, afecta a más de un lugar, localidad
+        o inclusive región.
+      </div>
+    </ion-accordion>
+    
+    <ion-accordion value="five">
+      <ion-item slot="header" color="light">
+        <ion-icon name="not-signal"></ion-icon>
+        <ion-label>Si pierdo la conexión a Internet</ion-label>
+      </ion-item>
+      <div class="ion-padding contenido" slot="content">
+        La versión incorpora el levantamiento de información offline, lo que significa que el aplicativo capturará hasta 7 localizaciones en terreno a pesar de no contar con señal, los almacenará hasta que vuelva a conectarse o recibir señal de internet.
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+</ion-content>

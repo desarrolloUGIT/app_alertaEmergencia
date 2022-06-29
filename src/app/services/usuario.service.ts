@@ -6,6 +6,7 @@ import * as xml2json from 'xml2json';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { Platform, ToastController } from '@ionic/angular';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
+import { BehaviorSubject } from 'rxjs';
 
 
 @Injectable({
@@ -31,8 +32,16 @@ export class UsuarioService {
     USERID:''
    }
   conexion;
-  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController ) { }
+  messages: "";
+  message: BehaviorSubject<String>;
 
+  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController ) { 
+    this.message = new BehaviorSubject(this.messages)
+  }
+  
+  nextmessage(data) {
+    this.message.next(data);
+  }
 
   // getIdentity(){
   //   var id_user1 = (localStorage.getItem('id_user'));
@@ -141,6 +150,33 @@ export class UsuarioService {
     localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');
     this.cargar_storage()
+  }
+
+  cerrarSesion(){
+    let promesa = new Promise((resolve,reject )=>{
+        localStorage.clear();
+        this.storage.clear();
+        this.usuario = {
+          DEFSITE:'',
+          GROUPUSER:'',
+          LOGINID:'',
+          PERSON:{
+            CARGOCOMP:'',
+            DFLTAPP:'',
+            DISPLAYNAME:'',
+            DPTOUNI:'',
+            INSTITUCION:'',
+            PERSONID:'',
+            PROFESION:'',
+            STATEPROVINCE:'',
+            TIPOBOD:null
+          },
+          STATUS:'',
+          USERID:''
+         };
+        resolve(true);
+    })
+    return promesa;
   }
 
 }
