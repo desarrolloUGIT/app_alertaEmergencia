@@ -2,5 +2,24 @@
 	"appId": "com.mop.alertaemergencia",
 	"appName": "Alerta Emergencia",
 	"webDir": "www",
-	"bundledWebRuntime": false
+	"bundledWebRuntime": false,
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 3000,
+			"launchAutoHide": true,
+			"androidSplashResourceName": "splash",
+			"androidScaleType": "CENTER_CROP",
+			"androidSpinnerStyle": "small",
+			"showSpinner": false,
+			"spinnerColor": "#ffffff",
+			"iosSpinnerStyle": "small",
+			"splashFullScreen": true,
+			"splashImmersive": true,
+			"layoutName": "launch_screen",
+			"useDialog": true
+		}
+	},
+	"server": {
+		"url": "http://172.20.10.2:8101"
+	}
 }

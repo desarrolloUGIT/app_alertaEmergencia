@@ -38,7 +38,7 @@ export class SplashPage implements OnInit {
 
   ngAfterViewInit(){    
     setTimeout(()=>{ 
-      if(this.platform.is("cordova")){
+      if(this.platform.is("capacitor")){
         let options: NativeTransitionOptions ={
           direction:'left',
           duration:200
@@ -58,7 +58,7 @@ export class SplashPage implements OnInit {
         this._mc.enable(false,'first')
         this.navctrl.navigateRoot('/login')
       })
-     }, 3000);
+     }, 5000);
   }
 
 }

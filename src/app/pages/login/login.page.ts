@@ -60,7 +60,7 @@ export class LoginPage implements OnInit {
       this.form.disable()
       if(this.platform.is('capacitor')){
         this._us.login(this.form.value).subscribe((res:any)=>{
-          console.log(res)
+          console.log('esto viene del soap-> ',res)
           if(res){
             this._us.xmlToJson(res).then((result:any)=>{
               let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
@@ -82,7 +82,7 @@ export class LoginPage implements OnInit {
                 STATUS:path.STATUS[0]['_'],
                 USERID:path.USERID[0]
                }
-               console.log(this._us.usuario)
+               console.log('aca por capacitor -> ',this._us.usuario)
              })
             // this._us.cargar_storage().then(()=>{
             //   this._mc.enable(true,'first')
@@ -105,7 +105,7 @@ export class LoginPage implements OnInit {
         })
       }else{
         this._http.get('../../../assets/usuario.xml').subscribe((res:any)=>{
-          console.log(JSON.stringify((res)))
+          console.log('archivo xml-> ',JSON.stringify((res)))
          },err=>{
            this._us.xmlToJson(err.error.text).then((result:any)=>{
             let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
@@ -127,7 +127,7 @@ export class LoginPage implements OnInit {
               STATUS:path.STATUS[0]['_'],
               USERID:path.USERID[0]
              }
-             console.log(this._us.usuario)
+             console.log('json de acrchivo xml-> ',this._us.usuario)
            })
          })
       }

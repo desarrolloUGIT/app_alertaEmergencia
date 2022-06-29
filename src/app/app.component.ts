@@ -7,8 +7,8 @@ import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
 // import { SplashScreen } from '@awesome-cordova-plugins/splash-screen/ngx';
 import { StatusBar } from '@awesome-cordova-plugins/status-bar/ngx';
-import { Plugins } from '@capacitor/core'
-const { SplashScreen } = Plugins;
+import { SplashScreen } from '@capacitor/splash-screen';
+
 
 @Component({
   selector: 'app-root',
@@ -61,10 +61,17 @@ export class AppComponent {
     });
   }
 
+  async splash(){
+    await SplashScreen.show({
+      showDuration: 5000,
+      autoHide: true
+    });
+  }
   initializeApp() {
     this.platform.ready().then(() => {
-      this.statusBar.overlaysWebView(true);
-      this.statusBar.backgroundColorByHexString('#000000');
+      this.splash()
+      // this.statusBar.overlaysWebView(true);
+      // this.statusBar.backgroundColorByHexString('#000000');
 
       // this.splashScreen.hide();
       this.registerBackButton()
