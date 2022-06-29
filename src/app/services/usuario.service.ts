@@ -136,17 +136,9 @@ export class UsuarioService {
 
 
   saveStorage(res){
-    this.storage.setItem('id_user', res.user._id);
-    this.storage.setItem('token', res.token);
-    this.storage.setItem('email', res.user.email);
-    this.storage.setItem('role', res.user.role);
-    this.storage.setItem('layout', 'list');
+    this.storage.setItem('usuario', JSON.stringify(res));
     this.storage.setItem('conexion', 'si');
-    localStorage.setItem('id_user', res.user._id);
-    localStorage.setItem('token', res.token);
-    localStorage.setItem('email', res.user.email);
-    localStorage.setItem('layout', 'list');
-    localStorage.setItem('role', res.user.role);
+    localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');
     this.cargar_storage()
   }

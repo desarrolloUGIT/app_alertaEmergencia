@@ -6,6 +6,10 @@
     <param name="ios-package" value="NativePageTransitions"/>
   </feature>
 
+  <feature name="Geolocation">
+    <param name="ios-package" value="CDVLocation"/>
+  </feature>
+
   <feature name="NativeStorage">
     <param name="ios-package" value="NativeStorage"/>
   </feature>

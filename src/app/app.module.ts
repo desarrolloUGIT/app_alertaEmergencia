@@ -12,16 +12,24 @@ import { HttpClientModule } from '@angular/common/http';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
+import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
+
 
 @NgModule({
   declarations: [AppComponent],
   imports: [BrowserModule, 
-    IonicModule.forRoot(), 
+    IonicModule.forRoot({
+      scrollPadding: false,
+      scrollAssist: false,
+      backButtonText: '',
+      backButtonIcon: 'ios',
+    }), 
     AppRoutingModule, 
     BrowserAnimationsModule,
     HttpClientModule,
   ],
-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },Network,NativeStorage,NativePageTransitions,SplashScreen,StatusBar],
+  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },Network,NativeStorage,
+    NativePageTransitions,SplashScreen,StatusBar,Geolocation],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -60,7 +60,7 @@ export class LoginPage implements OnInit {
       this.form.disable()
       if(this.platform.is('capacitor')){
         this._us.login(this.form.value).subscribe((res:any)=>{
-          console.log('esto viene del soap-> ',res)
+          // console.log('esto viene del soap-> ',res)
           if(res){
             this._us.xmlToJson(res).then((result:any)=>{
               let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
@@ -82,18 +82,20 @@ export class LoginPage implements OnInit {
                 STATUS:path.STATUS[0]['_'],
                 USERID:path.USERID[0]
                }
-               console.log('aca por capacitor -> ',this._us.usuario)
+                console.log('aca por capacitor -> ',this._us.usuario)
+                this._us.saveStorage(this._us.usuario)
+                this._us.cargar_storage().then(()=>{
+                // this._mc.enable(true,'first')
+                this.loader.dismiss()
+                let options: NativeTransitionOptions ={
+                  direction:'left',
+                  duration:300
+                }
+                this.nativePageTransitions.flip(options);    
+                this.navctrl.navigateRoot('/home')
+              })
              })
-            // this._us.cargar_storage().then(()=>{
-            //   this._mc.enable(true,'first')
-            //   this.loader.dismiss()
-            //   let options: NativeTransitionOptions ={
-            //     direction:'left',
-            //     duration:300
-            //   }
-            //   this.nativePageTransitions.flip(options);    
-            //   this.navctrl.navigateRoot('/home')
-            // })
+         
           }else{
             this.form.reset();
             this.form.enable()
@@ -128,6 +130,17 @@ export class LoginPage implements OnInit {
               USERID:path.USERID[0]
              }
              console.log('json de acrchivo xml-> ',this._us.usuario)
+                this._us.saveStorage(this._us.usuario)
+                this._us.cargar_storage().then(()=>{
+                // this._mc.enable(true,'first')
+                this.loader.dismiss()
+                let options: NativeTransitionOptions ={
+                  direction:'left',
+                  duration:300
+                }
+                this.nativePageTransitions.flip(options);    
+                this.navctrl.navigateRoot('/home')
+              })
            })
          })
       }
