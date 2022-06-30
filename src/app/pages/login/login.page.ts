@@ -28,6 +28,17 @@ export class LoginPage implements OnInit {
       user :[null, Validators.compose([Validators.required])],
       password: [null,Validators.required],
     });
+    this._us.cargar_storage().then(()=>{
+      if(this._us.user){
+        this.form.controls['user'].setValue(this._us.user.user)
+        this.form.controls['password'].setValue(this._us.user.password)
+      }
+    }).catch(()=>{
+      if(this._us.user){
+        this.form.controls['user'].setValue(this._us.user.user)
+        this.form.controls['password'].setValue(this._us.user.password)
+      }
+    })
   }
 
   showpassword(){
@@ -60,8 +71,7 @@ export class LoginPage implements OnInit {
       this.form.disable()
       if(this.platform.is('capacitor')){
         this._us.login(this.form.value).subscribe((res:any)=>{
-          // console.log('esto viene del soap-> ',res)
-          if(res){
+          if(res && res.status == '200'){
             this._us.xmlToJson(res).then((result:any)=>{
               let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
                 var grupo = '';
@@ -89,26 +99,30 @@ export class LoginPage implements OnInit {
                 STATUS:path.STATUS[0]['_'],
                 USERID:path.USERID[0]
                }
-                // console.log('aca por capacitor -> ',this._us.usuario)
-                this._us.saveStorage(this._us.usuario)
-                this._us.cargar_storage().then(()=>{
-                this._mc.enable(true,'first')
-                this.loader.dismiss()
-                let options: NativeTransitionOptions ={
-                  direction:'left',
-                  duration:300
-                }
-                this.nativePageTransitions.flip(options);    
-                this._us.nextmessage('usuario_logeado') 
-                this.navctrl.navigateRoot('/home')
-              })
+               if(this._us.usuario.STATUS == 'ACTIVE'){
+                  this._us.saveStorage(this._us.usuario,this.form.value)
+                  this._us.cargar_storage().then(()=>{
+                    this._mc.enable(true,'first')
+                    this.loader.dismiss()
+                    let options: NativeTransitionOptions ={
+                      direction:'left',
+                      duration:500
+                    }
+                    this.nativePageTransitions.flip(options);    
+                    this._us.nextmessage('usuario_logeado') 
+                  this.navctrl.navigateRoot('/home')
+                 })
+               }else{
+                this.presentAlert('¡Atención!','EL usuario esta inactivo')
+               }
              })
-         
           }else{
-            this.form.reset();
             this.form.enable()
+            this.loader.dismiss()
+            this.presentAlert('¡Error!','Usuario y/o contraseña incorrecta')
           }  
         },err=>{
+          console.log('Error-> ',err)
           this.form.enable()
           this.loader.dismiss()
           this.presentAlert('¡Error!','Usuario y/o contraseña incorrecta')
@@ -144,18 +158,22 @@ export class LoginPage implements OnInit {
               USERID:path.USERID[0]
              }
             //  console.log('json de acrchivo xml-> ',this._us.usuario)
-                this._us.saveStorage(this._us.usuario)
+              if(this._us.usuario.STATUS == 'ACTIVE'){
+                this._us.saveStorage(this._us.usuario,this.form.value)
                 this._us.cargar_storage().then(()=>{
-                this._mc.enable(true,'first')
-                this.loader.dismiss()
-                let options: NativeTransitionOptions ={
-                  direction:'left',
-                  duration:300
-                }
-                this.nativePageTransitions.flip(options);   
-                this._us.nextmessage('usuario_logeado') 
-                this.navctrl.navigateRoot('/home')
-              })
+                  this._mc.enable(true,'first')
+                  this.loader.dismiss()
+                  let options: NativeTransitionOptions ={
+                    direction:'left',
+                    duration:500
+                  }
+                  this.nativePageTransitions.flip(options);    
+                  this._us.nextmessage('usuario_logeado') 
+                  this.navctrl.navigateRoot('/home')
+                })
+              }else{
+                this.presentAlert('¡Atención!','EL usuario esta inactivo')
+              }
            })
          },err=>{
            this._us.xmlToJson(err.error.text).then((result:any)=>{
@@ -187,18 +205,22 @@ export class LoginPage implements OnInit {
               USERID:path.USERID[0]
              }
             //  console.log('json de acrchivo xml-> ',this._us.usuario)
-                this._us.saveStorage(this._us.usuario)
+              if(this._us.usuario.STATUS == 'ACTIVE'){
+                this._us.saveStorage(this._us.usuario,this.form.value)
                 this._us.cargar_storage().then(()=>{
-                this._mc.enable(true,'first')
-                this.loader.dismiss()
-                let options: NativeTransitionOptions ={
-                  direction:'left',
-                  duration:300
-                }
-                this.nativePageTransitions.flip(options);   
-                this._us.nextmessage('usuario_logeado') 
-                this.navctrl.navigateRoot('/home')
-              })
+                  this._mc.enable(true,'first')
+                  this.loader.dismiss()
+                  let options: NativeTransitionOptions ={
+                    direction:'left',
+                    duration:500
+                  }
+                  this.nativePageTransitions.flip(options);    
+                  this._us.nextmessage('usuario_logeado') 
+                  this.navctrl.navigateRoot('/home')
+                })
+              }else{
+                this.presentAlert('¡Atención!','EL usuario esta inactivo')
+              }
            })
          })
       }

@@ -9,7 +9,6 @@
   </div>
   <div class="formulario">
     <form [formGroup]="form" (ngSubmit)="iniciar()">
-      
       <ion-item lines="none" class="login input" [class.invalid]="!form.controls.user.valid && form.controls['user'].touched">
         <ion-input formControlName="user" placeholder="Usuario" clearInput="true" type="text" style="--placeholder-color:black;"></ion-input>
       </ion-item>

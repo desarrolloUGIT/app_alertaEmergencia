@@ -12,7 +12,7 @@ import { loadModules } from 'esri-loader';
 import { UsuarioService } from '../../services/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-import { AlertController, LoadingController, MenuController } from '@ionic/angular';
+import { AlertController, LoadingController, MenuController, Platform } from '@ionic/angular';
 
 const template = {
   title: "Resumen",
@@ -65,17 +65,18 @@ export class HomePage implements OnInit,AfterViewInit {
   isLinear = true;
 
   // MAPA
-  latitude: any = 0; //latitude
-  longitude: any = 0; //longitude
+  latitude: any = 0;
+  longitude: any = 0;
   view;
+  view2;
   map;
   mapImageLayerEmergencia: any;
   currentQuery : string;
   coordenadas: any;
   basemap = 'streets-vector'
   loader;
-
-  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public _http:HttpClient,
+  mostrarMapa2 = false;
+  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController) {}
 
   ngOnInit(){
@@ -88,6 +89,9 @@ export class HomePage implements OnInit,AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initailize()
+    this.operatividad();
+    this.nivelAlerta();
+    this.activos();
   }
   mapViewIdentify(mapPoint,IdentifyTask,IdentifyParameters,EmergenciasURL){
     let identifyTask = new IdentifyTask(EmergenciasURL);
@@ -131,7 +135,7 @@ export class HomePage implements OnInit,AfterViewInit {
       'esri/layers/MapImageLayer',
       'esri/layers/FeatureLayer',
       "esri/tasks/IdentifyTask",
-      "esri/tasks/support/IdentifyParameters",
+      "esri/rest/support/IdentifyParameters",
       'esri/widgets/Legend',
       'esri/Basemap',
       'esri/widgets/BasemapGallery',
@@ -140,7 +144,7 @@ export class HomePage implements OnInit,AfterViewInit {
       "esri/geometry/Point",
       'esri/core/watchUtils',
       'esri/symbols/SimpleMarkerSymbol',
-      "esri/tasks/support/StatisticDefinition",
+      "esri/rest/support/StatisticDefinition",
       "esri/Graphic",
       "esri/widgets/ScaleBar",
       "esri/widgets/Print",
@@ -165,8 +169,18 @@ export class HomePage implements OnInit,AfterViewInit {
         maxZoom:21
       },
     });
+    this.view2 = new MapView({
+      container: "container2", 
+      map: this.map, 
+      constraints : {
+        minZoom :2,
+        maxZoom:21
+      },
+    });
     this.view.center = [-70.673676, -33.447487]
-    this.view.zoom = 10;  
+    this.view.zoom = 10;
+    this.view2.center = [-70.673676, -33.447487]
+    this.view2.zoom = 10  
     this.map.add(this.mapImageLayerEmergencia);
 
     await this.view.when(() => {
@@ -174,8 +188,57 @@ export class HomePage implements OnInit,AfterViewInit {
         this.mapViewIdentify(e.mapPoint,IdentifyTask,IdentifyParameters,vialidadRedVialURL);
       });
     });
+
+    this.view.on("pointer-move", (e:any)=>{
+      let point = this.view.toMap(e);
+      this.coordenadas = ("X: " +point.longitude.toFixed(3) + " Y: " + point.latitude.toFixed(3))
+      console.log('coordenadas-> ',this.coordenadas)
+      let point2 = {
+        type: "point",
+        longitude: point.longitude.toFixed(3),
+        latitude: point.latitude.toFixed(3)
+      };
+      let markerSymbol = {
+        type: "picture-marker",
+        url: "assets/img/pin.png",
+        width: "50px",
+        height: "40px"
+      };
+  
+      let pointGraphic = new Graphic({
+        geometry: point2 as any,
+        symbol: markerSymbol as any,
+        popupTemplate:null
+      });
+      this.view.graphics.removeAll();
+      this.view.graphics.add(pointGraphic);
+      setTimeout(()=>{
+        this.view.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
+      },1000)
+      // this.view.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
+      // var point = this.getCenterPoint();
+     
+      // // var newPoint = webMercatorUtils.webMercatorToGeographic(point);
+     
+      // console.log("current map center point is x: " + point.getLatitude() + ", y: " + point.getLongitude());
+      // console.log("current map center is x: " + newPoint.x + ", y: " + newPoint.y);
+    });
+    
   }
 
+  getCenterPoint()
+{
+  return this.map.extent.getCenter();
+}
+
+  expandir(){
+    if(this.mostrarMapa2){
+      this.mostrarMapa2 = false;
+    }else{
+      this.mostrarMapa2 = true;
+    }
+  }
+  
   customZoom(){
     if(this.basemap == "streets-vector"){
       this.map.basemap = 'satellite' 
@@ -195,16 +258,18 @@ export class HomePage implements OnInit,AfterViewInit {
     this.presentLoader('Localizando ...').then(()=>{
     this.geolocation.getCurrentPosition().then((resp) => {
       loadModules(['esri/Graphic']).then(([Graphic]) => {
+        this.view.graphics.removeAll();
+        this.view2.graphics.removeAll();
         this.loader.dismiss();
         this.latitude = resp.coords.latitude
         this.longitude = resp.coords.longitude
         let point = {
-          type: "point",  // autocasts as new Point()
+          type: "point",
           longitude: this.longitude,
           latitude: this.latitude
         };
         let markerSymbol = {
-          type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
+          type: "picture-marker",
           url: "assets/img/pin.png",
           width: "50px",
           height: "40px"
@@ -218,11 +283,82 @@ export class HomePage implements OnInit,AfterViewInit {
         this.view.graphics.add(pointGraphic);
         this.view.center = [this.longitude, this.latitude]
         this.view.zoom = 15;  
+        this.view2.graphics.add(pointGraphic);
+        this.view2.center = [this.longitude, this.latitude]
+        this.view2.zoom = 15;  
       })
      }).catch((error) => {
        console.log('Error getting location', error);
      });
     })
+  }
+
+  operatividad(){
+    if(this.platform.is('capacitor')){
+      this._us.operatividad().subscribe((res:any)=>{
+        if(res && res.status == '200'){
+          this._us.xmlToJson(res).then((result:any)=>{
+            // console.log(result)
+          })
+        }
+      })
+    }else{
+      this._http.get('../../../assets/operatividad.xml').subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          // console.log(result)
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          // console.log(result)
+        })
+      })
+    }
+  }
+
+  nivelAlerta(){
+    if(this.platform.is('capacitor')){
+      this._us.nivelAlerta().subscribe((res:any)=>{
+        // console.log('ALERTA-> ',res)
+        if(res && res.status == '200'){
+          this._us.xmlToJson(res).then((result:any)=>{
+            // console.log(result)
+          })
+        }
+      })
+    }else{
+      this._http.get('../../../assets/nivelAlerta.xml').subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          // console.log(result)
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          // console.log(result)
+        })
+      })
+    }
+  }
+
+  activos(){
+    if(this.platform.is('capacitor')){
+      this._us.activos().subscribe((res:any)=>{
+        console.log('ACTIVOS-> ',res)
+        if(res && res.status == '200'){
+          this._us.xmlToJson(res).then((result:any)=>{
+            // console.log(result)
+          })
+        }
+      })
+    }else{
+      this._http.get('../../../assets/nivelAlerta.xml').subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          // console.log(result)
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          // console.log(result)
+        })
+      })
+    }
   }
 
 }

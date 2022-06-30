@@ -9,6 +9,13 @@ form{
   left: 0;
   right: 0;
 }
+#container2 {
+  text-align: center;
+  height: 0%;
+  width: 100%;
+  left: 0;
+  right: 0;
+}
 
 .custom-button {
   top: 100px;
@@ -16,12 +23,25 @@ form{
   position: absolute;
   left: 24px;
 }
+.custom-button3 {
+  top: 100px;
+  margin: 8px 0px 0 15px;
+  position: absolute;
+  left: 0px;
+}
 
 .custom-button2 {
   top: 6px;
   margin: 8px 0px 0 15px;
   position: absolute;
   right: 30px;
+}
+
+.custom-button4 {
+  top: 6px;
+  margin: 8px 0px 0 15px;
+  position: absolute;
+  right: 15px;
 }
 
 .custom-button>div {
@@ -41,6 +61,38 @@ form{
 }
 
 .custom-button2>div {
+  background-color: #6FA5DC !important;
+  color: #ffffff !important;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  transition: all 0.3s;
+  border: solid 1px rgba(110, 110, 110, .3)
+}
+
+.custom-button3>div {
+  background-color: #6FA5DC !important;
+  color: #ffffff !important;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  transition: all 0.3s;
+  border: solid 1px rgba(110, 110, 110, .3)
+}
+
+.custom-button4>div {
   background-color: #6FA5DC !important;
   color: #ffffff !important;
   width: 35px;

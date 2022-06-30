@@ -10,11 +10,26 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
+  <div id="container2"  #mapContainer [style.height]="mostrarMapa2 ? '100%' : '0%'">
+    <div id="custom-button" class="custom-button3" *ngIf="mostrarMapa2">
+      <div (click)='customZoom()' class="icon-button">
+          <ion-icon name="map-outline"></ion-icon>
+      </div>
+      <div (click)='obtenerGeolocalizacion()' class="icon-button">
+        <ion-icon name="locate-outline"></ion-icon>
+      </div>
+    </div>
+    <div id="custom-button2" class="custom-button4"  *ngIf="mostrarMapa2">
+      <div (click)='expandir()' class="icon-button">
+        <ion-icon name="expand-outline"></ion-icon>
+      </div>
+    </div>
+  </div>
   <mat-stepper orientation="vertical" [linear]="isLinear" #stepper>
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <div id="container"  #mapContainer>
-          <div id="custom-button" class="custom-button">
+          <div id="custom-button" class="custom-button" *ngIf="!mostrarMapa2">
             <div (click)='customZoom()' class="icon-button">
                 <ion-icon name="map-outline"></ion-icon>
             </div>
@@ -22,8 +37,8 @@
               <ion-icon name="locate-outline"></ion-icon>
             </div>
           </div>
-          <div id="custom-button2" class="custom-button2">
-            <div (click)='customZoom()' class="icon-button">
+          <div id="custom-button2" class="custom-button2" *ngIf="!mostrarMapa2">
+            <div (click)='expandir()' class="icon-button">
               <ion-icon name="expand-outline"></ion-icon>
             </div>
           </div>
