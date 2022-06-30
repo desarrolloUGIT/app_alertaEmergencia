@@ -115,7 +115,48 @@ export class LoginPage implements OnInit {
         })
       }else{
         this._http.get('../../../assets/usuario.xml').subscribe((res:any)=>{
-          console.log('archivo xml-> ',JSON.stringify((res)))
+          // console.log('archivo xml-> ',JSON.stringify((res)))
+          this._us.xmlToJson(res).then((result:any)=>{
+            let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
+            var grupo = '';
+            path.GROUPUSER.forEach((g,i)=>{
+              grupo+=g.GROUPNAME[0]
+              if((i+1) < path.GROUPUSER.length){
+                grupo+=','
+              }
+            })
+             this._us.usuario = {
+              DEFSITE:path.DEFSITE[0],
+              GROUPUSER:grupo,
+              LOGINID:path.LOGINID[0],
+              PERSON:{
+                CARGOCOMP:path.PERSON[0].CARGOCOMP[0],
+                DFLTAPP:path.PERSON[0].DFLTAPP[0],
+                DISPLAYNAME:path.PERSON[0].DISPLAYNAME[0],
+                DPTOUNI:path.PERSON[0].DPTOUNI[0],
+                INSTITUCION:path.PERSON[0].INSTITUCION[0],
+                PERSONID:path.PERSON[0].PERSONID[0],
+                PROFESION:path.PERSON[0].PROFESION[0],
+                STATEPROVINCE:path.PERSON[0].STATEPROVINCE[0],
+                TIPOBOD:Boolean(String(path.PERSON[0].TIPOBOD[0]['$']['XSI:NIL']).replace(/[\\"]/gi,""))
+              },
+              STATUS:path.STATUS[0]['_'],
+              USERID:path.USERID[0]
+             }
+            //  console.log('json de acrchivo xml-> ',this._us.usuario)
+                this._us.saveStorage(this._us.usuario)
+                this._us.cargar_storage().then(()=>{
+                this._mc.enable(true,'first')
+                this.loader.dismiss()
+                let options: NativeTransitionOptions ={
+                  direction:'left',
+                  duration:300
+                }
+                this.nativePageTransitions.flip(options);   
+                this._us.nextmessage('usuario_logeado') 
+                this.navctrl.navigateRoot('/home')
+              })
+           })
          },err=>{
            this._us.xmlToJson(err.error.text).then((result:any)=>{
             // console.log(result)
