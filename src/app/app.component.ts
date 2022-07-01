@@ -34,7 +34,6 @@ export class AppComponent {
     private statusBar: StatusBar,
   ) {
     this.initializeApp()
-    console.log('acaaaa')
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
       console.log('aca desconectado')
 

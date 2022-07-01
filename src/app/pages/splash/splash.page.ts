@@ -59,7 +59,7 @@ export class SplashPage implements OnInit {
         this._mc.enable(false,'first')
         this.navctrl.navigateRoot('/login')
       })
-     }, 5000);
+     }, 7000);
   }
 
 }

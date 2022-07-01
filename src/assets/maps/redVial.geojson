@@ -1,0 +1,302 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.89825420999995,
+          -33.457000809999954
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 127,
+        "PuntosPeajes.TipoPeaje": "Troncal",
+        "PuntosPeajes.SentidoTra": "ambos",
+        "PuntosPeajes.PlazaPeaje": "Lo Prado",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 17.85,
+        "PuntosPeajes.Latitud": -33.457001,
+        "PuntosPeajes.Longitud": -70.898254,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 99,
+        "tarifas.OBJECTID": 99,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Lo Prado",
+        "tarifas.IdPlazaPeaje": 127,
+        "tarifas.TipoPeaje": "Troncal",
+        "tarifas.SentidoTransito": "ambos",
+        "tarifas.Ubicacion": 17.85,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $500<br />punta | Motos y Motonetas: $800<br />normal | Autos y Camionetas: $1900<br />punta | Autos y Camionetas: $2800<br />Rebajada | Autos y Camionetas: $1000<br />normal | Autos y Camionetas con Remolque: $1900<br />punta | Autos y Camionetas con Remolque: $2800<br />Rebajada | Autos y Camionetas con Remolque: $1000<br />normal | Buses de 2 ejes: $3200<br />punta | Buses de 2 ejes: $4800<br />normal | Camiones de 2 ejes: $3200<br />punta | Camiones de 2 ejes: $4800<br />normal | Buses de más de 2 ejes: $5700<br />punta | Buses de más de 2 ejes: $8600<br />normal | Camiones de más de 2 ejes: $5700<br />punta | Camiones de más de 2 ejes: $8600<br />",
+        "tarifas.Latitud": -33.45700081,
+        "tarifas.Longitud": -70.89825421
+      },
+      "id": 0
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.29970230999999,
+          -33.371304289999955
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 128,
+        "PuntosPeajes.TipoPeaje": "Troncal",
+        "PuntosPeajes.SentidoTra": "ambos",
+        "PuntosPeajes.PlazaPeaje": "Zapata",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 59.3,
+        "PuntosPeajes.Latitud": -33.371304,
+        "PuntosPeajes.Longitud": -71.299702,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 100,
+        "tarifas.OBJECTID": 100,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Zapata",
+        "tarifas.IdPlazaPeaje": 128,
+        "tarifas.TipoPeaje": "Troncal",
+        "tarifas.SentidoTransito": "ambos",
+        "tarifas.Ubicacion": 59.3,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $500<br />punta | Motos y Motonetas: $800<br />normal | Autos y Camionetas: $1900<br />punta | Autos y Camionetas: $2800<br />Rebajada | Autos y Camionetas: $1000<br />normal | Autos y Camionetas con Remolque: $1900<br />punta | Autos y Camionetas con Remolque: $2800<br />Rebajada | Autos y Camionetas con Remolque: $1000<br />normal | Buses de 2 ejes: $3200<br />punta | Buses de 2 ejes: $4800<br />normal | Camiones de 2 ejes: $3200<br />punta | Camiones de 2 ejes: $4800<br />normal | Buses de más de 2 ejes: $5700<br />punta | Buses de más de 2 ejes: $8600<br />normal | Camiones de más de 2 ejes: $5700<br />punta | Camiones de más de 2 ejes: $8600<br />",
+        "tarifas.Latitud": -33.37130429,
+        "tarifas.Longitud": -71.29970231
+      },
+      "id": 1
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.43389999999994,
+          -33.06310999999994
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 129,
+        "PuntosPeajes.TipoPeaje": "Troncal",
+        "PuntosPeajes.SentidoTra": "ambos",
+        "PuntosPeajes.PlazaPeaje": "Troncal Sur",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 97.4,
+        "PuntosPeajes.Latitud": -33.06311,
+        "PuntosPeajes.Longitud": -71.4339,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 101,
+        "tarifas.OBJECTID": 101,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Troncal Sur",
+        "tarifas.IdPlazaPeaje": 129,
+        "tarifas.TipoPeaje": "Troncal",
+        "tarifas.SentidoTransito": "ambos",
+        "tarifas.Ubicacion": 97.4,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.06311,
+        "tarifas.Longitud": -71.4339
+      },
+      "id": 2
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.41133557999996,
+          -33.30540519999994
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 130,
+        "PuntosPeajes.TipoPeaje": "Lateral",
+        "PuntosPeajes.SentidoTra": "descendente",
+        "PuntosPeajes.PlazaPeaje": "Casablanca",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 72.25,
+        "PuntosPeajes.Latitud": -33.305405,
+        "PuntosPeajes.Longitud": -71.411336,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 102,
+        "tarifas.OBJECTID": 102,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Casablanca",
+        "tarifas.IdPlazaPeaje": 130,
+        "tarifas.TipoPeaje": "Lateral",
+        "tarifas.SentidoTransito": "descendente",
+        "tarifas.Ubicacion": 72.25,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.3054052,
+        "tarifas.Longitud": -71.41133558
+      },
+      "id": 3
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.36686713999995,
+          -33.340637829999935
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 131,
+        "PuntosPeajes.TipoPeaje": "Lateral",
+        "PuntosPeajes.SentidoTra": "descendente",
+        "PuntosPeajes.PlazaPeaje": "Algarrobo",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 66.42,
+        "PuntosPeajes.Latitud": -33.340638,
+        "PuntosPeajes.Longitud": -71.366867,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 103,
+        "tarifas.OBJECTID": 103,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Algarrobo",
+        "tarifas.IdPlazaPeaje": 131,
+        "tarifas.TipoPeaje": "Lateral",
+        "tarifas.SentidoTransito": "descendente",
+        "tarifas.Ubicacion": 66.42,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.34063783,
+        "tarifas.Longitud": -71.36686714
+      },
+      "id": 4
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.54222954999994,
+          -33.16143705999997
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 132,
+        "PuntosPeajes.TipoPeaje": "Lateral",
+        "PuntosPeajes.SentidoTra": "ambos",
+        "PuntosPeajes.PlazaPeaje": "Quintay",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 92.86,
+        "PuntosPeajes.Latitud": -33.161437,
+        "PuntosPeajes.Longitud": -71.54223,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 104,
+        "tarifas.OBJECTID": 104,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Quintay",
+        "tarifas.IdPlazaPeaje": 132,
+        "tarifas.TipoPeaje": "Lateral",
+        "tarifas.SentidoTransito": "ambos",
+        "tarifas.Ubicacion": 92.86,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.16143706,
+        "tarifas.Longitud": -71.54222955
+      },
+      "id": 5
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.39045182999996,
+          -33.328454729999976
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 133,
+        "PuntosPeajes.TipoPeaje": "Lateral",
+        "PuntosPeajes.SentidoTra": "descendente",
+        "PuntosPeajes.PlazaPeaje": "Tapihue",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 69,
+        "PuntosPeajes.Latitud": -33.328455,
+        "PuntosPeajes.Longitud": -71.390452,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 105,
+        "tarifas.OBJECTID": 105,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Tapihue",
+        "tarifas.IdPlazaPeaje": 133,
+        "tarifas.TipoPeaje": "Lateral",
+        "tarifas.SentidoTransito": "descendente",
+        "tarifas.Ubicacion": 69,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.32845473,
+        "tarifas.Longitud": -71.39045183
+      },
+      "id": 6
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.30873706999995,
+          -33.366748049999956
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 134,
+        "PuntosPeajes.TipoPeaje": "Lateral",
+        "PuntosPeajes.SentidoTra": "descendente",
+        "PuntosPeajes.PlazaPeaje": "Cuesta Zapata",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 60.28,
+        "PuntosPeajes.Latitud": -33.366748,
+        "PuntosPeajes.Longitud": -71.308737,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 106,
+        "tarifas.OBJECTID": 106,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Cuesta Zapata",
+        "tarifas.IdPlazaPeaje": 134,
+        "tarifas.TipoPeaje": "Lateral",
+        "tarifas.SentidoTransito": "descendente",
+        "tarifas.Ubicacion": 60.28,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.36674805,
+        "tarifas.Longitud": -71.30873707
+      },
+      "id": 7
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.45704999999998,
+          -33.062029999999936
+        ]
+      },
+      "properties": {
+        "PuntosPeajes.IdPlazaPea": 135,
+        "PuntosPeajes.TipoPeaje": "Lateral",
+        "PuntosPeajes.SentidoTra": "ambos",
+        "PuntosPeajes.PlazaPeaje": "Quilpué Poniente",
+        "PuntosPeajes.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "PuntosPeajes.Ubicacion": 99.6,
+        "PuntosPeajes.Latitud": -33.06203,
+        "PuntosPeajes.Longitud": -71.45705,
+        "PuntosPeajes.Valores": "http://www.concesiones.cl/peajesporticos/Paginas/valores-transversales-ruta68.aspx",
+        "PuntosPeajes.OBJECTID": 107,
+        "tarifas.OBJECTID": 107,
+        "tarifas.Contrato": "Interconexión Vial Santiago-Valparaíso-Viña del Mar",
+        "tarifas.PlazaPeaje": "Quilpué Poniente",
+        "tarifas.IdPlazaPeaje": 135,
+        "tarifas.TipoPeaje": "Lateral",
+        "tarifas.SentidoTransito": "ambos",
+        "tarifas.Ubicacion": 99.6,
+        "tarifas.Tarifas": "normal | Motos y Motonetas: $200<br />punta | Motos y Motonetas: $200<br />normal | Autos y Camionetas: $700<br />punta | Autos y Camionetas: $700<br />normal | Autos y Camionetas con Remolque: $700<br />punta | Autos y Camionetas con Remolque: $700<br />normal | Buses de 2 ejes: $1300<br />punta | Buses de 2 ejes: $1300<br />normal | Camiones de 2 ejes: $1300<br />punta | Camiones de 2 ejes: $1300<br />normal | Buses de más de 2 ejes: $2300<br />punta | Buses de más de 2 ejes: $2300<br />normal | Camiones de más de 2 ejes: $2300<br />punta | Camiones de más de 2 ejes: $2300<br />",
+        "tarifas.Latitud": -33.06203,
+        "tarifas.Longitud": -71.45705
+      },
+      "id": 8
+    }
+  ]
+}
