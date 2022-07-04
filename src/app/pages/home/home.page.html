@@ -43,7 +43,46 @@
             </div>
           </div>
         </div> -->
-        <div class="map-container" id="map"></div>
+        <div class="map-container" id="map">
+          <div id="custom-button" class="custom-button">
+            <div (click)='changeMap()' class="icon-button">
+                <ion-icon name="map-outline"></ion-icon>
+            </div>
+            <div (click)='geolocate()' class="icon-button">
+              <ion-icon name="locate-outline"></ion-icon>
+            </div>
+          </div>
+        </div>
+        <ion-card center>
+          ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
+          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;">Región: {{dataPosicion.region}}</h3>
+          <!-- <div style="cursor: pointer;" *ngIf="activosEncontrados">
+            Seleccione Activo
+          </div> -->
+          <!-- <div *ngIf="!activosEncontrados" class="col">
+            <h4>Cargando datos nuevos  <ion-spinner name="bubbles"></ion-spinner></h4>
+          </div> -->
+          <ion-grid>
+            <ion-row *ngIf="activosEncontrados" style="margin-top: -12%;">
+              <ion-col size="9">
+                <h4 style="margin: 0;margin-top: 8%;">Seleccione Activo  </h4>
+              </ion-col>
+              <ion-col size="3" align="left">
+                <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
+              </ion-col>
+            </ion-row>
+            <ion-row *ngIf="!activosEncontrados">
+              <ion-col size="9">
+                <h4>Cargando datos nuevos  </h4>
+              </ion-col>
+              <ion-col size="3" align="left">
+                <ion-spinner name="bubbles"></ion-spinner>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          <!-- <ion-card-content>
+          </ion-card-content> -->
+        </ion-card>
 
         <ng-template matStepLabel>Activo</ng-template>
         <!-- <mat-form-field appearance="fill">

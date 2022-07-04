@@ -32,6 +32,10 @@ import VectorLayer from 'ol/layer/Vector';
 import XYZ from 'ol/source/XYZ';
 import GeoJSON from 'ol/format/GeoJSON';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
+import FullScreen from 'ol/control/FullScreen';
+import Zoom from 'ol/control/Zoom';
+import LayerGroup from 'ol/layer/Group';
+
 
 const template = {
   title: "Resumen",
@@ -69,14 +73,14 @@ const template = {
 
 
 
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit,AfterViewInit {
-  // @Input() center: Coordinate;
-  // @Input() zoom: number;
+  activosEncontrados;
   stgo = olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')
   view3 =  new View({
     center: this.stgo, 
@@ -85,18 +89,36 @@ export class HomePage implements OnInit,AfterViewInit {
   // projection: Projection;
   // extent: Extent = [-20026376.39, -20048966.10,20026376.39, 20048966.10];
   Map2: Map;
+  // chile = new VectorLayer({
+  //   source: new VectorSource({
+  //       // url: 'assets/maps/chile.geojson',
+  //       features: new GeoJSON().readFeature('assets/maps/chile.geojson')
+  //   })
+  // });
+
   chile = new VectorLayer({
-    source: new VectorSource({
-        url: 'maps/chile.geojson',
-        format: new GeoJSON()
+    // source:new VectorSource({
+    //   features: new GeoJSON().readFeatures(null),
+    // })
+  })
+  baseLayer = new TileLayer({
+    source: new OSM({
+      attributions: ['Mapa de Esri',''],
+    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    maxZoom: 23
     })
+  })
+  osm = new TileLayer({
+    source: new OSM()
   });
-  dvRedVIal = new TileLayer({
-    source: new TileArcGISRest({
-          url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/Pruebas/Red_Vial_Chile_Cache/MapServer'
-      }),
-  });
-  regiones = this.chile.getSource().getFeatures();
+  modo = 'osm'
+
+  // dvRedVIal = new TileLayer({
+  //   source: new TileArcGISRest({
+  //         url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/Pruebas/Red_Vial_Chile_Cache/MapServer'
+  //     }),
+  // });
+  regiones = null;
   iconFeature = new Feature({
     geometry: new Point(this.stgo),
     name: 'Mi ubicación'
@@ -107,15 +129,11 @@ export class HomePage implements OnInit,AfterViewInit {
       image: new Icon({
         anchor: [0.5, 1],
         src: 'assets/img/pin.png',
-        // scale:500
-        // size: [100, 400],
         scale:0.08
       })
     })
   });
   marker = new Feature(new Point(olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')));
-
-  // @Output() mapReady = new EventEmitter<Map>();
   firstFormGroup = this._formBuilder.group({
     firstCtrl: ['', Validators.required],
   });
@@ -137,13 +155,14 @@ export class HomePage implements OnInit,AfterViewInit {
   loader;
   layer;
   mostrarMapa2 = false;
+  dataPosicion = {lat:0,lng:0,region:null}
 
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private zone: NgZone, private cd: ChangeDetectorRef) {}
 
   ngOnInit(){
     this._mc.enable(true,'first')
-    this.initailize()
+    // this.initailize()
     this._us.cargar_storage().then(()=>{
       this._us.nextmessage('usuario_logeado') 
     })
@@ -155,86 +174,122 @@ export class HomePage implements OnInit,AfterViewInit {
     this.operatividad();
     this.nivelAlerta();
     this.activos();
-    var iconStyle = new Style({
-      image: new Icon( {
-          // anchorXUnits: 'fraction',
-          // anchorYUnits: 'fraction',
-          offset: [0, 0],
-          anchor: [0.5, 47],
-          src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAEMUlEQVRoge2ZP2gkZRjGf0/+nEm0sBAUtDqukMlh9iIcKLdBa9ur5EAbUQsLi6st7Gy0ETlUDjmrQ5tDgoVwYVbFy2mYxGRBEZEDRVNIODSuIZnHYmZ2N7s7MTM7c1VemM2zuzPf8z7v93zvN5OFkziJsUJ1DLq1tPAg5qykh4AY+46hPd9a36uaqzIBW83GBPii4FXgAjAF4B7JXWAZ8R4oDMKoEt5KBLSXGg3Mh5YX5WRIy8jCGEnYTggljJeFXgvC6OdxuccW0F5qXMS+BswgkpJnI/vQDAziu0gvzYfR9XH4xxKw1Vx4HukjDduli/v/Moxj7BeC1vrHZXMoLaDdbDwN3LR8atA2/dgyIrFSQjiA7T1JzSCMVu+ZgHazMQf+Hjh9VHn/x0L9uC04F5ToUhNlBBheQTqNhBEoOfIwEj4aB0Yvlsml8Ay0lxoThh9kzsBo2wD8Y/PHQQzAw5MTzExkhKPthNmQtFC0vU4VFWD7cdAZdz8Qh7FZ+/eA7zoHxE7Sm5R4cmaSxfsmyWT0QtnrE8BpoFBrLW4haVEyecfWXsztzgEHybkgEQO3Owds7cVJvnJ6DGB8vmg6hQUIHjEkqzCrfoYNa519eivZYENqlLXOfrqhqXfKYfxY7QKSvJJF6gG8a9iN09Zj9yWWvP87NruJnl7i/RhOFU2lzBrYVs7Snya7VRgRSqo1ndkm+7Cv7xr/WTSfMjPQzrPQtODRqf6kehaC5LtpiTwLyfxYuwBJG1g7oyyExYXZKWalIQvNCS7MTiXFH22hDtK3hfMpegFAe6lxDXwp7/u/4mTB/rrfq/zizBT3T+TvA0LLQRg9VzSXwmsgjfcxlyC910mrmOEHJJpzSbVN37pw1i41hA1XyiRSrgtBCHwzykKDeGS3GcBCmxKf3TMBQRhhuCw5PmpTU96GNYS5HIRRfM8EAMy31r8EfZC7qXVxdkVO50HXgzD6vGwepQUA2H4d2Ozutdke1ofT89J2OoR/Al4eJ4cqHinPAreAuYKX7hmemg+jtXH4x5oBgCCMNsFvdCue2ibDWZu0PYB5c9zkoQIBSegd4w3SJJ3uwF0ruXvPn+FNmbcqYa5iEICt5sIzkm4e62TzbNCKVqrgrWgGAGnFsHwMC91ArFRGW9VAAO2lxnnbt444JQadm29FG1VxVjcDgGFV0ookco4bEpUlDxULmA8jMO/mWQj8dlX/E82iUgEAiBvG2yO6UBsrrJqucgFBGO1Juj5sH64GrWqrD3XMAGDz6YCFYtAndXDVIkDia+ydPgttBGH0Sx1ctQhIbdTtRsAXdfBATQIAbH/VtZDUqounNgGSVjMLYY9905YXZZ+JjxMbkmKS38Z+q4ukTgE7mG3EdtnHxeNEbRZKnpt9x/bvdXFAvTOApG2gUydHrQJsX1E9v6WfxElUFf8B56dMY7dSpPwAAAAASUVORK5CYII='
+    this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
+      this.Map2 = new Map({
+        layers: [
+         this.osm,
+         this.baseLayer
+        ],
+        view:this.view3,
+        controls: [new FullScreen(), new Zoom()],
+
+      });
+      setTimeout(() => {
+        this.Map2.setTarget("map");
+      }, 1000);
+      this.chile = new VectorLayer({
+        source:new VectorSource({
+          features: new GeoJSON().readFeatures(chileJSON),
         })
-    });
-    var vectorSource = new VectorSource({
-        features: [this.iconFeature]
-    });
-    var vectorLayer = new VectorLayer({
-        source: vectorSource,
-        style: iconStyle
-    });
-    this.Map2 = new Map({
-      layers: [
-        new TileLayer({
-          source: new OSM()
-        }),vectorLayer
-      ],
-      view:this.view3
-    });
-    setTimeout(() => {
-      this.Map2.setTarget("map");
-    }, 1000);
-    // this.markers.getSource().addFeature(this.marker);
-    // this.Map2.addLayer(this.markers);
-    console.log(this.view3.getCenter());
-    // this.marker = new Feature(new Point(olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')));
-    this.markers.getSource().addFeature(this.marker);
-    // console.log()
-    this.Map2.addLayer(this.markers);
-    // this.Map2.getView().un('change:center', this.updateUIfase);
-            //map.getView().un('pointerup',onMoveEnd);
-    this.Map2.getView().on('change:center', ()=>{
-      this.marker.getGeometry().setCoordinates(this.view3.getCenter());
-    });
+      })
+      this.osm.setVisible(true)
+      this.baseLayer.setVisible(false)
+      this.regiones = this.chile.getSource().getFeatures();
+      this.markers.getSource().addFeature(this.marker);
+      this.Map2.addLayer(this.markers);
+      var lonlat = olProj.toLonLat(this.view3.getCenter());
+      this.dataPosicion.lng = Number(lonlat[0].toFixed(6))
+      this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
+      this.Map2.getView().on('change:center', ()=>{
+        this.obtenerUbicacionRegion()
+      });
+    })
   }
 
-  updateUIfase() {
-    console.log('aca puede ser')
-      this.updateUI();
-
-    // marker.getGeometry().setCoordinates()
-    if (typeof this.Map2 != "undefined") {
-        var curr = olProj.transform(this.view3.getCenter(), 'EPSG:3857', 'EPSG:4326');
-        // $scope.activosnear();
-        // this.updateUI();
+  obtenerUbicacionRegion(){
+    this.marker.getGeometry().setCoordinates(this.view3.getCenter());
+    var curr = olProj.toLonLat(this.view3.getCenter());
+    this.dataPosicion.lat = Number(curr[1].toFixed(6));
+    this.dataPosicion.lng = Number(curr[0].toFixed(6));
+    var region;
+    this.regiones = this.chile.getSource().getFeatures();
+    for (var i in this.regiones) {
+        var polygonGeometry = this.regiones[i].getGeometry();
+        var coords = olProj.toLonLat(this.marker.getGeometry().getCoordinates());
+        if (polygonGeometry && typeof polygonGeometry != "undefined") {
+            if (polygonGeometry.intersectsCoordinate(coords)) {
+                region = this.regiones[i].get("region") + "";
+                if (region.length == 1) region = "0" + region;
+                this.dataPosicion.region = region;
+            }
+        }else{
+          console.log('fuera de regiones')
+        }
     }
-}
+  }
+
+  changeMap(){
+    if(this.modo == 'osm'){
+      this.osm.setVisible(false)
+      this.baseLayer.setVisible(true)
+      this.modo = 'satelite'
+    }else{
+      this.osm.setVisible(true)
+      this.baseLayer.setVisible(false)
+      this.modo = 'osm'
+    }
+  }
+
+  geolocate(){
+    this.presentLoader('Localizando ...').then(()=>{
+    this.geolocation.getCurrentPosition().then((resp) => {
+      this.view3.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
+      this.marker.getGeometry().setCoordinates(this.view3.getCenter());
+      this.view3.setZoom(15)
+      this.loader.dismiss();
+      // loadModules(['esri/Graphic']).then(([Graphic]) => {
+      //   this.view.graphics.removeAll();
+      //   this.view2.graphics.removeAll();
+      //   this.loader.dismiss();
+      //   this.latitude = resp.coords.latitude
+      //   this.longitude = resp.coords.longitude
+      //   let point = {
+      //     type: "point",
+      //     longitude: this.longitude,
+      //     latitude: this.latitude
+      //   };
+      //   let markerSymbol = {
+      //     type: "picture-marker",
+      //     url: "assets/img/pin.png",
+      //     width: "50px",
+      //     height: "40px"
+      //   };
+    
+      //   let pointGraphic = new Graphic({
+      //     geometry: point as any,
+      //     symbol: markerSymbol as any,
+      //     popupTemplate:null
+      //   });
+      //   this.view.graphics.add(pointGraphic);
+      //   this.view.center = [this.longitude, this.latitude]
+      //   this.view.zoom = 15;  
+      //   this.view2.graphics.add(pointGraphic);
+      //   this.view2.center = [this.longitude, this.latitude]
+      //   this.view2.zoom = 15;  
+      // })
+     }).catch((error) => {
+       console.log('Error getting location', error);
+     });
+    })
+  }
+
+
 
   distance(y2, y1, x2, x1) {
     // return Math.round(111.139 * Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)), 0);
   }
 
-  updateUI() {
-    // console.log('acaaa')
 
-    this.marker.getGeometry().setCoordinates(this.view3.getCenter());
-    var curr = olProj.transform(this.view3.getCenter(), 'EPSG:3857', 'EPSG:4326');
-    var data = {lat:0,lng:0,region:null}
-    data.lat = curr[1];
-    data.lng = curr[0];
-    var region;
-    this.regiones = this.chile.getSource().getFeatures();
-    for (var i in this.regiones) {
-        var polygonGeometry = this.regiones[i].getGeometry();
-        var coords = this.marker.getGeometry().getCoordinates();
-        if (polygonGeometry && typeof polygonGeometry != "undefined") {
-            if (polygonGeometry.intersectsCoordinate(coords)) {
-                region = this.regiones[i].get("region") + "";
-                if (region.length == 1) region = "0" + region;
-                data.region = region;
-                console.log(data)
-            }
-        }
-    }
-  }
 
   mapViewIdentify(mapPoint,IdentifyTask,IdentifyParameters,EmergenciasURL){
     let identifyTask = new IdentifyTask(EmergenciasURL);
@@ -369,10 +424,6 @@ export class HomePage implements OnInit,AfterViewInit {
     
   }
 
-  getCenterPoint()
-{
-  return this.map.extent.getCenter();
-}
 
   expandir(){
     if(this.mostrarMapa2){
@@ -503,5 +554,6 @@ export class HomePage implements OnInit,AfterViewInit {
       })
     }
   }
+    
 
 }

@@ -27,12 +27,6 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Se necesita permiso para acceder a tu ubicación</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Se necesita permiso para acceder a tu ubicación</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Se necesita permiso para acceder a tu ubicación</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
