@@ -1,5 +1,5 @@
-import { AfterViewInit, Component, Input, OnInit, Output, EventEmitter, NgZone, ChangeDetectorRef } from '@angular/core';
-import {FormBuilder, Validators} from '@angular/forms';
+import { AfterViewInit, Component, Input, OnInit, Output, EventEmitter, NgZone, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 // import IdentifyParameters from "@arcgis/core/rest/support/IdentifyParameters";
 // import * as identify from "@arcgis/core/rest/identify";
 // import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
@@ -12,7 +12,7 @@ import { loadModules } from 'esri-loader';
 import { UsuarioService } from '../../services/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-import { AlertController, LoadingController, MenuController, Platform } from '@ionic/angular';
+import { AlertController, LoadingController, MenuController, Platform, ModalController } from '@ionic/angular';
 
 import Projection from 'ol/proj/Projection';
 import {register}  from 'ol/proj/proj4';
@@ -32,44 +32,12 @@ import VectorLayer from 'ol/layer/Vector';
 import XYZ from 'ol/source/XYZ';
 import GeoJSON from 'ol/format/GeoJSON';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
-import FullScreen from 'ol/control/FullScreen';
+import {FullScreen, defaults as defaultControls} from 'ol/control';
 import Zoom from 'ol/control/Zoom';
 import LayerGroup from 'ol/layer/Group';
-
-
-const template = {
-  title: "Resumen",
-  content: [{
-    type: "fields",
-    fieldInfos:
-    [
-      {       
-        fieldName: "NOMBRE",
-        label: "Nombre"
-      },
-      {
-        fieldName: "ESTADO",
-        label: "Estado Consulta"
-      },
-      {
-        fieldName: "DIRECCION",
-        label: "Dirección MOP"
-      },
-      {
-        fieldName: "REGION",
-        label: "Región"
-      },
-      {
-        fieldName: "COMUNAS",
-        label: "Comunas"
-      },
-      {
-        fieldName: "LINK",
-        label: "Link a web MOP"
-      }
-    ]
-  }]
-};
+import ZoomToExtent from 'ol/control/ZoomToExtent';
+import { ModalActivosPage } from '../modal-activos/modal-activos.page';
+import { MatStepper } from '@angular/material/stepper';
 
 
 
@@ -80,32 +48,19 @@ const template = {
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit,AfterViewInit {
+  @ViewChild('stepper')  stepper: MatStepper;
   activosEncontrados;
   stgo = olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')
-  view3 =  new View({
+  view =  new View({
     center: this.stgo, 
     zoom: 13
   })
-  // projection: Projection;
-  // extent: Extent = [-20026376.39, -20048966.10,20026376.39, 20048966.10];
-  Map2: Map;
-  // chile = new VectorLayer({
-  //   source: new VectorSource({
-  //       // url: 'assets/maps/chile.geojson',
-  //       features: new GeoJSON().readFeature('assets/maps/chile.geojson')
-  //   })
-  // });
-
-  chile = new VectorLayer({
-    // source:new VectorSource({
-    //   features: new GeoJSON().readFeatures(null),
-    // })
-  })
+  map: Map;
+  chile = new VectorLayer({})
   baseLayer = new TileLayer({
     source: new OSM({
       attributions: ['Mapa de Esri',''],
-    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    maxZoom: 23
+      url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     })
   })
   osm = new TileLayer({
@@ -113,11 +68,11 @@ export class HomePage implements OnInit,AfterViewInit {
   });
   modo = 'osm'
 
-  // dvRedVIal = new TileLayer({
-  //   source: new TileArcGISRest({
-  //         url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/Pruebas/Red_Vial_Chile_Cache/MapServer'
-  //     }),
-  // });
+  dvRedVIal = new TileLayer({
+    source: new TileArcGISRest({
+          url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer'
+      }),
+  });
   regiones = null;
   iconFeature = new Feature({
     geometry: new Point(this.stgo),
@@ -134,59 +89,56 @@ export class HomePage implements OnInit,AfterViewInit {
     })
   });
   marker = new Feature(new Point(olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')));
-  firstFormGroup = this._formBuilder.group({
-    firstCtrl: ['', Validators.required],
-  });
-  secondFormGroup = this._formBuilder.group({
-    secondCtrl: ['', Validators.required],
-  });
+  firstFormGroup:FormGroup;
+  secondFormGroup:FormGroup;
+  thirdFormGroup:FormGroup;
   isLinear = true;
-
-  // MAPA
-  latitude: any = 0;
-  longitude: any = 0;
-  view;
-  view2;
-  map;
-  mapImageLayerEmergencia: any;
-  currentQuery : string;
-  coordenadas: any;
-  basemap = 'streets-vector'
   loader;
-  layer;
-  mostrarMapa2 = false;
-  dataPosicion = {lat:0,lng:0,region:null}
+  dataPosicion = {lat:0,lng:0,region:'13'}
+  operatividadArray = [];
+  nivelAlertaArray = [];
+  destinosArray = [];
 
-  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,
+  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private zone: NgZone, private cd: ChangeDetectorRef) {}
 
   ngOnInit(){
+    this.operatividad();
+    this.nivelAlerta();
+    this.destinos();
+    this.firstFormGroup = this._formBuilder.group({
+      activoSeleccionado: [null],
+    });
+    this.secondFormGroup = this._formBuilder.group({
+      operatividad:[],
+      nivelAlerta:[],
+      destino:[]
+    })
+    this.thirdFormGroup = this._formBuilder.group({
+      titulo: [null,Validators.compose([Validators.maxLength(120)])],
+      descripcion: [null,Validators.compose([Validators.maxLength(2000)])],
+    });
     this._mc.enable(true,'first')
-    // this.initailize()
     this._us.cargar_storage().then(()=>{
       this._us.nextmessage('usuario_logeado') 
     })
-
   }
 
   ngAfterViewInit(): void {
-    // this.initailize()
-    this.operatividad();
-    this.nivelAlerta();
     this.activos();
     this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
-      this.Map2 = new Map({
+      this.map = new Map({
         layers: [
          this.osm,
-         this.baseLayer
+         this.baseLayer,
+         this.dvRedVIal
         ],
-        view:this.view3,
-        controls: [new FullScreen(), new Zoom()],
-
+        view:this.view,
+        // controls: defaultControls().extend([new FullScreen()]),
       });
       setTimeout(() => {
-        this.Map2.setTarget("map");
-      }, 1000);
+        this.map.setTarget("map");
+      }, 500);
       this.chile = new VectorLayer({
         source:new VectorSource({
           features: new GeoJSON().readFeatures(chileJSON),
@@ -196,19 +148,19 @@ export class HomePage implements OnInit,AfterViewInit {
       this.baseLayer.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
       this.markers.getSource().addFeature(this.marker);
-      this.Map2.addLayer(this.markers);
-      var lonlat = olProj.toLonLat(this.view3.getCenter());
+      this.map.addLayer(this.markers);
+      var lonlat = olProj.toLonLat(this.view.getCenter());
       this.dataPosicion.lng = Number(lonlat[0].toFixed(6))
       this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
-      this.Map2.getView().on('change:center', ()=>{
+      this.map.getView().on('change:center', ()=>{
         this.obtenerUbicacionRegion()
       });
     })
   }
 
   obtenerUbicacionRegion(){
-    this.marker.getGeometry().setCoordinates(this.view3.getCenter());
-    var curr = olProj.toLonLat(this.view3.getCenter());
+    this.marker.getGeometry().setCoordinates(this.view.getCenter());
+    var curr = olProj.toLonLat(this.view.getCenter());
     this.dataPosicion.lat = Number(curr[1].toFixed(6));
     this.dataPosicion.lng = Number(curr[0].toFixed(6));
     var region;
@@ -243,204 +195,14 @@ export class HomePage implements OnInit,AfterViewInit {
   geolocate(){
     this.presentLoader('Localizando ...').then(()=>{
     this.geolocation.getCurrentPosition().then((resp) => {
-      this.view3.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
-      this.marker.getGeometry().setCoordinates(this.view3.getCenter());
-      this.view3.setZoom(15)
+      this.view.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
+      this.marker.getGeometry().setCoordinates(this.view.getCenter());
+      this.view.setZoom(15)
       this.loader.dismiss();
-      // loadModules(['esri/Graphic']).then(([Graphic]) => {
-      //   this.view.graphics.removeAll();
-      //   this.view2.graphics.removeAll();
-      //   this.loader.dismiss();
-      //   this.latitude = resp.coords.latitude
-      //   this.longitude = resp.coords.longitude
-      //   let point = {
-      //     type: "point",
-      //     longitude: this.longitude,
-      //     latitude: this.latitude
-      //   };
-      //   let markerSymbol = {
-      //     type: "picture-marker",
-      //     url: "assets/img/pin.png",
-      //     width: "50px",
-      //     height: "40px"
-      //   };
-    
-      //   let pointGraphic = new Graphic({
-      //     geometry: point as any,
-      //     symbol: markerSymbol as any,
-      //     popupTemplate:null
-      //   });
-      //   this.view.graphics.add(pointGraphic);
-      //   this.view.center = [this.longitude, this.latitude]
-      //   this.view.zoom = 15;  
-      //   this.view2.graphics.add(pointGraphic);
-      //   this.view2.center = [this.longitude, this.latitude]
-      //   this.view2.zoom = 15;  
-      // })
      }).catch((error) => {
        console.log('Error getting location', error);
      });
     })
-  }
-
-
-
-  distance(y2, y1, x2, x1) {
-    // return Math.round(111.139 * Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)), 0);
-  }
-
-
-
-  mapViewIdentify(mapPoint,IdentifyTask,IdentifyParameters,EmergenciasURL){
-    let identifyTask = new IdentifyTask(EmergenciasURL);
-    let params = new IdentifyParameters();
-    params.tolerance = 15;
-    params.layerIds = [0];
-    params.layerDefinitions = "FECHA >= '" + '' + "'";
-    params.layerOption = "visible";
-    params.width = this.view.width;
-    params.height = this.view.height;
-    params.geometry = mapPoint;
-    params.mapExtent = this.view.extent;
-    identifyTask.execute(params).then((response)=>{
-      // console.log(response,mapPoint)
-      // this.sendIndentifyData.emit([[0],[response]]);
-    });
-  }
-
-  async initailize(){
-    const [Map,
-      MapView,
-      MapImageLayer,
-      FeatureLayer,
-      IdentifyTask,
-      IdentifyParameters,
-      Legend,
-      Basemap,
-      BasemapGallery,
-      intl,
-      Multipoint,
-      Point,
-      watchUtils,
-      SimpleMarkerSymbol,
-      StatisticDefinition,
-      Graphic, ScaleBar,
-      Print,
-      Search,
-      Locator]:any = await loadModules([
-      'esri/Map',
-      'esri/views/MapView',
-      'esri/layers/MapImageLayer',
-      'esri/layers/FeatureLayer',
-      "esri/tasks/IdentifyTask",
-      "esri/rest/support/IdentifyParameters",
-      'esri/widgets/Legend',
-      'esri/Basemap',
-      'esri/widgets/BasemapGallery',
-      "esri/intl",
-      'esri/geometry/Multipoint',
-      "esri/geometry/Point",
-      'esri/core/watchUtils',
-      'esri/symbols/SimpleMarkerSymbol',
-      "esri/rest/support/StatisticDefinition",
-      "esri/Graphic",
-      "esri/widgets/ScaleBar",
-      "esri/widgets/Print",
-      "esri/widgets/Search",
-      "esri/tasks/Locator"
-    ])
-      .catch(err => {
-        console.error("ArcGIS: ", err);
-      });
-    this.map = new Map({
-      basemap: this.basemap
-    });
-    const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
-    this.mapImageLayerEmergencia = new MapImageLayer({
-      url: vialidadRedVialURL
-    })
-    this.view = new MapView({
-      container: "container", 
-      map: this.map, 
-      constraints : {
-        minZoom :2,
-        maxZoom:21
-      },
-    });
-    this.view2 = new MapView({
-      container: "container2", 
-      map: this.map, 
-      constraints : {
-        minZoom :2,
-        maxZoom:21
-      },
-    });
-    this.view.center = [-70.673676, -33.447487]
-    this.view.zoom = 10;
-    this.view2.center = [-70.673676, -33.447487]
-    this.view2.zoom = 10  
-    this.map.add(this.mapImageLayerEmergencia);
-
-    await this.view.when(() => {
-      this.view.on("click",(e)=>{
-        this.mapViewIdentify(e.mapPoint,IdentifyTask,IdentifyParameters,vialidadRedVialURL);
-      });
-    });
-
-    this.view.on("pointer-move", (e:any)=>{
-      let point = this.view.toMap(e);
-      this.coordenadas = ("X: " +point.longitude.toFixed(3) + " Y: " + point.latitude.toFixed(3))
-      console.log('coordenadas-> ',this.coordenadas)
-      let point2 = {
-        type: "point",
-        longitude: point.longitude.toFixed(3),
-        latitude: point.latitude.toFixed(3)
-      };
-      let markerSymbol = {
-        type: "picture-marker",
-        url: "assets/img/pin.png",
-        width: "50px",
-        height: "40px"
-      };
-  
-      let pointGraphic = new Graphic({
-        geometry: point2 as any,
-        symbol: markerSymbol as any,
-        popupTemplate:null
-      });
-      this.view.graphics.removeAll();
-      this.view.graphics.add(pointGraphic);
-      setTimeout(()=>{
-        this.view.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
-      },1000)
-      // this.view.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
-      // var point = this.getCenterPoint();
-     
-      // // var newPoint = webMercatorUtils.webMercatorToGeographic(point);
-     
-      // console.log("current map center point is x: " + point.getLatitude() + ", y: " + point.getLongitude());
-      // console.log("current map center is x: " + newPoint.x + ", y: " + newPoint.y);
-    });
-    
-  }
-
-
-  expandir(){
-    if(this.mostrarMapa2){
-      this.mostrarMapa2 = false;
-    }else{
-      this.mostrarMapa2 = true;
-    }
-  }
-  
-  customZoom(){
-    if(this.basemap == "streets-vector"){
-      this.map.basemap = 'satellite' 
-      this.basemap = 'satellite' 
-    }else{
-      this.map.basemap = 'streets-vector' 
-      this.basemap = 'streets-vector' 
-    }
   }
 
   async presentLoader(msg) {
@@ -448,62 +210,32 @@ export class HomePage implements OnInit,AfterViewInit {
     await this.loader.present();
   }
 
-  obtenerGeolocalizacion(){
-    this.presentLoader('Localizando ...').then(()=>{
-    this.geolocation.getCurrentPosition().then((resp) => {
-      loadModules(['esri/Graphic']).then(([Graphic]) => {
-        this.view.graphics.removeAll();
-        this.view2.graphics.removeAll();
-        this.loader.dismiss();
-        this.latitude = resp.coords.latitude
-        this.longitude = resp.coords.longitude
-        let point = {
-          type: "point",
-          longitude: this.longitude,
-          latitude: this.latitude
-        };
-        let markerSymbol = {
-          type: "picture-marker",
-          url: "assets/img/pin.png",
-          width: "50px",
-          height: "40px"
-        };
-    
-        let pointGraphic = new Graphic({
-          geometry: point as any,
-          symbol: markerSymbol as any,
-          popupTemplate:null
-        });
-        this.view.graphics.add(pointGraphic);
-        this.view.center = [this.longitude, this.latitude]
-        this.view.zoom = 15;  
-        this.view2.graphics.add(pointGraphic);
-        this.view2.center = [this.longitude, this.latitude]
-        this.view2.zoom = 15;  
-      })
-     }).catch((error) => {
-       console.log('Error getting location', error);
-     });
-    })
-  }
-
   operatividad(){
     if(this.platform.is('capacitor')){
       this._us.operatividad().subscribe((res:any)=>{
         if(res && res.status == '200'){
           this._us.xmlToJson(res).then((result:any)=>{
-            // console.log(result)
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+            path.forEach(f=>{
+              this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            })
           })
         }
       })
     }else{
       this._http.get('../../../assets/operatividad.xml').subscribe((res:any)=>{
         this._us.xmlToJson(res).then((result:any)=>{
-          // console.log(result)
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          path.forEach(f=>{
+            this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
         })
       },err=>{
         this._us.xmlToJson(err.error.text).then((result:any)=>{
-          // console.log(result)
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          path.forEach(f=>{
+            this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
         })
       })
     }
@@ -515,45 +247,314 @@ export class HomePage implements OnInit,AfterViewInit {
         // console.log('ALERTA-> ',res)
         if(res && res.status == '200'){
           this._us.xmlToJson(res).then((result:any)=>{
-            // console.log(result)
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+            path.forEach(f=>{
+              this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            })
           })
         }
       })
     }else{
       this._http.get('../../../assets/nivelAlerta.xml').subscribe((res:any)=>{
         this._us.xmlToJson(res).then((result:any)=>{
-          // console.log(result)
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          path.forEach(f=>{
+            this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
         })
       },err=>{
         this._us.xmlToJson(err.error.text).then((result:any)=>{
-          // console.log(result)
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          path.forEach(f=>{
+            this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
         })
       })
     }
   }
 
+  destinos(){
+    this.destinosArray = [
+      { code: "APR", name: "Agua Potable Rural" },
+      { code: "DOH-ALL", name: "Aguas Lluvias" },
+      { code: "DOH-CAUC", name: "Obras Fluviales" },
+      { code: "DOH-RIEG", name: "Riego" }
+    ]
+  }
+
   activos(){
     if(this.platform.is('capacitor')){
       this._us.activos().subscribe((res:any)=>{
-        console.log('ACTIVOS-> ',res)
         if(res && res.status == '200'){
           this._us.xmlToJson(res).then((result:any)=>{
-            // console.log(result)
+            var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+            var temp = []
+            path.forEach(p=>{
+              var activo = {
+                "ADMSIST": p.ADMSIST[0],
+                "ADMSIST1": p.ADMSIST1[0],
+                "ASSETNUM": p.ASSETNUM[0],
+                "AUTOMOTORA": p.AUTOMOTORA[0],
+                "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+                "CLASART160": p.CLASART160[0],
+                "CODSIAPR": p.CODSIAPR[0],
+                "DESCRIPTION": p.DESCRIPTION[0],
+                "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+                "INVOICENUM": p.INVOICENUM[0],
+                "ISLINEAR": p.ISLINEAR[0],
+                "LOCATION": p.LOCATION[0],
+                "NUMRESOL": p.NUMRESOL[0],
+                "OBSERSIT": p.OBSERSIT[0],
+                "PONUM": p.PONUM,
+                "PRIORITY": p.PRIORITY[0],
+                "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+                "RAZONSOC": p.RAZONSOC[0],
+                "RECASES": p.RECASES[0],
+                "REGION": p.REGION[0],
+                "RUT": p.RUT[0],
+                "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
+                "SEGCOMUNA": p.SEGCOMUNA[0],
+                "SITEID": p.SITEID[0],
+                "SITUACION": p.SITUACION[0],
+                "STATUS": p.STATUS[0]['$']['_'],
+                "TIPOACT": p.TIPOACT[0],
+                "TIPOTRAC": p.TIPOTRAC[0],
+                "SERVICEADDRESS": {
+                  "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
+                  "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
+                  "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
+                  "CITY": p.SERVICEADDRESS[0].CITY[0],
+                  "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
+                  "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
+                  "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
+                  "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
+                  "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
+                  "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
+                  "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
+                  "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
+                  "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
+                  "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
+                  "HUSO": p.SERVICEADDRESS[0].HUSO[0],
+                  "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
+                  "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                  "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                  "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
+                  "ORGID": p.SERVICEADDRESS[0].ORGID[0],
+                  "PARENT": p.SERVICEADDRESS[0].PARENT[0],
+                  "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
+                  "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
+                  "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
+                  "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
+                  "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                  "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
+                  "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
+                  "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
+                  "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
+                  "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
+                  "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
+                  "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
+                  "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
+                  "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
+                  "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
+                }
+              }
+              temp.push(activo)
+            })
+            this.activosEncontrados = temp;
           })
         }
       })
     }else{
-      this._http.get('../../../assets/nivelAlerta.xml').subscribe((res:any)=>{
+      this._http.get('../../../assets/activos.xml').subscribe((res:any)=>{
         this._us.xmlToJson(res).then((result:any)=>{
-          // console.log(result)
+          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+          var temp = []
+          path.forEach(p=>{
+            var activo = {
+              "ADMSIST": p.ADMSIST[0],
+              "ADMSIST1": p.ADMSIST1[0],
+              "ASSETNUM": p.ASSETNUM[0],
+              "AUTOMOTORA": p.AUTOMOTORA[0],
+              "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              "CLASART160": p.CLASART160[0],
+              "CODSIAPR": p.CODSIAPR[0],
+              "DESCRIPTION": p.DESCRIPTION[0],
+              "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              "INVOICENUM": p.INVOICENUM[0],
+              "ISLINEAR": p.ISLINEAR[0],
+              "LOCATION": p.LOCATION[0],
+              "NUMRESOL": p.NUMRESOL[0],
+              "OBSERSIT": p.OBSERSIT[0],
+              "PONUM": p.PONUM,
+              "PRIORITY": p.PRIORITY[0],
+              "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              "RAZONSOC": p.RAZONSOC[0],
+              "RECASES": p.RECASES[0],
+              "REGION": p.REGION[0],
+              "RUT": p.RUT[0],
+              "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
+              "SEGCOMUNA": p.SEGCOMUNA[0],
+              "SITEID": p.SITEID[0],
+              "SITUACION": p.SITUACION[0],
+              "STATUS": p.STATUS[0]['$']['_'],
+              "TIPOACT": p.TIPOACT[0],
+              "TIPOTRAC": p.TIPOTRAC[0],
+              "SERVICEADDRESS": {
+                "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
+                "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
+                "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
+                "CITY": p.SERVICEADDRESS[0].CITY[0],
+                "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
+                "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
+                "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
+                "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
+                "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
+                "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
+                "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
+                "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
+                "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
+                "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
+                "HUSO": p.SERVICEADDRESS[0].HUSO[0],
+                "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
+                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
+                "ORGID": p.SERVICEADDRESS[0].ORGID[0],
+                "PARENT": p.SERVICEADDRESS[0].PARENT[0],
+                "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
+                "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
+                "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
+                "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
+                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
+                "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
+                "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
+                "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
+                "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
+                "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
+                "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
+                "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
+                "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
+                "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
+              }
+            }
+            temp.push(activo)
+          })
+          this.activosEncontrados = temp;
         })
       },err=>{
         this._us.xmlToJson(err.error.text).then((result:any)=>{
-          // console.log(result)
+          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+          var temp = []
+          path.forEach(p=>{
+            var activo = {
+              "ADMSIST": p.ADMSIST[0],
+              "ADMSIST1": p.ADMSIST1[0],
+              "ASSETNUM": p.ASSETNUM[0],
+              "AUTOMOTORA": p.AUTOMOTORA[0],
+              "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              "CLASART160": p.CLASART160[0],
+              "CODSIAPR": p.CODSIAPR[0],
+              "DESCRIPTION": p.DESCRIPTION[0],
+              "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              "INVOICENUM": p.INVOICENUM[0],
+              "ISLINEAR": p.ISLINEAR[0],
+              "LOCATION": p.LOCATION[0],
+              "NUMRESOL": p.NUMRESOL[0],
+              "OBSERSIT": p.OBSERSIT[0],
+              "PONUM": p.PONUM,
+              "PRIORITY": p.PRIORITY[0],
+              "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              "RAZONSOC": p.RAZONSOC[0],
+              "RECASES": p.RECASES[0],
+              "REGION": p.REGION[0],
+              "RUT": p.RUT[0],
+              "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
+              "SEGCOMUNA": p.SEGCOMUNA[0],
+              "SITEID": p.SITEID[0],
+              "SITUACION": p.SITUACION[0],
+              "STATUS": p.STATUS[0]['$']['_'],
+              "TIPOACT": p.TIPOACT[0],
+              "TIPOTRAC": p.TIPOTRAC[0],
+              "SERVICEADDRESS": {
+                "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
+                "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
+                "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
+                "CITY": p.SERVICEADDRESS[0].CITY[0],
+                "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
+                "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
+                "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
+                "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
+                "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
+                "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
+                "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
+                "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
+                "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
+                "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
+                "HUSO": p.SERVICEADDRESS[0].HUSO[0],
+                "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
+                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
+                "ORGID": p.SERVICEADDRESS[0].ORGID[0],
+                "PARENT": p.SERVICEADDRESS[0].PARENT[0],
+                "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
+                "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
+                "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
+                "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
+                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
+                "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
+                "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
+                "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
+                "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
+                "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
+                "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
+                "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
+                "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
+                "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
+              }
+            }
+            temp.push(activo)
+          })
+          this.activosEncontrados = temp;
         })
       })
     }
   }
     
+  async openModalActivos() {
+    const modal = await this._modalCtrl.create({
+      component: ModalActivosPage,
+      showBackdrop:true,
+      mode:'ios',
+      swipeToClose:true,
+      cssClass: 'my-custom-class',
+      backdropDismiss:true,
+      breakpoints:[0, 0.5, 0.75, 0.95],
+      initialBreakpoint:0.75,
+      componentProps:{
+        activos:this.activosEncontrados,
+        coord:olProj.toLonLat(this.marker.getGeometry().getCoordinates())
+      }
+    });
+    modal.present();
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      // console.log(data);
+      this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
+      this.view.setCenter(olProj.transform([data.activo.SERVICEADDRESS.LONGITUDEX,data.activo.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
+      this.obtenerUbicacionRegion()
+      this.view.setZoom(15)
+    }
+  }
+ 
+  moverStepperr(direction){
+    if(direction == 'next'){
+      this.stepper.next();
+    }else{
+      this.stepper.previous()
+    }
+  }
 
 }

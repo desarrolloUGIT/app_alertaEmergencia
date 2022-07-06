@@ -28,12 +28,15 @@ export class LoginPage implements OnInit {
       user :[null, Validators.compose([Validators.required])],
       password: [null,Validators.required],
     });
+    // this.form.controls['user'].setValue('maximo.emrdv')
+    // this.form.controls['password'].setValue('Dfg.Cvb#47')
     this._us.cargar_storage().then(()=>{
       if(this._us.user){
         this.form.controls['user'].setValue(this._us.user.user)
         this.form.controls['password'].setValue(this._us.user.password)
       }
     }).catch(()=>{
+      console.log(this._us.usuario)
       if(this._us.user){
         this.form.controls['user'].setValue(this._us.user.user)
         this.form.controls['password'].setValue(this._us.user.password)
@@ -71,6 +74,7 @@ export class LoginPage implements OnInit {
       this.form.disable()
       if(this.platform.is('capacitor')){
         this._us.login(this.form.value).subscribe((res:any)=>{
+          console.log(res)
           if(res && res.status == '200'){
             this._us.xmlToJson(res).then((result:any)=>{
               let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
@@ -128,7 +132,7 @@ export class LoginPage implements OnInit {
           this.presentAlert('¡Error!','Usuario y/o contraseña incorrecta')
         })
       }else{
-        this._http.get('../../../assets/usuario.xml').subscribe((res:any)=>{
+        this._http.get('../../../assets/usuario_2.xml').subscribe((res:any)=>{
           // console.log('archivo xml-> ',JSON.stringify((res)))
           this._us.xmlToJson(res).then((result:any)=>{
             let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]

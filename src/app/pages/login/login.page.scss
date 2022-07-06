@@ -11,6 +11,7 @@ ion-content {
     }
     --padding-top: var(--ion-safe-area-top);
       padding-bottom:0!important;
+    //   --padding-top: 30%;
   }
 div{
     width: 100%;
@@ -52,8 +53,4 @@ h4{
     margin: auto;
     width: 70%;
     margin-bottom: 5%;
-}
-.botoninicia{
-    --background:#006CB5;  
-    --background-activated:#006CB5ce;
 }

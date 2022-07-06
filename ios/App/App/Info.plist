@@ -46,6 +46,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Se necesita permiso para acceder a tu ubicación</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+		<string>Se necesita permiso para acceder a tu ubicación</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Se necesita permiso para acceder a tu ubicación</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>

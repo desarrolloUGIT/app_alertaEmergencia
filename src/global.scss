@@ -34,10 +34,15 @@ ion-content {
     background-position: center;
   }
   
-  ion-toolbar{
+ion-toolbar{
     --background: #062A4E;
     color:white;
-  }
+}
+.botoninicia{
+    --background:#006CB5;  
+    --background-activated:#006CB5ce;
+}
+
 
   .pulse {
     overflow: visible;

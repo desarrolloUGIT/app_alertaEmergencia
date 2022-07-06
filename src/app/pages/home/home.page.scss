@@ -5,7 +5,6 @@ form{
 .map-container {
   width: 100%;
   height: 200px;
-  // z-index: 1;
 }
 
 #container {
@@ -161,7 +160,7 @@ form{
 }
 
 ::ng-deep .mat-stepper-vertical {
-  background-color: transparent !important;
+  background-color: #ffffffc9 !important;
 }
 
 ::ng-deep .ol-attribution{
@@ -171,9 +170,10 @@ form{
 ion-card{
   margin: 0;
   margin-top: 2%;
-  padding: 5%;
+  padding: 0%;
   text-align: center;
-  border:1px solid
+  border:1px solid;
+  padding-top: 3%;
 }
 
 ion-button[shape=circle] {
@@ -182,6 +182,7 @@ ion-button[shape=circle] {
   height: 46px;
   --background: #1d7d74;
   font-size: 100%;
+  margin-left: -50%;
 }
 
 
@@ -206,7 +207,7 @@ ion-button[shape=circle] {
   transition: opacity .3s, transform .3s, -webkit-transform .3s;
   -webkit-animation: pulse-animation 1s cubic-bezier(0.24, 0, 0.38, 1) infinite;
   animation: pulse-animation 1s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-  z-index: -1;
+  z-index: 1;
 }
 
 
@@ -245,3 +246,17 @@ ion-button[shape=circle] {
       transform: scale(1.5);
   }
 }
+
+.select{
+  --background: #bababaa1;
+  color:black !important;
+}
+// .login{
+//   border: none;
+//   margin-bottom: 5%;
+// }
+// .input{
+//   --background: #9f9e9e73;
+//   border: none;
+//   border-radius: 10px;
+// }

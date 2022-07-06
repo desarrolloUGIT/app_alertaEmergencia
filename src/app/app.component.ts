@@ -92,8 +92,9 @@ export class AppComponent {
       }).catch(()=>{
         this._mc.enable(false,'first')
       })
-      // this.statusBar.overlaysWebView(true);
+      this.statusBar.overlaysWebView(false);
       // this.statusBar.backgroundColorByHexString('#000000');
+      this.statusBar.hide()
 
       // this.splashScreen.hide();
       this.registerBackButton()
