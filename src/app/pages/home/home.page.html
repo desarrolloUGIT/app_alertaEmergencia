@@ -38,7 +38,7 @@
             </ion-row>
             <ion-row *ngIf="!activosEncontrados" style="margin-bottom: -3%;margin-top: -5%;">
               <ion-col size="9">
-                <h4>Cargando datos nuevos  </h4>
+                <h4>Cargando activos  </h4>
               </ion-col>
               <ion-col size="3" align="left">
                 <ion-spinner name="bubbles"></ion-spinner>
@@ -105,16 +105,16 @@
         <ion-card center>
           <ion-item>
             <ion-label position="stacked">Título de la Alerta</ion-label>
-            <ion-textarea formControlName="titulo" placeholder="Ingrese el título de la Alerta" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="120"></ion-textarea>
+            <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="120"></ion-textarea>
           </ion-item>
           <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/120</span>
         </ion-card>
         <ion-card center>
           <ion-item>
             <ion-label position="stacked">Descripción del Evento</ion-label>
-            <ion-textarea formControlName="descripcion" placeholder="Descripción del Evento" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="5" maxlength="2000"></ion-textarea>
+            <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="5" maxlength="2000"></ion-textarea>
           </ion-item>
-          <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/2000</span>
+          <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/2000</span>
         </ion-card>
       </form>
       <div align="center" >

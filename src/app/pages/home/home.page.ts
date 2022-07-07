@@ -1,27 +1,12 @@
 import { AfterViewInit, Component, Input, OnInit, Output, EventEmitter, NgZone, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { FormBuilder, Validators, FormGroup } from '@angular/forms';
-// import IdentifyParameters from "@arcgis/core/rest/support/IdentifyParameters";
-// import * as identify from "@arcgis/core/rest/identify";
-// import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
-// import Map from '@arcgis/core/Map';
-// import MapView from '@arcgis/core/views/MapView';
-// import Graphic from "@arcgis/core/Graphic";
-// import GraphicsLayer from '@arcgis/core/Graphic';
 import { loadModules } from 'esri-loader';
-// import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { UsuarioService } from '../../services/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-import { AlertController, LoadingController, MenuController, Platform, ModalController } from '@ionic/angular';
-
-import Projection from 'ol/proj/Projection';
-import {register}  from 'ol/proj/proj4';
-import {get as GetProjection} from 'ol/proj'
-import {Extent} from 'ol/extent';
+import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController } from '@ionic/angular';
 import TileLayer from 'ol/layer/Tile';
-import { ScaleLine, defaults as DefaultControls} from 'ol/control';
 import {View, Feature, Map } from 'ol';
-import {Coordinate} from 'ol/coordinate';
 import OSM, {ATTRIBUTION} from 'ol/source/OSM';
 import * as olProj from 'ol/proj';
 import Style from 'ol/style/Style';
@@ -33,11 +18,9 @@ import XYZ from 'ol/source/XYZ';
 import GeoJSON from 'ol/format/GeoJSON';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
 import {FullScreen, defaults as defaultControls} from 'ol/control';
-import Zoom from 'ol/control/Zoom';
-import LayerGroup from 'ol/layer/Group';
-import ZoomToExtent from 'ol/control/ZoomToExtent';
 import { ModalActivosPage } from '../modal-activos/modal-activos.page';
 import { MatStepper } from '@angular/material/stepper';
+import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 
 
 
@@ -98,11 +81,19 @@ export class HomePage implements OnInit,AfterViewInit {
   operatividadArray = [];
   nivelAlertaArray = [];
   destinosArray = [];
-
+  db:SQLiteObject;
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private zone: NgZone, private cd: ChangeDetectorRef) {}
+    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
+    public toastController:ToastController) {}
 
   ngOnInit(){
+    if(this.platform.is('capacitor')){
+      this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+        console.log('acaaa funciona')
+        this.db = db;
+        db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)')
+      })
+    }
     this.operatividad();
     this.nivelAlerta();
     this.destinos();
@@ -285,84 +276,171 @@ export class HomePage implements OnInit,AfterViewInit {
   activos(){
     if(this.platform.is('capacitor')){
       this._us.activos().subscribe((res:any)=>{
+        // console.log('ACTIVOS->',res)
         if(res && res.status == '200'){
           this._us.xmlToJson(res).then((result:any)=>{
             var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
             var temp = []
             path.forEach(p=>{
               var activo = {
-                "ADMSIST": p.ADMSIST[0],
-                "ADMSIST1": p.ADMSIST1[0],
+                // "ADMSIST": p.ADMSIST[0],
+                // "ADMSIST1": p.ADMSIST1[0],
                 "ASSETNUM": p.ASSETNUM[0],
-                "AUTOMOTORA": p.AUTOMOTORA[0],
-                "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
-                "CLASART160": p.CLASART160[0],
-                "CODSIAPR": p.CODSIAPR[0],
+                // "AUTOMOTORA": p.AUTOMOTORA[0],
+                // "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+                // "CLASART160": p.CLASART160[0],
+                // "CODSIAPR": p.CODSIAPR[0],
                 "DESCRIPTION": p.DESCRIPTION[0],
-                "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
-                "INVOICENUM": p.INVOICENUM[0],
-                "ISLINEAR": p.ISLINEAR[0],
-                "LOCATION": p.LOCATION[0],
-                "NUMRESOL": p.NUMRESOL[0],
-                "OBSERSIT": p.OBSERSIT[0],
-                "PONUM": p.PONUM,
-                "PRIORITY": p.PRIORITY[0],
-                "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
-                "RAZONSOC": p.RAZONSOC[0],
-                "RECASES": p.RECASES[0],
-                "REGION": p.REGION[0],
-                "RUT": p.RUT[0],
-                "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
-                "SEGCOMUNA": p.SEGCOMUNA[0],
+                // "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+                // "INVOICENUM": p.INVOICENUM[0],
+                // "ISLINEAR": p.ISLINEAR[0],
+                // "LOCATION": p.LOCATION[0],
+                // "NUMRESOL": p.NUMRESOL[0],
+                // "OBSERSIT": p.OBSERSIT[0],
+                // "PONUM": p.PONUM,
+                // "PRIORITY": p.PRIORITY[0],
+                // "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+                // "RAZONSOC": p.RAZONSOC[0],
+                // "RECASES": p.RECASES[0],
+                // "REGION": p.REGION[0],
+                // "RUT": p.RUT[0],
+                // "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
+                // "SEGCOMUNA": p.SEGCOMUNA[0],
                 "SITEID": p.SITEID[0],
-                "SITUACION": p.SITUACION[0],
-                "STATUS": p.STATUS[0]['$']['_'],
-                "TIPOACT": p.TIPOACT[0],
-                "TIPOTRAC": p.TIPOTRAC[0],
+                // "SITUACION": p.SITUACION[0],
+                // "STATUS": p.STATUS[0]['$']['_'],
+                // "TIPOACT": p.TIPOACT[0],
+                // "TIPOTRAC": p.TIPOTRAC[0],
                 "SERVICEADDRESS": {
-                  "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
-                  "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
-                  "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
-                  "CITY": p.SERVICEADDRESS[0].CITY[0],
-                  "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
-                  "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
-                  "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
-                  "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
-                  "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
-                  "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
-                  "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
-                  "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
-                  "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
-                  "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
-                  "HUSO": p.SERVICEADDRESS[0].HUSO[0],
-                  "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
+                  // "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
+                  // "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
+                  // "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
+                  // "CITY": p.SERVICEADDRESS[0].CITY[0],
+                  // "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
+                  // "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
+                  // "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
+                  // "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
+                  // "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
+                  // "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
+                  // "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
+                  // "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
+                  // "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
+                  // "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
+                  // "HUSO": p.SERVICEADDRESS[0].HUSO[0],
+                  // "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
                   "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
                   "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                  "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
-                  "ORGID": p.SERVICEADDRESS[0].ORGID[0],
-                  "PARENT": p.SERVICEADDRESS[0].PARENT[0],
-                  "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
-                  "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
-                  "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
-                  "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
+                  // "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
+                  // "ORGID": p.SERVICEADDRESS[0].ORGID[0],
+                  // "PARENT": p.SERVICEADDRESS[0].PARENT[0],
+                  // "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
+                  // "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
+                  // "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
+                  // "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
                   "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                  "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
-                  "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
-                  "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
-                  "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
-                  "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
-                  "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
-                  "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
-                  "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
-                  "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
-                  "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
+                  // "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
+                  // "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
+                  // "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
+                  // "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
+                  // "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
+                  // "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
+                  // "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
+                  // "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
+                  // "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
+                  // "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
                 }
               }
               temp.push(activo)
             })
-            this.activosEncontrados = temp;
+            this.db.open().then(()=>{
+                this.db.transaction(rx=>{
+                  rx.executeSql('delete from activos', [], ()=>{
+                   temp.forEach((activo,i)=>{
+                    this.db.transaction(tx=>{
+                      tx.executeSql('insert into activos (id,name,lat,lng,cod,lugar) values (?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
+                    })
+                   })
+                  })
+                }).then(()=>{
+                  this.activosEncontrados = temp;
+                  this.presentToast('Se encontraron '+this.activosEncontrados.length+' activos.')
+              }).catch(()=>{
+                  this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+                    if(data.rows.length > 0){
+                      var arr = []
+                      Array.from(data.rows.length).forEach(i=>{
+                        var tmp = {
+                          ASSETNUM:data.rows.item(i).id,
+                          DESCRIPTION:data.rows.item(i).name,
+                          SITEID:data.rows.item(i).cod,
+                          SERVICEADDRESS:{
+                            REGIONDISTRICT:data.rows.item(i).lugar,
+                            LATITUDEY:data.rows.item(i).lat,
+                            LONGITUDEX:data.rows.item(i).lng
+                          }
+                        }
+                        arr.push(tmp)
+                      })
+                      this.activosEncontrados = arr;
+                      this.presentToast('Se encontraron '+this.activosEncontrados.length+' activos.')
+                    }else{
+                      this.presentToast('No se han podido cargar activos')
+                    }
+                  })     
+              })
+            })
+          })
+        }else{
+          this.db.open().then(()=>{
+            this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+              if(data.rows.length > 0){
+                var arr = []
+                Array.from(data.rows.length).forEach(i=>{
+                  var tmp = {
+                    ASSETNUM:data.rows.item(i).id,
+                    DESCRIPTION:data.rows.item(i).name,
+                    SITEID:data.rows.item(i).cod,
+                    SERVICEADDRESS:{
+                      REGIONDISTRICT:data.rows.item(i).lugar,
+                      LATITUDEY:data.rows.item(i).lat,
+                      LONGITUDEX:data.rows.item(i).lng
+                    }
+                  }
+                  arr.push(tmp)
+                })
+                this.activosEncontrados = arr;
+                this.presentToast('Se encontraron '+this.activosEncontrados.length+' activos.')
+              }else{
+                this.presentToast('No se han podido cargar activos')
+              }
+            })     
           })
         }
+      },err=>{
+        this.db.open().then(()=>{
+          this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+            if(data.rows.length > 0){
+              var arr = []
+              Array.from(data.rows.length).forEach(i=>{
+                var tmp = {
+                  ASSETNUM:data.rows.item(i).id,
+                  DESCRIPTION:data.rows.item(i).name,
+                  SITEID:data.rows.item(i).cod,
+                  SERVICEADDRESS:{
+                    REGIONDISTRICT:data.rows.item(i).lugar,
+                    LATITUDEY:data.rows.item(i).lat,
+                    LONGITUDEX:data.rows.item(i).lng
+                  }
+                }
+                arr.push(tmp)
+              })
+              this.activosEncontrados = arr;
+              this.presentToast('Se encontraron '+this.activosEncontrados.length+' activos.')
+            }else{
+              this.presentToast('No se han podido cargar activos')
+            }
+          })     
+        })
       })
     }else{
       this._http.get('../../../assets/activos.xml').subscribe((res:any)=>{
@@ -371,76 +449,77 @@ export class HomePage implements OnInit,AfterViewInit {
           var temp = []
           path.forEach(p=>{
             var activo = {
-              "ADMSIST": p.ADMSIST[0],
-              "ADMSIST1": p.ADMSIST1[0],
+              // "ADMSIST": p.ADMSIST[0],
+              // "ADMSIST1": p.ADMSIST1[0],
               "ASSETNUM": p.ASSETNUM[0],
-              "AUTOMOTORA": p.AUTOMOTORA[0],
-              "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
-              "CLASART160": p.CLASART160[0],
-              "CODSIAPR": p.CODSIAPR[0],
+              // "AUTOMOTORA": p.AUTOMOTORA[0],
+              // "BENEFEST": Boolean(String(p.BENEFEST[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              // "CLASART160": p.CLASART160[0],
+              // "CODSIAPR": p.CODSIAPR[0],
               "DESCRIPTION": p.DESCRIPTION[0],
-              "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
-              "INVOICENUM": p.INVOICENUM[0],
-              "ISLINEAR": p.ISLINEAR[0],
-              "LOCATION": p.LOCATION[0],
-              "NUMRESOL": p.NUMRESOL[0],
-              "OBSERSIT": p.OBSERSIT[0],
-              "PONUM": p.PONUM,
-              "PRIORITY": p.PRIORITY[0],
-              "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
-              "RAZONSOC": p.RAZONSOC[0],
-              "RECASES": p.RECASES[0],
-              "REGION": p.REGION[0],
-              "RUT": p.RUT[0],
-              "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
-              "SEGCOMUNA": p.SEGCOMUNA[0],
+              // "FECRESOL": Boolean(String(p.FECRESOL[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              // "INVOICENUM": p.INVOICENUM[0],
+              // "ISLINEAR": p.ISLINEAR[0],
+              // "LOCATION": p.LOCATION[0],
+              // "NUMRESOL": p.NUMRESOL[0],
+              // "OBSERSIT": p.OBSERSIT[0],
+              // "PONUM": p.PONUM,
+              // "PRIORITY": p.PRIORITY[0],
+              // "PURCHASEDATE": Boolean(String(p.PURCHASEDATE[0]['$']['XSI:NIL']).replace(/[\\"]/gi,"")),
+              // "RAZONSOC": p.RAZONSOC[0],
+              // "RECASES": p.RECASES[0],
+              // "REGION": p.REGION[0],
+              // "RUT": p.RUT[0],
+              // "SADDRESSCODE": Number(p.SADDRESSCODE[0]),
+              // "SEGCOMUNA": p.SEGCOMUNA[0],
               "SITEID": p.SITEID[0],
-              "SITUACION": p.SITUACION[0],
-              "STATUS": p.STATUS[0]['$']['_'],
-              "TIPOACT": p.TIPOACT[0],
-              "TIPOTRAC": p.TIPOTRAC[0],
+              // "SITUACION": p.SITUACION[0],
+              // "STATUS": p.STATUS[0]['$']['_'],
+              // "TIPOACT": p.TIPOACT[0],
+              // "TIPOTRAC": p.TIPOTRAC[0],
               "SERVICEADDRESS": {
-                "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
-                "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
-                "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
-                "CITY": p.SERVICEADDRESS[0].CITY[0],
-                "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
-                "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
-                "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
-                "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
-                "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
-                "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
-                "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
-                "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
-                "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
-                "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
-                "HUSO": p.SERVICEADDRESS[0].HUSO[0],
-                "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
+                // "ADDRESSCODE": p.SERVICEADDRESS[0].ADDRESSCODE[0],
+                // "ADDRESSLINE2": p.SERVICEADDRESS[0].ADDRESSLINE2[0],
+                // "ADDRESSLINE3": p.SERVICEADDRESS[0].ADDRESSLINE3[0],
+                // "CITY": p.SERVICEADDRESS[0].CITY[0],
+                // "COORDX": Number(p.SERVICEADDRESS[0].COORDX[0]),
+                // "COORDX1": Number(p.SERVICEADDRESS[0].COORDX1[0]),
+                // "COORDY": Number(p.SERVICEADDRESS[0].COORDY[0]),
+                // "COORDY1": Number(p.SERVICEADDRESS[0].COORDY1[0]),
+                // "COUNTRY": p.SERVICEADDRESS[0].COUNTRY[0],
+                // "COUNTY": p.SERVICEADDRESS[0].COUNTY[0],
+                // "DESCRIPTION": p.SERVICEADDRESS[0].DESCRIPTION[0],
+                // "DIRECTIONS": p.SERVICEADDRESS[0].DIRECTIONS[0],
+                // "FORMATTEDADDRESS": p.SERVICEADDRESS[0].FORMATTEDADDRESS[0],
+                // "GEOCODE": p.SERVICEADDRESS[0].GEOCODE[0],
+                // "HUSO": p.SERVICEADDRESS[0].HUSO[0],
+                // "ISWEATHERZONE": p.SERVICEADDRESS[0].ISWEATHERZONE[0],
                 "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
                 "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
-                "ORGID": p.SERVICEADDRESS[0].ORGID[0],
-                "PARENT": p.SERVICEADDRESS[0].PARENT[0],
-                "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
-                "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
-                "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
-                "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
+                // "OBJECTNAME": p.SERVICEADDRESS[0].OBJECTNAME[0],
+                // "ORGID": p.SERVICEADDRESS[0].ORGID[0],
+                // "PARENT": p.SERVICEADDRESS[0].PARENT[0],
+                // "PLUSSFEATURECLASS": p.SERVICEADDRESS[0].PLUSSFEATURECLASS[0],
+                // "PLUSSISGIS": p.SERVICEADDRESS[0].PLUSSISGIS[0],
+                // "POSTALCODE": p.SERVICEADDRESS[0].POSTALCODE[0],
+                // "REFERENCEPOINT": p.SERVICEADDRESS[0].REFERENCEPOINT[0],
                 "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
-                "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
-                "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
-                "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
-                "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
-                "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
-                "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
-                "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
-                "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
-                "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
+                // "SERVICEADDRESSID": Number(p.SERVICEADDRESS[0].SERVICEADDRESSID[0]),
+                // "STADDRDIRPRFX": p.SERVICEADDRESS[0].STADDRDIRPRFX[0],
+                // "STADDRDIRSFX": p.SERVICEADDRESS[0].STADDRDIRSFX[0],
+                // "STADDRNUMBER": p.SERVICEADDRESS[0].STADDRNUMBER[0],
+                // "STADDRSTREET": p.SERVICEADDRESS[0].STADDRSTREET[0],
+                // "STADDRSTTYPE": p.SERVICEADDRESS[0].STADDRSTTYPE[0],
+                // "STADDRUNITNUM": p.SERVICEADDRESS[0].STADDRUNITNUM[0],
+                // "STATEPROVINCE": p.SERVICEADDRESS[0].STATEPROVINCE[0],
+                // "STREETADDRESS": p.SERVICEADDRESS[0].STREETADDRESS[0],
+                // "TIMEZONE": p.SERVICEADDRESS[0].TIMEZONE[0]
               }
             }
             temp.push(activo)
           })
           this.activosEncontrados = temp;
+          this.presentToast('Se encontraron '+this.activosEncontrados.length+' activos.')
         })
       },err=>{
         this._us.xmlToJson(err.error.text).then((result:any)=>{
@@ -518,6 +597,7 @@ export class HomePage implements OnInit,AfterViewInit {
             temp.push(activo)
           })
           this.activosEncontrados = temp;
+          this.presentToast('Se encontraron '+this.activosEncontrados.length+' activos.')
         })
       })
     }
@@ -547,6 +627,14 @@ export class HomePage implements OnInit,AfterViewInit {
       this.obtenerUbicacionRegion()
       this.view.setZoom(15)
     }
+  }
+
+  async presentToast(message) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 4000
+    });
+    toast.present();
   }
  
   moverStepperr(direction){

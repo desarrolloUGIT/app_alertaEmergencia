@@ -13,6 +13,7 @@ import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
+import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
 
 
 @NgModule({
@@ -29,7 +30,7 @@ import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
     HttpClientModule,
   ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },Network,NativeStorage,
-    NativePageTransitions,SplashScreen,StatusBar,Geolocation],
+    NativePageTransitions,SplashScreen,StatusBar,Geolocation,SQLite],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
