@@ -54,5 +54,11 @@
 		<string>Se necesita permiso para acceder a tu ubicación</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+		<string>Se necesita permiso para acceder a tus fotos</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Se necesita permiso para acceder a tus fotos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+		<string>Se necesita permiso para acceder a tus fotos</string>
 </dict>
 </plist>

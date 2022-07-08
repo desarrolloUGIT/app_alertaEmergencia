@@ -7,6 +7,7 @@ import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { Platform, ToastController } from '@ionic/angular';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { BehaviorSubject } from 'rxjs';
+import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 
 
 @Injectable({
@@ -41,8 +42,9 @@ export class UsuarioService {
     'Accept': "text/plain",
     'Content-Type': "text/plain",
   };
-  URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_udp/service/";
-  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController ) { 
+  // URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_udp/service/";
+  URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_ugit2/restservice/service/";
+  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite ) { 
     this.message = new BehaviorSubject(this.messages)
   }
   
@@ -165,7 +167,16 @@ export class UsuarioService {
           STATUS:'',
           USERID:''
          };
-        resolve(true);
+         if(this.platform.is('capacitor')){
+          this.sqlite.deleteDatabase({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((re)=>{
+            resolve(true)
+          }).catch(err=>{
+            resolve(true)
+          })
+         }else{
+          resolve(true);
+         }
+
     })
     return promesa;
   }

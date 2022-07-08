@@ -251,12 +251,13 @@ ion-button[shape=circle] {
   --background: #bababaa1;
   color:black !important;
 }
-// .login{
-//   border: none;
-//   margin-bottom: 5%;
-// }
-// .input{
-//   --background: #9f9e9e73;
-//   border: none;
-//   border-radius: 10px;
-// }
+
+.tituloTable{
+  border-bottom: 1px solid black;
+  font-weight: bold;
+}
+
+.cierreTabla{
+  border-right: 1px solid grey;
+  padding-top: 3%;
+}

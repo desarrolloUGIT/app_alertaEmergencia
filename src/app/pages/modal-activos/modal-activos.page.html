@@ -7,7 +7,8 @@
     <ion-accordion-group mode="ios" style="margin-bottom: 5%;margin-top: 3%;">
       <ion-accordion [value]="item.activo.ASSETINUM" *ngFor="let item of activosShow">
         <ion-item slot="header" color="light">
-          <ion-icon name="location-sharp"></ion-icon>
+          <!-- <ion-icon name="location-sharp"></ion-icon> -->
+          <ion-badge slot="start" color="medium">Región<br>{{item.activo.SERVICEADDRESS.REGIONDISTRICT}}</ion-badge>
           <ion-label>{{item.activo.DESCRIPTION}}</ion-label>
         </ion-item>
         <div class="ion-padding contenido" slot="content">
@@ -20,10 +21,10 @@
               <ion-icon name="server" slot="start"></ion-icon>
               <ion-label>Infraestructura: {{item.activo.SITEID}}</ion-label>
             </ion-item>
-            <ion-item>
+            <!-- <ion-item>
               <ion-icon name="map" slot="start"></ion-icon>
               <ion-label>Región: {{item.activo.SERVICEADDRESS.REGIONDISTRICT}}</ion-label>
-            </ion-item>
+            </ion-item> -->
             <ion-item lines="none">
               <ion-button (click)="selectActivo(item)" class="botoninicia" slot="end" size="small">Seleccionar</ion-button>
             </ion-item>

@@ -6,6 +6,18 @@ Esto e spara pedir la autorización de utilizar el gps y obtener la geolocalizac
     <string>Se necesita permiso para acceder a tu ubicación</string>
 <key>NSLocationWhenInUseUsageDescription</key>
     <string>Se necesita permiso para acceder a tu ubicación</string>
+<key>NSCameraUsageDescription</key>
+    <string>Se necesita permiso para acceder a tus fotos</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Se necesita permiso para acceder a tus fotos</string>
+<key>NSPhotoLibraryUsageDescription</key>
+    <string>Se necesita permiso para acceder a tus fotos</string>
+
+
+
+#AGREGAR A ANDROID MANIFEST XML
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 #Usuarios de prueba:
 ·Emergencia Regional
