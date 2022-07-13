@@ -8,6 +8,7 @@ import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova
 // import { SplashScreen } from '@awesome-cordova-plugins/splash-screen/ngx';
 import { StatusBar } from '@awesome-cordova-plugins/status-bar/ngx';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { App } from '@capacitor/app';
 
 
 @Component({
@@ -34,10 +35,7 @@ export class AppComponent {
     private statusBar: StatusBar,
   ) {
     this.initializeApp()
-    console.log('acaaaa')
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
-      console.log('aca desconectado')
-
       this.presentToast('Sin conexión ...')
       this.storage.setItem('conexion', 'no');
       localStorage.setItem('conexion','no')
@@ -93,8 +91,9 @@ export class AppComponent {
       }).catch(()=>{
         this._mc.enable(false,'first')
       })
-      // this.statusBar.overlaysWebView(true);
+      this.statusBar.overlaysWebView(false);
       // this.statusBar.backgroundColorByHexString('#000000');
+      this.statusBar.hide()
 
       // this.splashScreen.hide();
       this.registerBackButton()
@@ -179,20 +178,13 @@ export class AppComponent {
   }
 
   registerBackButton() {
-    // this.platform.backButton.subscribe(() => {
-    //   console.log(this.router.url)
-    //   if(String(this.router.url).includes('parametros')){
-    //     this.navCtrl.pop()
-    //   }else{
-    //     if(this.router.url != '/home' && this.router.url != '/login' && this.router.url != '/splash'){
-    //       this.navCtrl.navigateRoot('/home')   
-    //     }else{
-    //       if(this.router.url == '/home'){
-    //         this.appMinimize.minimize();
-    //       }
-    //     }
-    //   }  
-    // });
+    this.platform.backButton.subscribe(() => {
+      // this.navCtrl.pop()
+      this._mc.toggle()
+      // if(this.router.url == '/home'){
+      //   App.minimizeApp()
+      // }  
+    });
   }
 
   cerrarMenu(){

@@ -9,6 +9,8 @@ import { MatStepperModule } from '@angular/material/stepper';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { HttpClientModule } from '@angular/common/http';
+import { ModalActivosPageModule } from '../modal-activos/modal-activos.module';
+import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
 
 
 @NgModule({
@@ -21,8 +23,9 @@ import { HttpClientModule } from '@angular/common/http';
     MatStepperModule,
     MatFormFieldModule,
     MatInputModule,
-    HttpClientModule
+    HttpClientModule,
+    ModalActivosPageModule
   ],
-  declarations: [HomePage]
+  declarations: [HomePage],providers:[SQLite]
 })
 export class HomePageModule {}

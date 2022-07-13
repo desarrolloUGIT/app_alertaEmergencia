@@ -23,6 +23,10 @@ const routes: Routes = [
     path: 'help',
     loadChildren: () => import('./pages/help/help.module').then( m => m.HelpPageModule)
   },
+  {
+    path: 'modal-activos',
+    loadChildren: () => import('./pages/modal-activos/modal-activos.module').then( m => m.ModalActivosPageModule)
+  },
 ];
 
 @NgModule({

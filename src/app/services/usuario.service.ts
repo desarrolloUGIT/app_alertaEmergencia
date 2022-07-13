@@ -7,6 +7,7 @@ import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { Platform, ToastController } from '@ionic/angular';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { BehaviorSubject } from 'rxjs';
+import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 
 
 @Injectable({
@@ -32,48 +33,26 @@ export class UsuarioService {
     USERID:''
    }
   conexion;
+  token_user;
+  user;
+  tokenESRI;
+  menuType;
   messages: "";
   message: BehaviorSubject<String>;
-
-  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController ) { 
+  headers = {
+    'Authorization': '',
+    'Accept': "text/plain",
+    'Content-Type': "text/plain",
+  };
+  // URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_udp/service/";
+  URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_ugit2/restservice/service/";
+  constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite ) { 
     this.message = new BehaviorSubject(this.messages)
   }
   
   nextmessage(data) {
     this.message.next(data);
   }
-
-  // getIdentity(){
-  //   var id_user1 = (localStorage.getItem('id_user'));
-  //   if(id_user1){
-  //       this.id_user = id_user1;
-  //   }else{
-  //       this.id_user = null;
-  //   }
-  //   this.storage.getItem("id_user").then(id_user=>{
-  //     if(id_user){
-  //       this.id_user = id_user;
-  //       }
-  //     });
-    
-  //   return this.id_user;
-  // }
-
-  // getToken(){
-  //   let token1 = localStorage.getItem('token');
-  //   if(token1 != "undefined"){
-  //       this.token = token1;
-  //   }else{
-  //       this.token = null;
-  //   }
-  //   this.storage.getItem("token").then(token=>{
-  //     if(token){
-  //       this.token = token;
-  //       }
-  //     });
-    
-  //   return this.token
-  // }
 
  cargar_storage(){
     let promesa = new Promise((resolve,reject )=>{
@@ -83,13 +62,33 @@ export class UsuarioService {
           this.storage.getItem("conexion").then(conexion=>{
             if(conexion){
               this.conexion = conexion;
-              }
-            });
+            }
+          });
+          this.storage.getItem("user").then(user=>{
+            if(user){
+              this.user =JSON.parse(user);
+            }
+          });
+          this.storage.getItem("token_user").then(token_user=>{
+            if(token_user){
+              this.token_user = token_user;
+            }
+          });
+          this.storage.getItem("menuType").then(menuType=>{
+            if(menuType){
+              this.menuType = menuType;
+            }
+          });
+          this.storage.getItem("tokenESRI").then(tokenESRI=>{
+            if(tokenESRI){
+              this.tokenESRI = Number(tokenESRI);
+            }
+          });
           this.storage.getItem("usuario").then(usuario=>{
             if(usuario){
               this.usuario = JSON.parse(usuario);
               resolve('');
-              }
+            }
           }).catch(()=>{
             reject('');
           })     
@@ -97,35 +96,33 @@ export class UsuarioService {
         //desktop
           this.usuario = JSON.parse(localStorage.getItem("usuario"));
           this.conexion = localStorage.getItem("conexion");
+          this.token_user = localStorage.getItem("token_user");
+          this.menuType = localStorage.getItem("menuType");
+          this.tokenESRI = Number(localStorage.getItem("tokenESRI"));
+          this.user = JSON.parse(localStorage.getItem("user"));
           resolve(null);
         }
     })
     return promesa
   }
 
-  login(user?){
+  login(user){
     var data = {
       user: user.user ,
       password:user.password
     }
-    var headers = {
-      'Authorization': '',
-      'Accept': "text/plain",
-      'Content-Type': "text/plain",
-    };
-    headers['Authorization'] = "Basic " + btoa(data.user + ':' + data.password);
+    this.headers['Authorization'] = "Basic " + btoa(data.user + ':' + data.password);
     let sr = "<soapenv:Envelope [env]:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'>"+
     "<soapenv:Header/><soapenv:Body><max:QueryMOP_USUARIO_DOH ><max:MOP_USUARIO_DOHQuery operandMode='AND'><max:WHERE>status='ACTIVE'</max:WHERE><max:MAXUSER><max:LOGINID >" + 
     data.user + "</max:LOGINID><max:GROUPUSER grounname in><max:GROUPNAME >PLDGA</max:GROUPNAME></max:GROUPUSER></max:MAXUSER>"+
     "</max:MOP_USUARIO_DOHQuery></max:QueryMOP_USUARIO_DOH></soapenv:Body></soapenv:Envelope>";
     const options: HttpOptions = {
-      url:'https://emergencias-doh.mop.gob.cl/bypass_udp/service/MOP_WS_MOP_USUARIOQRY_DOH',
+      url:this.URL_SERVICIOS+'MOP_WS_MOP_USUARIOQRY_DOH',
       data:sr,
-      headers:headers
+      headers:this.headers
     };
     return from(Http.post(options))
   }
-
 
   xmlToJson(data) {
     var promise = new Promise((resolve,request)=>{
@@ -142,19 +139,38 @@ export class UsuarioService {
     return promise;
   };
 
-
-  saveStorage(res){
+  saveStorage(res,usuario?){
     this.storage.setItem('usuario', JSON.stringify(res));
     this.storage.setItem('conexion', 'si');
+    this.storage.setItem('user', JSON.stringify(usuario));
+    this.storage.setItem('tokenESRI', String(226));
+    var menuType = '';
+    if (res.DEFSITE == "APR" || res.DEFSITE == "DOH-ALL" || res.DEFSITE == "DOH-CAUC" || res.DEFSITE == "DOH-RIEG") {
+      menuType = "APR";
+    } else {
+      menuType = res.DEFSITE;
+    }
+    this.storage.setItem('menuType', menuType);
     localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');
-    this.cargar_storage()
+    localStorage.setItem('user', JSON.stringify(usuario));
+    localStorage.setItem('tokenESRI', String(226));
+    localStorage.setItem('menuType', menuType);
+    if(usuario){
+      this.storage.setItem('token_user', JSON.stringify(btoa(usuario.user + ':' + usuario.password)));
+      localStorage.setItem('token_user', JSON.stringify(btoa(usuario.user + ':' + usuario.password)));
+    }
+    this.cargar_storage() 
   }
 
   cerrarSesion(){
     let promesa = new Promise((resolve,reject )=>{
-        localStorage.clear();
-        this.storage.clear();
+        localStorage.removeItem('token_user');
+        localStorage.removeItem('conexion');
+        localStorage.removeItem('usuario');
+        this.storage.remove('token_user');
+        this.storage.remove('conexion');
+        this.storage.remove('usuario');
         this.usuario = {
           DEFSITE:'',
           GROUPUSER:'',
@@ -173,9 +189,268 @@ export class UsuarioService {
           STATUS:'',
           USERID:''
          };
-        resolve(true);
+         if(this.platform.is('capacitor')){
+          this.sqlite.deleteDatabase({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((re)=>{
+            resolve(true)
+          }).catch(err=>{
+            resolve(true)
+          })
+         }else{
+          resolve(true);
+         }
+
     })
     return promesa;
+  }
+
+  operatividad(){
+    this.token_user = JSON.parse(localStorage.getItem("token_user"));
+    this.storage.getItem("token_user").then(token_user=>{
+      if(token_user){
+        this.token_user = JSON.parse(token_user);
+      }
+    })    
+    this.headers['Authorization'] = "Basic " + this.token_user;
+    let sr = "<soapenv:Envelope [env]:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'><soapenv:Header/><soapenv:Body><max:QueryMOP_DOMAIN_DOH ><max:MOP_DOMAIN_DOHQuery operandMode='AND'><max:MAXDOMAIN><max:DOMAINID >ESTADOUB</max:DOMAINID></max:MAXDOMAIN></max:MOP_DOMAIN_DOHQuery></max:QueryMOP_DOMAIN_DOH></soapenv:Body></soapenv:Envelope>";
+    const options: HttpOptions = {
+      url:this.URL_SERVICIOS+'MOP_WS_MOP_DOMAIN_DOH',
+      data:sr,
+      headers:this.headers
+    };
+    return from(Http.post(options))
+  }
+
+  nivelAlerta(){
+    this.token_user = JSON.parse(localStorage.getItem("token_user"));
+    this.storage.getItem("token_user").then(token_user=>{
+      if(token_user){
+        this.token_user = JSON.parse(token_user);
+      }
+    })    
+    this.headers['Authorization'] = "Basic " + this.token_user;
+    let sr = "<soapenv:Envelope [env]:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'><soapenv:Header/><soapenv:Body><max:QueryMOP_DOMAIN_DOH ><max:MOP_DOMAIN_DOHQuery operandMode='AND'><max:MAXDOMAIN><max:DOMAINID >SIECATEGORIA</max:DOMAINID></max:MAXDOMAIN></max:MOP_DOMAIN_DOHQuery></max:QueryMOP_DOMAIN_DOH></soapenv:Body></soapenv:Envelope>";
+    const options: HttpOptions = {
+      url:this.URL_SERVICIOS+'MOP_WS_MOP_DOMAIN_DOH',
+      data:sr,
+      headers:this.headers
+    };
+    return from(Http.post(options))
+  }
+
+  activos(){
+    this.token_user = JSON.parse(localStorage.getItem("token_user"));
+    this.storage.getItem("token_user").then(token_user=>{
+      if(token_user){
+        this.token_user = JSON.parse(token_user);
+      }
+    }) 
+    var menu = '';
+    menu = localStorage.getItem("menuType");
+    this.storage.getItem("menuType").then(menuType=>{
+      if(menuType){
+        menu = menuType;
+      }
+    })    
+    this.headers['Authorization'] = "Basic " + this.token_user;
+    let sr = '';
+    let url = '';
+    menu == 'APR' ? url = this.URL_SERVICIOS + "MOP_WS_MOP_ASSET_DOH" : url = this.URL_SERVICIOS + "MOP_WS_MOP_OPERLOCQRY_DOH";
+    menu == 'APR' ? sr = "<soapenv:Envelope [env]:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'>  <soapenv:Header/>   <soapenv:Body>      <max:QueryMOP_ASSET_DOH >         <max:MOP_ASSET_DOHQuery operandMode='AND'>            <!--Optional:-->            <max:ASSET>               <!--Zero or more repetitions:-->               <max:ASSETNUM >%</max:ASSETNUM>               <!--Zero or more repetitions:-->               <max:DESCRIPTION >%</max:DESCRIPTION>               <!--Zero or more repetitions:-->               <max:ISLINEAR >0</max:ISLINEAR>               <!--Zero or more repetitions:-->               <max:REGION >%</max:REGION>               <!--Zero or more repetitions:-->               <max:SITEID operator='=' >APR</max:SITEID>               <!--Zero or more repetitions:-->               <max:STATUS operator='=' >ACTIVA</max:STATUS>               <max:SERVICEADDRESS >                  <!--Zero or more repetitions:-->                  <max:COUNTY >%</max:COUNTY>                  <!--Zero or more repetitions:-->                  <max:REGIONDISTRICT >%</max:REGIONDISTRICT>               </max:SERVICEADDRESS>            </max:ASSET>         </max:MOP_ASSET_DOHQuery>      </max:QueryMOP_ASSET_DOH>   </soapenv:Body></soapenv:Envelope>" :
+    menu == 'DGA' ?  
+    sr = "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'><soapenv:Header/><soapenv:Body><max:QueryMOP_OPERLOC_DOH><max:MOP_OPERLOC_DOHQuery operandMode='AND'><max:LOCATIONS><max:STATUS operator='=' >ACTIVA</max:STATUS><max:SITEID operator='=' >" + menu + "</max:SITEID><max:LOCATION>14%</max:LOCATION></max:LOCATIONS></max:MOP_OPERLOC_DOHQuery></max:QueryMOP_OPERLOC_DOH></soapenv:Body></soapenv:Envelope>" : 
+    sr = "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'><soapenv:Header/><soapenv:Body><max:QueryMOP_OPERLOC_DOH creationDateTime='2008-09-28T21:49:45'  rsStart='0'><max:MOP_OPERLOC_DOHQuery orderby='LOCATION' operandMode='AND'><max:LOCATIONS><max:ESOBRA operator='=' >1</max:ESOBRA><max:STATUS operator='=' >ACTIVA</max:STATUS><max:SITEID operator='=' >" + menu + "</max:SITEID><max:LOCATION>%</max:LOCATION></max:LOCATIONS></max:MOP_OPERLOC_DOHQuery></max:QueryMOP_OPERLOC_DOH></soapenv:Body></soapenv:Envelope>"
+    // console.log('SRRRRR ->>>>> ',sr)
+    const options: HttpOptions = {
+      url:url,
+      data:sr,
+      headers:this.headers
+    };
+    return from(Http.post(options))
+  }
+
+  enviarAlerta(data){
+    var menu = '';
+    menu = localStorage.getItem("menuType");
+    this.storage.getItem("menuType").then(menuType=>{
+      if(menuType){
+        menu = menuType;
+      }
+    })    
+    this.headers['Authorization'] = "Basic " + this.token_user;
+    let sr = '';
+    if (menu == "DOP" || menu == "DGA" || menu == "DAP") {
+      sr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:max="http://www.ibm.com/maximo">
+                <soapenv:Header/>
+                <soapenv:Body>
+                  <max:SyncMOP_SR_EMER_DOH >
+                      <max:MOP_SR_EMER_DOHSet>
+                        <!--Zero or more repetitions:-->
+                        <max:SR action="Add">
+                        <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
+                            <max:LOCATION maxvalue="?">` + data.location + `</max:LOCATION>
+                            <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+                            <max:CLASS maxvalue="?">SR</max:CLASS>
+                            <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
+                            <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
+                            <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
+                            <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
+                            <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
+                            <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
+                            <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
+                            <max:LOCATION changed="?"></max:LOCATION>
+                            <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+                            <max:ELEMENTO changed="?"></max:ELEMENTO>
+                            <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
+                            <max:EVENTO changed="?"> </max:EVENTO>
+                            <max:APUNTALAR changed="?">False</max:APUNTALAR>
+                            <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+                            <max:REMOVER changed="?">0</max:REMOVER>
+                            <max:ACORDONAR changed="?">False</max:ACORDONAR>
+                            <max:PROTECCION changed="?">0</max:PROTECCION>
+                            <max:REMCENIZA changed="?">False</max:REMCENIZA>
+                            <max:REMBARRO changed="?">False</max:REMBARRO>
+                            <max:DESTTUBE changed="?">False</max:DESTTUBE>
+                            <max:LIMPCUB changed="?">0</max:LIMPCUB>
+                            <max:CORTESUM changed="?">False</max:CORTESUM>
+                            <max:OTRO changed="?">0</max:OTRO>
+                            <max:COORX changed="?">1</max:COORX>
+                            <max:COORY changed="?">2</max:COORY>
+                            <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
+                            <max:TKSERVICEADDRESS action="AddChange">
+                                <max:CITY changed="?"> </max:CITY>
+                                <max:COUNTRY changed="?">CL</max:COUNTRY>
+                                <max:COUNTY changed="?">100202</max:COUNTY>
+                                <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+                              <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+                                <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+                                <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+                                <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+                                <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+                                <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+                                <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+                            </max:TKSERVICEADDRESS>
+                            <!--Zero or more repetitions:-->
+                            <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+                              <!--Optional:-->
+                              <max:ADDINFO changed="?">1</max:ADDINFO>
+                              <!--Optional:-->
+                              <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+                              <!--Optional:-->
+                              <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
+                              <!--Optional:-->
+                              <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+                              <!--Optional:-->
+                              <max:DOCUMENT changed="?">foto</max:DOCUMENT>
+                              <!--Optional:-->
+                              <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
+                              <!--Optional:-->
+                              <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+                              <!--Optional:-->
+                              <max:UPLOAD changed="?">1</max:UPLOAD>
+                              <!--Optional:-->
+                              <max:URLNAME changed="?">Imagen</max:URLNAME>
+                              <!--Optional:-->
+                              <max:URLTYPE changed="?">FILE</max:URLTYPE>
+                            </max:DOCLINKS>
+                        </max:SR>
+                      </max:MOP_SR_EMER_DOHSet>
+                  </max:SyncMOP_SR_EMER_DOH>
+                </soapenv:Body>
+            </soapenv:Envelope>`
+            const options: HttpOptions = {
+              url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+              data:sr,
+              headers:this.headers
+            };
+            return from(Http.post(options))
+    }else{
+      sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
+            <soapenv:Header/>
+            <soapenv:Body>
+                <max:SyncMOP_SR_EMER_DOH >
+                    <max:MOP_SR_EMER_DOHSet>
+                        <!--Zero or more repetitions:-->
+                        <max:SR action="Add">
+                        <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
+                        <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+                        <max:CLASS maxvalue="?">SR</max:CLASS>
+                        <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
+                        <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
+                        <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
+                        <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
+                        <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
+                        <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
+                        <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
+                        <max:LOCATION changed="?"></max:LOCATION>
+                        <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+                        <max:ELEMENTO changed="?"></max:ELEMENTO>
+                        <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
+                        <max:EVENTO changed="?"> </max:EVENTO>
+                        <max:APUNTALAR changed="?">False</max:APUNTALAR>
+                        <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+                        <max:REMOVER changed="?">0</max:REMOVER>
+                        <max:ACORDONAR changed="?">False</max:ACORDONAR>
+                        <max:PROTECCION changed="?">0</max:PROTECCION>
+                        <max:REMCENIZA changed="?">False</max:REMCENIZA>
+                        <max:REMBARRO changed="?">False</max:REMBARRO>
+                        <max:DESTTUBE changed="?">False</max:DESTTUBE>
+                        <max:LIMPCUB changed="?">0</max:LIMPCUB>
+                        <max:CORTESUM changed="?">False</max:CORTESUM>
+                        <max:OTRO changed="?">0</max:OTRO>
+                        <max:COORX changed="?">1</max:COORX>
+                        <max:COORY changed="?">2</max:COORY>
+                        <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
+                        <max:TKSERVICEADDRESS action="AddChange">
+                            <max:CITY changed="?"> </max:CITY>
+                            <max:COUNTRY changed="?">CL</max:COUNTRY>
+                            <max:COUNTY changed="?">100202</max:COUNTY>
+                            <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+                            <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+                            <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+                            <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+                            <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+                            <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+                            <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+                            <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+                        </max:TKSERVICEADDRESS>
+                        <!--Zero or more repetitions:-->
+                        <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+                            <!--Optional:-->
+                            <max:ADDINFO changed="?">1</max:ADDINFO>
+                            <!--Optional:-->
+                            <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+                            <!--Optional:-->
+                            <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
+                            <!--Optional:-->
+                            <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+                            <!--Optional:-->
+                            <max:DOCUMENT changed="?">foto</max:DOCUMENT>
+                            <!--Optional:-->
+                            <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
+                            <!--Optional:-->
+                            <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+                            <!--Optional:-->
+                            <max:UPLOAD changed="?">1</max:UPLOAD>
+                            <!--Optional:-->
+                            <max:URLNAME changed="?">Imagen</max:URLNAME>
+                            <!--Optional:-->
+                            <max:URLTYPE changed="?">FILE</max:URLTYPE>
+                        </max:DOCLINKS>
+                        </max:SR>
+                    </max:MOP_SR_EMER_DOHSet>
+                </max:SyncMOP_SR_EMER_DOH>
+            </soapenv:Body>
+          </soapenv:Envelope>`
+          const options: HttpOptions = {
+            url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+            data:sr,
+            headers:this.headers
+          };
+          console.log(data)
+          return from(Http.post(options))
+
+    }
+
   }
 
 }
