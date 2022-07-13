@@ -92,7 +92,8 @@ export class HomePage implements OnInit,AfterViewInit {
   db:SQLiteObject;
   images: LocalFile[] = [];
   coordenadas;
-
+  existenActivos = true;
+  picture = null;
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController) {}
@@ -103,6 +104,7 @@ export class HomePage implements OnInit,AfterViewInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)')
         db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)')
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
+        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id integer primary key autoincrement , titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region)');
         this.db = db;
         this.operatividad();
         this.nivelAlerta();
@@ -290,6 +292,7 @@ export class HomePage implements OnInit,AfterViewInit {
 
   actualizarOperatividad(){
     this._us.operatividad().subscribe((res:any)=>{
+      // console.log('OPERATIVIDAD -> ',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -417,6 +420,7 @@ export class HomePage implements OnInit,AfterViewInit {
 
   actualizarNivelAlerta(){
     this._us.nivelAlerta().subscribe((res:any)=>{
+      // console.log('ALERTA -> ',res) 
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -482,28 +486,85 @@ export class HomePage implements OnInit,AfterViewInit {
   }
 
   activos(){
-    if(this.platform.is('capacitor')){
-      this.db.open().then(()=>{
-        this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
-          if(data.rows.length > 0){
-            var arr = []
-            var AR = Array.from({length: data.rows.length}, (x, i) => i);
-            AR.forEach(i=>{
-              var tmp = {
-                ASSETNUM:data.rows.item(i).id,
-                DESCRIPTION:data.rows.item(i).name,
-                SITEID:data.rows.item(i).cod,
-                SERVICEADDRESS:{
-                  REGIONDISTRICT:data.rows.item(i).lugar,
-                  LATITUDEY:data.rows.item(i).lat,
-                  LONGITUDEX:data.rows.item(i).lng
+    this._us.cargar_storage().then(()=>{
+      if(this._us.menuType == 'DV' || this._us.menuType == 'DGA' || this._us.menuType == 'DGOP'){
+        this.existenActivos = false;
+      }else{
+        if(!this._us.menuType || this._us.menuType == ''){
+          this.existenActivos = false;
+        }else{
+          if(this.platform.is('capacitor')){
+            this.db.open().then(()=>{
+              this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+                if(data.rows.length > 0){
+                  var arr = []
+                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                  AR.forEach(i=>{
+                    var tmp = {
+                      ASSETNUM:data.rows.item(i).id,
+                      DESCRIPTION:data.rows.item(i).name,
+                      SITEID:data.rows.item(i).cod,
+                      SERVICEADDRESS:{
+                        REGIONDISTRICT:data.rows.item(i).lugar,
+                        LATITUDEY:data.rows.item(i).lat,
+                        LONGITUDEX:data.rows.item(i).lng
+                      }
+                    }
+                    i++;
+                    arr.push(tmp)
+                  })
+                  this.activosEncontrados = arr;
+                  this.actualizarActivos()
+                }else{
+                  this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+                    this._us.xmlToJson(res).then((result:any)=>{
+                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+                      var temp = []
+                      path.forEach(p=>{
+                        var activo = {
+                          "ASSETNUM": p.ASSETNUM[0],
+                          "DESCRIPTION": p.DESCRIPTION[0],
+                          "SITEID": p.SITEID[0],
+                          "SERVICEADDRESS": {
+                            "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                            "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                            "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                          }
+                        }
+                        temp.push(activo)
+                      })
+                      this.activosEncontrados = temp;
+                      if(this.platform.is('capacitor')){
+                        this.actualizarActivos()
+                      }
+                    })
+                  },err=>{
+                    this._us.xmlToJson(err.error.text).then((result:any)=>{
+                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+                      var temp = []
+                      path.forEach(p=>{
+                        var activo = {
+                          "ASSETNUM": p.ASSETNUM[0],
+                          "DESCRIPTION": p.DESCRIPTION[0],
+                          "SITEID": p.SITEID[0],
+                          "SERVICEADDRESS": {
+                            "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                            "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                            "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                          }
+                        }
+                        temp.push(activo)
+                      })
+                      this.activosEncontrados = temp;
+                      if(this.platform.is('capacitor')){
+                        this.actualizarActivos()
+                      }
+                    })
+                  })
                 }
-              }
-              i++;
-              arr.push(tmp)
+              }).catch(err=>{
+              })
             })
-            this.activosEncontrados = arr;
-            this.actualizarActivos()
           }else{
             this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -525,6 +586,8 @@ export class HomePage implements OnInit,AfterViewInit {
                 this.activosEncontrados = temp;
                 if(this.platform.is('capacitor')){
                   this.actualizarActivos()
+                }else{
+                  this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
                 }
               })
             },err=>{
@@ -547,68 +610,19 @@ export class HomePage implements OnInit,AfterViewInit {
                 this.activosEncontrados = temp;
                 if(this.platform.is('capacitor')){
                   this.actualizarActivos()
+                }else{
+                  this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
                 }
               })
             })
           }
-        }).catch(err=>{
-        })
-      })
-    }else{
-      this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-        console.log(res)
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
-          var temp = []
-          path.forEach(p=>{
-            var activo = {
-              "ASSETNUM": p.ASSETNUM[0],
-              "DESCRIPTION": p.DESCRIPTION[0],
-              "SITEID": p.SITEID[0],
-              "SERVICEADDRESS": {
-                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-              }
-            }
-            temp.push(activo)
-          })
-          this.activosEncontrados = temp;
-          if(this.platform.is('capacitor')){
-            this.actualizarActivos()
-          }else{
-            this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-          }
-        })
-      },err=>{
-        this._us.xmlToJson(err.error.text).then((result:any)=>{
-          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
-          var temp = []
-          path.forEach(p=>{
-            var activo = {
-              "ASSETNUM": p.ASSETNUM[0],
-              "DESCRIPTION": p.DESCRIPTION[0],
-              "SITEID": p.SITEID[0],
-              "SERVICEADDRESS": {
-                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-              }
-            }
-            temp.push(activo)
-          })
-          this.activosEncontrados = temp;
-          if(this.platform.is('capacitor')){
-            this.actualizarActivos()
-          }else{
-            this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-          }
-        })
-      })
-    }
+        }
+      }
+    })
+
   }
 
-  actualizarActivos(){
+  actualizarActivos(){ 
     this._us.activos().subscribe((res:any)=>{
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
@@ -694,6 +708,7 @@ export class HomePage implements OnInit,AfterViewInit {
         })
       }
     },err=>{
+      console.log('ERRROR ->',err)
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
           if(data.rows.length > 0){
@@ -722,7 +737,6 @@ export class HomePage implements OnInit,AfterViewInit {
     })
   }
   // FIN CARGAS INICIALES
-
   // OTROS
   async presentLoader(msg) {
     this.loader = await this.loadctrl.create({message: msg,mode:'ios'});
@@ -747,7 +761,6 @@ export class HomePage implements OnInit,AfterViewInit {
     modal.present();
     const { data } = await modal.onWillDismiss();
     if (data) {
-      // console.log(data);
       this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
       this.view.setCenter(olProj.transform([data.activo.SERVICEADDRESS.LONGITUDEX,data.activo.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
       this.obtenerUbicacionRegion()
@@ -882,6 +895,7 @@ export class HomePage implements OnInit,AfterViewInit {
         path:filePath,
         data:'data:image/jpeg;base64,'+readFile.data
       })
+      this.picture = readFile.data;
     }
   }
 
@@ -893,6 +907,89 @@ export class HomePage implements OnInit,AfterViewInit {
     this.loadFiles()
   }
   // FIN SECCIÓN FOTO
+  // ENVIAR ALERTA
+  enviar(step){
+    this._us.cargar_storage().then(()=>{
+      let data = {
+        titulo:this.thirdFormGroup.value.titulo,
+        descripcion:this.thirdFormGroup.value.descripcion,
+        destino:'',
+        usuario:this._us.user.user,
+        lat:this.dataPosicion.lat,
+        lng:this.dataPosicion.lng,
+        nivelalerta:this.secondFormGroup.value.nivelAlerta,
+        operatividad:this.secondFormGroup.value.operatividad,
+        region:this.dataPosicion.region,
+        location:null,
+        date:new Date(),
+        // picture:this.picture
+      }
+      if (this._us.menuType == "DOP") {
+        data.destino = "DOP";
+      } else if (this._us.menuType == "DGA") {
+          data.destino = "DGA";
+      } else if (this._us.menuType == "DAP") {
+          data.destino = "DAP";
+      } else if (this._us.menuType == "APR" || this._us.menuType == "DOH-ALL" || this._us.menuType == "DOH-CAUC" || this._us.menuType == "DOH-RIEG") {
+          data.destino = "APR";
+      }else{
+        data.destino = this._us.menuType;
+      }
+      if(this.firstFormGroup.value){
+        if(this.firstFormGroup.value.activoSeleccionado){
+          data.location = (this.firstFormGroup.value.activoSeleccionado.activo.ASSETINUM)
+        }else{
+          data.location = null;
+        }
+      }else{
+        data.location = null;
+      } 
+      this._us.enviarAlerta(data).subscribe(res=>{
+        // this.stepper.reset()
+        console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+      },err=>{
+        console.log('******************** ERROR ENVIAR ******************** ',err)
+      })
+      // this.stepper.reset()
 
-  enviar(e){}
+
+
+    //   dataToSend = {
+    //     destino: rep.destino,
+    //     fechahora: newDate,
+    //     lat: rep.lat,
+    //     lng: rep.lng,
+    //     msg: rep.msg,
+    //     nivelalerta: rep.nivalerta,
+    //     operatividad: rep.nivoperatividad,
+    //     region: rep.region,
+    //     seleccionado: {
+    //         $$hashKey: rep.key,
+    //         cod: rep.cod,
+    //         distance: rep.distancia,
+    //         id: rep.activoid,
+    //         lat: rep.lat,
+    //         lng: rep.lng,
+    //         lugar: rep.lugar,
+    //         name: rep.name
+    //     },
+    //     titulo: rep.titulo,
+    //     usuario: rep.usuario
+    // }
+
+    // let token = $localstorage.getObject('tokenESRI');
+    // dataToSend.esriTOKEN = token;
+    // send(dataToSend, rep.id);
+
+      // this.db.open().then(()=>{
+      //   this.db.transaction(rx=>{
+      //     rx.executeSql('INSERT INTO alerta ( titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, 
+      //       region, key, cod, distancia, lugar ,name , activoid) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+      //       [data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng, data.nivelalerta, data.operatividad, 
+      //         data.region, data.seleccionado.$$hashKey, data.seleccionado.cod, data.seleccionado.distance, data.seleccionado.lugar, 
+      //         data.seleccionado.name, data.seleccionado.id], (trans, result) => {
+      //   })
+      // })
+    })
+  }
 }

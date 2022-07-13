@@ -35,6 +35,8 @@ export class UsuarioService {
   conexion;
   token_user;
   user;
+  tokenESRI;
+  menuType;
   messages: "";
   message: BehaviorSubject<String>;
   headers = {
@@ -72,6 +74,16 @@ export class UsuarioService {
               this.token_user = token_user;
             }
           });
+          this.storage.getItem("menuType").then(menuType=>{
+            if(menuType){
+              this.menuType = menuType;
+            }
+          });
+          this.storage.getItem("tokenESRI").then(tokenESRI=>{
+            if(tokenESRI){
+              this.tokenESRI = Number(tokenESRI);
+            }
+          });
           this.storage.getItem("usuario").then(usuario=>{
             if(usuario){
               this.usuario = JSON.parse(usuario);
@@ -85,6 +97,8 @@ export class UsuarioService {
           this.usuario = JSON.parse(localStorage.getItem("usuario"));
           this.conexion = localStorage.getItem("conexion");
           this.token_user = localStorage.getItem("token_user");
+          this.menuType = localStorage.getItem("menuType");
+          this.tokenESRI = Number(localStorage.getItem("tokenESRI"));
           this.user = JSON.parse(localStorage.getItem("user"));
           resolve(null);
         }
@@ -110,7 +124,6 @@ export class UsuarioService {
     return from(Http.post(options))
   }
 
-
   xmlToJson(data) {
     var promise = new Promise((resolve,request)=>{
       const parser = new xml2js.Parser({ strict: false, trim: true });
@@ -126,19 +139,28 @@ export class UsuarioService {
     return promise;
   };
 
-
   saveStorage(res,usuario?){
     this.storage.setItem('usuario', JSON.stringify(res));
     this.storage.setItem('conexion', 'si');
     this.storage.setItem('user', JSON.stringify(usuario));
+    this.storage.setItem('tokenESRI', String(226));
+    var menuType = '';
+    if (res.DEFSITE == "APR" || res.DEFSITE == "DOH-ALL" || res.DEFSITE == "DOH-CAUC" || res.DEFSITE == "DOH-RIEG") {
+      menuType = "APR";
+    } else {
+      menuType = res.DEFSITE;
+    }
+    this.storage.setItem('menuType', menuType);
     localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');
     localStorage.setItem('user', JSON.stringify(usuario));
+    localStorage.setItem('tokenESRI', String(226));
+    localStorage.setItem('menuType', menuType);
     if(usuario){
       this.storage.setItem('token_user', JSON.stringify(btoa(usuario.user + ':' + usuario.password)));
       localStorage.setItem('token_user', JSON.stringify(btoa(usuario.user + ':' + usuario.password)));
     }
-    this.cargar_storage()
+    this.cargar_storage() 
   }
 
   cerrarSesion(){
@@ -221,15 +243,214 @@ export class UsuarioService {
       if(token_user){
         this.token_user = JSON.parse(token_user);
       }
+    }) 
+    var menu = '';
+    menu = localStorage.getItem("menuType");
+    this.storage.getItem("menuType").then(menuType=>{
+      if(menuType){
+        menu = menuType;
+      }
     })    
     this.headers['Authorization'] = "Basic " + this.token_user;
-    let sr = "<soapenv:Envelope [env]:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'>  <soapenv:Header/>   <soapenv:Body>      <max:QueryMOP_ASSET_DOH >         <max:MOP_ASSET_DOHQuery operandMode='AND'>            <!--Optional:-->            <max:ASSET>               <!--Zero or more repetitions:-->               <max:ASSETNUM >%</max:ASSETNUM>               <!--Zero or more repetitions:-->               <max:DESCRIPTION >%</max:DESCRIPTION>               <!--Zero or more repetitions:-->               <max:ISLINEAR >0</max:ISLINEAR>               <!--Zero or more repetitions:-->               <max:REGION >%</max:REGION>               <!--Zero or more repetitions:-->               <max:SITEID operator='=' >APR</max:SITEID>               <!--Zero or more repetitions:-->               <max:STATUS operator='=' >ACTIVA</max:STATUS>               <max:SERVICEADDRESS >                  <!--Zero or more repetitions:-->                  <max:COUNTY >%</max:COUNTY>                  <!--Zero or more repetitions:-->                  <max:REGIONDISTRICT >%</max:REGIONDISTRICT>               </max:SERVICEADDRESS>            </max:ASSET>         </max:MOP_ASSET_DOHQuery>      </max:QueryMOP_ASSET_DOH>   </soapenv:Body></soapenv:Envelope>";
+    let sr = '';
+    let url = '';
+    menu == 'APR' ? url = this.URL_SERVICIOS + "MOP_WS_MOP_ASSET_DOH" : url = this.URL_SERVICIOS + "MOP_WS_MOP_OPERLOCQRY_DOH";
+    menu == 'APR' ? sr = "<soapenv:Envelope [env]:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'>  <soapenv:Header/>   <soapenv:Body>      <max:QueryMOP_ASSET_DOH >         <max:MOP_ASSET_DOHQuery operandMode='AND'>            <!--Optional:-->            <max:ASSET>               <!--Zero or more repetitions:-->               <max:ASSETNUM >%</max:ASSETNUM>               <!--Zero or more repetitions:-->               <max:DESCRIPTION >%</max:DESCRIPTION>               <!--Zero or more repetitions:-->               <max:ISLINEAR >0</max:ISLINEAR>               <!--Zero or more repetitions:-->               <max:REGION >%</max:REGION>               <!--Zero or more repetitions:-->               <max:SITEID operator='=' >APR</max:SITEID>               <!--Zero or more repetitions:-->               <max:STATUS operator='=' >ACTIVA</max:STATUS>               <max:SERVICEADDRESS >                  <!--Zero or more repetitions:-->                  <max:COUNTY >%</max:COUNTY>                  <!--Zero or more repetitions:-->                  <max:REGIONDISTRICT >%</max:REGIONDISTRICT>               </max:SERVICEADDRESS>            </max:ASSET>         </max:MOP_ASSET_DOHQuery>      </max:QueryMOP_ASSET_DOH>   </soapenv:Body></soapenv:Envelope>" :
+    menu == 'DGA' ?  
+    sr = "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'><soapenv:Header/><soapenv:Body><max:QueryMOP_OPERLOC_DOH><max:MOP_OPERLOC_DOHQuery operandMode='AND'><max:LOCATIONS><max:STATUS operator='=' >ACTIVA</max:STATUS><max:SITEID operator='=' >" + menu + "</max:SITEID><max:LOCATION>14%</max:LOCATION></max:LOCATIONS></max:MOP_OPERLOC_DOHQuery></max:QueryMOP_OPERLOC_DOH></soapenv:Body></soapenv:Envelope>" : 
+    sr = "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' [env]:max='http://www.ibm.com/maximo'><soapenv:Header/><soapenv:Body><max:QueryMOP_OPERLOC_DOH creationDateTime='2008-09-28T21:49:45'  rsStart='0'><max:MOP_OPERLOC_DOHQuery orderby='LOCATION' operandMode='AND'><max:LOCATIONS><max:ESOBRA operator='=' >1</max:ESOBRA><max:STATUS operator='=' >ACTIVA</max:STATUS><max:SITEID operator='=' >" + menu + "</max:SITEID><max:LOCATION>%</max:LOCATION></max:LOCATIONS></max:MOP_OPERLOC_DOHQuery></max:QueryMOP_OPERLOC_DOH></soapenv:Body></soapenv:Envelope>"
+    // console.log('SRRRRR ->>>>> ',sr)
     const options: HttpOptions = {
-      url:this.URL_SERVICIOS+'MOP_WS_MOP_ASSET_DOH',
+      url:url,
       data:sr,
       headers:this.headers
     };
     return from(Http.post(options))
+  }
+
+  enviarAlerta(data){
+    var menu = '';
+    menu = localStorage.getItem("menuType");
+    this.storage.getItem("menuType").then(menuType=>{
+      if(menuType){
+        menu = menuType;
+      }
+    })    
+    this.headers['Authorization'] = "Basic " + this.token_user;
+    let sr = '';
+    if (menu == "DOP" || menu == "DGA" || menu == "DAP") {
+      sr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:max="http://www.ibm.com/maximo">
+                <soapenv:Header/>
+                <soapenv:Body>
+                  <max:SyncMOP_SR_EMER_DOH >
+                      <max:MOP_SR_EMER_DOHSet>
+                        <!--Zero or more repetitions:-->
+                        <max:SR action="Add">
+                        <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
+                            <max:LOCATION maxvalue="?">` + data.location + `</max:LOCATION>
+                            <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+                            <max:CLASS maxvalue="?">SR</max:CLASS>
+                            <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
+                            <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
+                            <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
+                            <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
+                            <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
+                            <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
+                            <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
+                            <max:LOCATION changed="?"></max:LOCATION>
+                            <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+                            <max:ELEMENTO changed="?"></max:ELEMENTO>
+                            <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
+                            <max:EVENTO changed="?"> </max:EVENTO>
+                            <max:APUNTALAR changed="?">False</max:APUNTALAR>
+                            <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+                            <max:REMOVER changed="?">0</max:REMOVER>
+                            <max:ACORDONAR changed="?">False</max:ACORDONAR>
+                            <max:PROTECCION changed="?">0</max:PROTECCION>
+                            <max:REMCENIZA changed="?">False</max:REMCENIZA>
+                            <max:REMBARRO changed="?">False</max:REMBARRO>
+                            <max:DESTTUBE changed="?">False</max:DESTTUBE>
+                            <max:LIMPCUB changed="?">0</max:LIMPCUB>
+                            <max:CORTESUM changed="?">False</max:CORTESUM>
+                            <max:OTRO changed="?">0</max:OTRO>
+                            <max:COORX changed="?">1</max:COORX>
+                            <max:COORY changed="?">2</max:COORY>
+                            <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
+                            <max:TKSERVICEADDRESS action="AddChange">
+                                <max:CITY changed="?"> </max:CITY>
+                                <max:COUNTRY changed="?">CL</max:COUNTRY>
+                                <max:COUNTY changed="?">100202</max:COUNTY>
+                                <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+                              <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+                                <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+                                <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+                                <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+                                <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+                                <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+                                <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+                            </max:TKSERVICEADDRESS>
+                            <!--Zero or more repetitions:-->
+                            <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+                              <!--Optional:-->
+                              <max:ADDINFO changed="?">1</max:ADDINFO>
+                              <!--Optional:-->
+                              <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+                              <!--Optional:-->
+                              <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
+                              <!--Optional:-->
+                              <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+                              <!--Optional:-->
+                              <max:DOCUMENT changed="?">foto</max:DOCUMENT>
+                              <!--Optional:-->
+                              <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
+                              <!--Optional:-->
+                              <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+                              <!--Optional:-->
+                              <max:UPLOAD changed="?">1</max:UPLOAD>
+                              <!--Optional:-->
+                              <max:URLNAME changed="?">Imagen</max:URLNAME>
+                              <!--Optional:-->
+                              <max:URLTYPE changed="?">FILE</max:URLTYPE>
+                            </max:DOCLINKS>
+                        </max:SR>
+                      </max:MOP_SR_EMER_DOHSet>
+                  </max:SyncMOP_SR_EMER_DOH>
+                </soapenv:Body>
+            </soapenv:Envelope>`
+            const options: HttpOptions = {
+              url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+              data:sr,
+              headers:this.headers
+            };
+            return from(Http.post(options))
+    }else{
+      sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
+            <soapenv:Header/>
+            <soapenv:Body>
+                <max:SyncMOP_SR_EMER_DOH >
+                    <max:MOP_SR_EMER_DOHSet>
+                        <!--Zero or more repetitions:-->
+                        <max:SR action="Add">
+                        <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
+                        <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+                        <max:CLASS maxvalue="?">SR</max:CLASS>
+                        <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
+                        <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
+                        <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
+                        <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
+                        <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
+                        <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
+                        <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
+                        <max:LOCATION changed="?"></max:LOCATION>
+                        <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+                        <max:ELEMENTO changed="?"></max:ELEMENTO>
+                        <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
+                        <max:EVENTO changed="?"> </max:EVENTO>
+                        <max:APUNTALAR changed="?">False</max:APUNTALAR>
+                        <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+                        <max:REMOVER changed="?">0</max:REMOVER>
+                        <max:ACORDONAR changed="?">False</max:ACORDONAR>
+                        <max:PROTECCION changed="?">0</max:PROTECCION>
+                        <max:REMCENIZA changed="?">False</max:REMCENIZA>
+                        <max:REMBARRO changed="?">False</max:REMBARRO>
+                        <max:DESTTUBE changed="?">False</max:DESTTUBE>
+                        <max:LIMPCUB changed="?">0</max:LIMPCUB>
+                        <max:CORTESUM changed="?">False</max:CORTESUM>
+                        <max:OTRO changed="?">0</max:OTRO>
+                        <max:COORX changed="?">1</max:COORX>
+                        <max:COORY changed="?">2</max:COORY>
+                        <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
+                        <max:TKSERVICEADDRESS action="AddChange">
+                            <max:CITY changed="?"> </max:CITY>
+                            <max:COUNTRY changed="?">CL</max:COUNTRY>
+                            <max:COUNTY changed="?">100202</max:COUNTY>
+                            <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+                            <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+                            <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+                            <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+                            <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+                            <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+                            <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+                            <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+                        </max:TKSERVICEADDRESS>
+                        <!--Zero or more repetitions:-->
+                        <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+                            <!--Optional:-->
+                            <max:ADDINFO changed="?">1</max:ADDINFO>
+                            <!--Optional:-->
+                            <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+                            <!--Optional:-->
+                            <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
+                            <!--Optional:-->
+                            <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+                            <!--Optional:-->
+                            <max:DOCUMENT changed="?">foto</max:DOCUMENT>
+                            <!--Optional:-->
+                            <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
+                            <!--Optional:-->
+                            <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+                            <!--Optional:-->
+                            <max:UPLOAD changed="?">1</max:UPLOAD>
+                            <!--Optional:-->
+                            <max:URLNAME changed="?">Imagen</max:URLNAME>
+                            <!--Optional:-->
+                            <max:URLTYPE changed="?">FILE</max:URLTYPE>
+                        </max:DOCLINKS>
+                        </max:SR>
+                    </max:MOP_SR_EMER_DOHSet>
+                </max:SyncMOP_SR_EMER_DOH>
+            </soapenv:Body>
+          </soapenv:Envelope>`
+          const options: HttpOptions = {
+            url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+            data:sr,
+            headers:this.headers
+          };
+          console.log(data)
+          return from(Http.post(options))
+
+    }
+
   }
 
 }

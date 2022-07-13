@@ -16,6 +16,7 @@ Esto e spara pedir la autorización de utilizar el gps y obtener la geolocalizac
 
 
 #AGREGAR A ANDROID MANIFEST XML
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
