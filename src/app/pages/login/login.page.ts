@@ -1,7 +1,6 @@
 
 import { Component, OnInit,AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CustomValidators } from 'ng2-validation';
 import { NavController, AlertController, LoadingController, Platform, MenuController } from '@ionic/angular';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
 import { UsuarioService } from '../../services/usuario.service';
@@ -112,7 +111,7 @@ export class LoginPage implements OnInit {
                       direction:'left',
                       duration:500
                     }
-                    this.nativePageTransitions.flip(options);    
+                    this.nativePageTransitions.slide(options);    
                     this._us.nextmessage('usuario_logeado') 
                   this.navctrl.navigateRoot('/home')
                  })
@@ -133,7 +132,6 @@ export class LoginPage implements OnInit {
         })
       }else{
         this._http.get('../../../assets/usuario_2.xml').subscribe((res:any)=>{
-          // console.log('archivo xml-> ',JSON.stringify((res)))
           this._us.xmlToJson(res).then((result:any)=>{
             let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
             var grupo = '';
@@ -171,7 +169,7 @@ export class LoginPage implements OnInit {
                     direction:'left',
                     duration:500
                   }
-                  this.nativePageTransitions.flip(options);    
+                  this.nativePageTransitions.slide(options);    
                   this._us.nextmessage('usuario_logeado') 
                   this.navctrl.navigateRoot('/home')
                 })
@@ -181,7 +179,6 @@ export class LoginPage implements OnInit {
            })
          },err=>{
            this._us.xmlToJson(err.error.text).then((result:any)=>{
-            // console.log(result)
             let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
             var grupo = '';
             path.GROUPUSER.forEach((g,i)=>{
@@ -208,27 +205,25 @@ export class LoginPage implements OnInit {
               STATUS:path.STATUS[0]['_'],
               USERID:path.USERID[0]
              }
-            //  console.log('json de acrchivo xml-> ',this._us.usuario)
-              if(this._us.usuario.STATUS == 'ACTIVE'){
-                this._us.saveStorage(this._us.usuario,this.form.value)
-                this._us.cargar_storage().then(()=>{
-                  this._mc.enable(true,'first')
-                  this.loader.dismiss()
-                  let options: NativeTransitionOptions ={
-                    direction:'left',
-                    duration:500
-                  }
-                  this.nativePageTransitions.flip(options);    
-                  this._us.nextmessage('usuario_logeado') 
-                  this.navctrl.navigateRoot('/home')
-                })
-              }else{
-                this.presentAlert('¡Atención!','EL usuario esta inactivo')
-              }
+            if(this._us.usuario.STATUS == 'ACTIVE'){
+              this._us.saveStorage(this._us.usuario,this.form.value)
+              this._us.cargar_storage().then(()=>{
+                this._mc.enable(true,'first')
+                this.loader.dismiss()
+                let options: NativeTransitionOptions ={
+                  direction:'left',
+                  duration:500
+                }
+                this.nativePageTransitions.slide(options);    
+                this._us.nextmessage('usuario_logeado') 
+                this.navctrl.navigateRoot('/home')
+              })
+            }else{
+              this.presentAlert('¡Atención!','EL usuario esta inactivo')
+            }
            })
          })
       }
-      
     })    
   }
 

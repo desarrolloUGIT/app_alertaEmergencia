@@ -26,6 +26,8 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { ActionSheetController } from '@ionic/angular';
 
 const IMAGE_DIR = 'stored-images';
+const SAVE_IMAGE_DIR = 'save-stored-images';
+
 
 interface LocalFile {
   name:string;
@@ -41,7 +43,7 @@ interface LocalFile {
 export class HomePage implements OnInit,AfterViewInit {
   @ViewChild('stepper')  stepper: MatStepper;
   activosEncontrados;
-  stgo = olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')
+  stgo = olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')
   view =  new View({
     center: this.stgo, 
     zoom: 13
@@ -79,7 +81,7 @@ export class HomePage implements OnInit,AfterViewInit {
       })
     })
   });
-  marker = new Feature(new Point(olProj.transform([-70.673676, -33.447487], 'EPSG:4326', 'EPSG:3857')));
+  marker = new Feature(new Point(olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')));
   firstFormGroup:FormGroup;
   secondFormGroup:FormGroup;
   thirdFormGroup:FormGroup;
@@ -104,7 +106,7 @@ export class HomePage implements OnInit,AfterViewInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)')
         db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)')
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
-        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id integer primary key autoincrement , titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region)');
+        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)');
         this.db = db;
         this.operatividad();
         this.nivelAlerta();
@@ -134,17 +136,22 @@ export class HomePage implements OnInit,AfterViewInit {
     this._us.cargar_storage().then(()=>{
       this._us.nextmessage('usuario_logeado') 
     })
-    // this.loadFiles()
   }
 
 // INICIO MAPA
   ngAfterViewInit(): void {
     this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
+      this.chile = new VectorLayer({
+        source:new VectorSource({
+          features: new GeoJSON().readFeatures(chileJSON),
+        })
+      })
       this.map = new Map({
         layers: [
          this.osm,
          this.baseLayer,
-         this.dvRedVIal
+         this.dvRedVIal,
+         this.chile
         ],
         view:this.view,
         // controls: defaultControls().extend([new FullScreen()]),
@@ -152,11 +159,7 @@ export class HomePage implements OnInit,AfterViewInit {
       setTimeout(() => {
         this.map.setTarget("map");
       }, 500);
-      this.chile = new VectorLayer({
-        source:new VectorSource({
-          features: new GeoJSON().readFeatures(chileJSON),
-        })
-      })
+      this.chile.setVisible(true)
       this.osm.setVisible(true)
       this.baseLayer.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
@@ -234,7 +237,7 @@ export class HomePage implements OnInit,AfterViewInit {
               }
               arr.push(tmp)
             })
-            this.nivelAlertaArray = arr;
+            this.operatividadArray = arr;
             this.actualizarOperatividad()
           }else{
             this._http.get('assets/operatividad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
@@ -302,7 +305,7 @@ export class HomePage implements OnInit,AfterViewInit {
           })
           this.db.open().then(()=>{
             this.db.transaction(rx=>{
-              rx.executeSql('delete from nivelAlerta', [], ()=>{
+              rx.executeSql('delete from operatividad', [], ()=>{
                 this.operatividadArray.forEach((activo,i)=>{
                   this.db.transaction(tx=>{
                     tx.executeSql('insert into operatividad (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
@@ -345,6 +348,8 @@ export class HomePage implements OnInit,AfterViewInit {
           }
         })  
       }
+    },err=>{
+      console.log('ERRRRRRRR POR ACA')
     })
   }
 
@@ -819,10 +824,11 @@ export class HomePage implements OnInit,AfterViewInit {
 
   async selectImage(tipe:CameraSource){
     const image = await Camera.getPhoto({
-      quality:55,
-      allowEditing:false,
+      quality:45,
+      allowEditing:true,
       resultType:CameraResultType.Uri,
-      source:tipe
+      source:tipe,
+      
     });
     if(image){
       this.saveImage(image)
@@ -876,8 +882,15 @@ export class HomePage implements OnInit,AfterViewInit {
         await Filesystem.mkdir({
           directory:Directory.Data,
           path:IMAGE_DIR
-        }).then(()=>{
-          this.loader.dismiss()
+        }).then(async ()=>{
+          await Filesystem.mkdir({
+            directory:Directory.Data,
+            path:SAVE_IMAGE_DIR
+          }).then(()=>{
+            this.loader.dismiss()
+          }).catch(()=>{
+            this.loader.dismiss()
+          })
         }).catch(()=>{this.loader.dismiss()})
       })
     })
@@ -908,8 +921,8 @@ export class HomePage implements OnInit,AfterViewInit {
   }
   // FIN SECCIÓN FOTO
   // ENVIAR ALERTA
-  enviar(step){
-    this._us.cargar_storage().then(()=>{
+   enviar(step){
+     this._us.cargar_storage().then(()=>{
       let data = {
         titulo:this.thirdFormGroup.value.titulo,
         descripcion:this.thirdFormGroup.value.descripcion,
@@ -920,12 +933,13 @@ export class HomePage implements OnInit,AfterViewInit {
         nivelalerta:this.secondFormGroup.value.nivelAlerta,
         operatividad:this.secondFormGroup.value.operatividad,
         region:this.dataPosicion.region,
-        location:null,
+        locations:'',
         date:new Date(),
-        // picture:this.picture
+        picture:this.picture,
+        name:new Date()
       }
       if (this._us.menuType == "DOP") {
-        data.destino = "DOP";
+        data.destino = "DOP"; 
       } else if (this._us.menuType == "DGA") {
           data.destino = "DGA";
       } else if (this._us.menuType == "DAP") {
@@ -935,61 +949,75 @@ export class HomePage implements OnInit,AfterViewInit {
       }else{
         data.destino = this._us.menuType;
       }
-      if(this.firstFormGroup.value){
+      if(this.firstFormGroup.value.activoSeleccionado){
         if(this.firstFormGroup.value.activoSeleccionado){
-          data.location = (this.firstFormGroup.value.activoSeleccionado.activo.ASSETINUM)
+          data.locations = this.firstFormGroup.value.activoSeleccionado.activo.ASSETNUM
         }else{
-          data.location = null;
+          data.locations = '';
         }
       }else{
-        data.location = null;
+        data.locations = '';
       } 
-      this._us.enviarAlerta(data).subscribe(res=>{
-        // this.stepper.reset()
-        console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
-      },err=>{
-        console.log('******************** ERROR ENVIAR ******************** ',err)
-      })
+      if(this._us.conexion == 'no'){
+        this.db.open().then(()=>{
+          this.db.transaction( tx1=>{
+            this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+              this.db.transaction(async tx=>{
+                if(dat.rows.length > 0){
+                  tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                  [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                  this.presentToast('La alerta sera enviada cuando tengas conexión a internet nuevamente');
+                  const savedFile = await Filesystem.writeFile({
+                    directory:Directory.Data,
+                    path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                    data:this.images[0].data
+                    }).then(()=>{
+                    this.deleteImage(this.images[0])
+                    this.volverInicio()
+                    this._us.nextmessage('pendiente') 
+                  })
+                }else{
+                  tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                  [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                  this.presentToast('La alerta sera enviada cuando tengas conexión a internet nuevamente');
+                  const savedFile = await Filesystem.writeFile({
+                    directory:Directory.Data, 
+                    path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                    data:this.images[0].data
+                    }).then(()=>{
+                    this.deleteImage(this.images[0])
+                    this.volverInicio()
+                    this._us.nextmessage('pendiente') 
+                  })
+                }
+              })
+            })
+          })
+        })
+      }else{
+        this._us.enviarAlerta(data).subscribe(res=>{
+          console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+          this.presentToast('Aca se envia la alerta, pero aun no funciona eso');
+          // this.deleteImage(this.images[0])
+          // this.volverInicio()
+        },err=>{
+          console.log('******************** ERROR ENVIAR ******************** ',err)
+        })
+      }
+      
+     
       // this.stepper.reset()
-
-
-
-    //   dataToSend = {
-    //     destino: rep.destino,
-    //     fechahora: newDate,
-    //     lat: rep.lat,
-    //     lng: rep.lng,
-    //     msg: rep.msg,
-    //     nivelalerta: rep.nivalerta,
-    //     operatividad: rep.nivoperatividad,
-    //     region: rep.region,
-    //     seleccionado: {
-    //         $$hashKey: rep.key,
-    //         cod: rep.cod,
-    //         distance: rep.distancia,
-    //         id: rep.activoid,
-    //         lat: rep.lat,
-    //         lng: rep.lng,
-    //         lugar: rep.lugar,
-    //         name: rep.name
-    //     },
-    //     titulo: rep.titulo,
-    //     usuario: rep.usuario
-    // }
-
-    // let token = $localstorage.getObject('tokenESRI');
-    // dataToSend.esriTOKEN = token;
-    // send(dataToSend, rep.id);
-
-      // this.db.open().then(()=>{
-      //   this.db.transaction(rx=>{
-      //     rx.executeSql('INSERT INTO alerta ( titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, 
-      //       region, key, cod, distancia, lugar ,name , activoid) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-      //       [data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng, data.nivelalerta, data.operatividad, 
-      //         data.region, data.seleccionado.$$hashKey, data.seleccionado.cod, data.seleccionado.distance, data.seleccionado.lugar, 
-      //         data.seleccionado.name, data.seleccionado.id], (trans, result) => {
-      //   })
-      // })
     })
   }
+
+  volverInicio(){
+    this.firstFormGroup.reset();
+    this.secondFormGroup.reset();
+    this.thirdFormGroup.reset();
+    this.stepper.reset();
+    this.view.setCenter(this.stgo)
+    this.view.setZoom(13)
+    this.obtenerUbicacionRegion()
+  }
+
 }
