@@ -73,7 +73,7 @@ export class LoginPage implements OnInit {
       this.form.disable()
       if(this.platform.is('capacitor')){
         this._us.login(this.form.value).subscribe((res:any)=>{
-          console.log(res)
+          console.log('LOGIN ->>> ',res)
           if(res && res.status == '200'){
             this._us.xmlToJson(res).then((result:any)=>{
               let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]

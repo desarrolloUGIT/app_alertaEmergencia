@@ -956,7 +956,7 @@ export class HomePage implements OnInit,AfterViewInit {
         }else{
           data.locations = '';
         }
-      }else{
+      }else{ 
         data.locations = '';
       } 
       if(this._us.conexion == 'no'){
