@@ -295,7 +295,7 @@ export class HomePage implements OnInit,AfterViewInit {
 
   actualizarOperatividad(){
     this._us.operatividad().subscribe((res:any)=>{
-      // console.log('OPERATIVIDAD -> ',res)
+      console.log('OPERATIVIDAD -> ',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -425,7 +425,7 @@ export class HomePage implements OnInit,AfterViewInit {
 
   actualizarNivelAlerta(){
     this._us.nivelAlerta().subscribe((res:any)=>{
-      // console.log('ALERTA -> ',res) 
+      console.log('ALERTA -> ',res) 
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -629,6 +629,7 @@ export class HomePage implements OnInit,AfterViewInit {
 
   actualizarActivos(){ 
     this._us.activos().subscribe((res:any)=>{
+      console.log('ACTIVOS ->',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
