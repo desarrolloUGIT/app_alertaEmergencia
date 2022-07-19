@@ -44,8 +44,8 @@ export class UsuarioService {
     'Accept': "text/plain",
     'Content-Type': "text/plain",
   };
-  // URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_udp/service/";
-  URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_ugit2/restservice/service/";
+  // URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_udp/service/"; //PROD
+  URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_ugit2/restservice/service/"; //QA
   constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite ) { 
     this.message = new BehaviorSubject(this.messages)
   }
@@ -278,178 +278,316 @@ export class UsuarioService {
     })    
     this.headers['Authorization'] = "Basic " + this.token_user;
     let sr = '';
-    if (menu == "DOP" || menu == "DGA" || menu == "DAP") {
-      sr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:max="http://www.ibm.com/maximo">
-                <soapenv:Header/>
-                <soapenv:Body>
-                  <max:SyncMOP_SR_EMER_DOH >
-                      <max:MOP_SR_EMER_DOHSet>
-                        <!--Zero or more repetitions:-->
-                        <max:SR action="Add">
-                        <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
-                            <max:LOCATION maxvalue="?">` + data.location + `</max:LOCATION>
-                            <max:STATUS maxvalue="?">NUEVO</max:STATUS>
-                            <max:CLASS maxvalue="?">SR</max:CLASS>
-                            <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
-                            <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
-                            <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
-                            <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
-                            <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
-                            <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
-                            <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
-                            <max:LOCATION changed="?"></max:LOCATION>
-                            <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
-                            <max:ELEMENTO changed="?"></max:ELEMENTO>
-                            <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
-                            <max:EVENTO changed="?"> </max:EVENTO>
-                            <max:APUNTALAR changed="?">False</max:APUNTALAR>
-                            <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
-                            <max:REMOVER changed="?">0</max:REMOVER>
-                            <max:ACORDONAR changed="?">False</max:ACORDONAR>
-                            <max:PROTECCION changed="?">0</max:PROTECCION>
-                            <max:REMCENIZA changed="?">False</max:REMCENIZA>
-                            <max:REMBARRO changed="?">False</max:REMBARRO>
-                            <max:DESTTUBE changed="?">False</max:DESTTUBE>
-                            <max:LIMPCUB changed="?">0</max:LIMPCUB>
-                            <max:CORTESUM changed="?">False</max:CORTESUM>
-                            <max:OTRO changed="?">0</max:OTRO>
-                            <max:COORX changed="?">1</max:COORX>
-                            <max:COORY changed="?">2</max:COORY>
-                            <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
-                            <max:TKSERVICEADDRESS action="AddChange">
-                                <max:CITY changed="?"> </max:CITY>
-                                <max:COUNTRY changed="?">CL</max:COUNTRY>
-                                <max:COUNTY changed="?">100202</max:COUNTY>
-                                <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
-                              <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
-                                <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
-                                <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
-                                <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
-                                <max:STREETADDRESS changed="?"></max:STREETADDRESS>
-                                <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
-                                <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
-                            </max:TKSERVICEADDRESS>
-                            <!--Zero or more repetitions:-->
-                            <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
-                              <!--Optional:-->
-                              <max:ADDINFO changed="?">1</max:ADDINFO>
-                              <!--Optional:-->
-                              <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
-                              <!--Optional:-->
-                              <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
-                              <!--Optional:-->
-                              <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
-                              <!--Optional:-->
-                              <max:DOCUMENT changed="?">foto</max:DOCUMENT>
-                              <!--Optional:-->
-                              <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
-                              <!--Optional:-->
-                              <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
-                              <!--Optional:-->
-                              <max:UPLOAD changed="?">1</max:UPLOAD>
-                              <!--Optional:-->
-                              <max:URLNAME changed="?">Imagen</max:URLNAME>
-                              <!--Optional:-->
-                              <max:URLTYPE changed="?">FILE</max:URLTYPE>
-                            </max:DOCLINKS>
-                        </max:SR>
-                      </max:MOP_SR_EMER_DOHSet>
-                  </max:SyncMOP_SR_EMER_DOH>
-                </soapenv:Body>
-            </soapenv:Envelope>`
-            const options: HttpOptions = {
-              url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
-              data:sr,
-              headers:this.headers
-            };
-            return from(Http.post(options))
-    }else{
-      sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
-            <soapenv:Header/>
-            <soapenv:Body>
-                <max:SyncMOP_SR_EMER_DOH >
-                    <max:MOP_SR_EMER_DOHSet>
-                        <!--Zero or more repetitions:-->
-                        <max:SR action="Add">
-                        <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
-                        <max:STATUS maxvalue="?">NUEVO</max:STATUS>
-                        <max:CLASS maxvalue="?">SR</max:CLASS>
-                        <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
-                        <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
-                        <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
-                        <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
-                        <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
-                        <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
-                        <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
-                        <max:LOCATION changed="?"></max:LOCATION>
-                        <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
-                        <max:ELEMENTO changed="?"></max:ELEMENTO>
-                        <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
-                        <max:EVENTO changed="?"> </max:EVENTO>
-                        <max:APUNTALAR changed="?">False</max:APUNTALAR>
-                        <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
-                        <max:REMOVER changed="?">0</max:REMOVER>
-                        <max:ACORDONAR changed="?">False</max:ACORDONAR>
-                        <max:PROTECCION changed="?">0</max:PROTECCION>
-                        <max:REMCENIZA changed="?">False</max:REMCENIZA>
-                        <max:REMBARRO changed="?">False</max:REMBARRO>
-                        <max:DESTTUBE changed="?">False</max:DESTTUBE>
-                        <max:LIMPCUB changed="?">0</max:LIMPCUB>
-                        <max:CORTESUM changed="?">False</max:CORTESUM>
-                        <max:OTRO changed="?">0</max:OTRO>
-                        <max:COORX changed="?">1</max:COORX>
-                        <max:COORY changed="?">2</max:COORY>
-                        <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
-                        <max:TKSERVICEADDRESS action="AddChange">
-                            <max:CITY changed="?"> </max:CITY>
-                            <max:COUNTRY changed="?">CL</max:COUNTRY>
-                            <max:COUNTY changed="?">100202</max:COUNTY>
-                            <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
-                            <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
-                            <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
-                            <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
-                            <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
-                            <max:STREETADDRESS changed="?"></max:STREETADDRESS>
-                            <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
-                            <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
-                        </max:TKSERVICEADDRESS>
-                        <!--Zero or more repetitions:-->
-                        <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
-                            <!--Optional:-->
-                            <max:ADDINFO changed="?">1</max:ADDINFO>
-                            <!--Optional:-->
-                            <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
-                            <!--Optional:-->
-                            <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
-                            <!--Optional:-->
-                            <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
-                            <!--Optional:-->
-                            <max:DOCUMENT changed="?">foto</max:DOCUMENT>
-                            <!--Optional:-->
-                            <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
-                            <!--Optional:-->
-                            <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
-                            <!--Optional:-->
-                            <max:UPLOAD changed="?">1</max:UPLOAD>
-                            <!--Optional:-->
-                            <max:URLNAME changed="?">Imagen</max:URLNAME>
-                            <!--Optional:-->
-                            <max:URLTYPE changed="?">FILE</max:URLTYPE>
-                        </max:DOCLINKS>
-                        </max:SR>
-                    </max:MOP_SR_EMER_DOHSet>
-                </max:SyncMOP_SR_EMER_DOH>
-            </soapenv:Body>
-          </soapenv:Envelope>`
-          const options: HttpOptions = {
-            url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
-            data:sr,
-            headers:this.headers
-          };
-          console.log(data)
-          return from(Http.post(options))
+    // sr = `
+    // <soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' xmlns:max='http://www.ibm.com/maximo'>
+    //   <soapenv:Header/>
+    //     <soapenv:Body>
+    //     <max:SyncMOP_SR_EMER_DOH creationDateTime='?' baseLanguage='EN' transLanguage='ES' messageID='?' maximoVersion='?'>
+    //     <max:MOP_SR_EMER_DOHSet>
+    //     <max:SR action='Add' transLanguage='ES'>
+    //     <max:AFFECTEDPERSON changed='?'></max:AFFECTEDPERSON>
+    //     <max:ASSETNUM changed='?'>`+data.locations+`</max:ASSETNUM>
+    //     <max:ELEMENTO changed='?'></max:ELEMENTO>
+    //     <max:ASSETSITEID changed='?'>`+data.destino+`</max:ASSETSITEID>
+    //     <max:CATEGORIAMOP changed='?'>`+data.nivelalerta+`</max:CATEGORIAMOP>
+    //     <max:COMPETENCIA changed='?'></max:COMPETENCIA>
+    //     <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+    //     <max:DESCRIPTION changed='?'>`+data.titulo+`</max:DESCRIPTION>
+    //     <max:DESCRIPTION_LONGDESCRIPTION changed='?'>`+data.descripcion+`</max:DESCRIPTION_LONGDESCRIPTION>
+    //     <max:FECHARE changed='?'>`+data.date+`</max:FECHARE>
+    //     <max:REPORTDATE changed='?'>`+data.date+`</max:REPORTDATE>
+    //     <max:REPORTEDBY changed='?'>`+data.usuario+`</max:REPORTEDBY>
+    //     <max:TRANSITO changed='?'></max:TRANSITO>
+    //     <max:RESTRICCION changed='?'></max:RESTRICCION>
+    //     <max:TIPOTRAB changed='?'></max:TIPOTRAB>
+    //     <max:TKSERVICEADDRESS action='AddChange' relationship='?' deleteForInsert='?'>
+    //       <max:CITY changed="?"> </max:CITY>
+    //       <max:COUNTRY changed="?">CL</max:COUNTRY>
+    //       <max:COUNTY changed="?">100202</max:COUNTY>
+    //       <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+    //       <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+    //       <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+    //       <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+    //       <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+    //       <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+    //       <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+    //       <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+    //     </max:TKSERVICEADDRESS>
+    //     <max:DOCLINKS action='AddChange'>
+    //     <max:DOCUMENTDATA changed='?'>`+data.picture+`</max:DOCUMENTDATA>
+    //     <!--Optional:-->
+    //     <max:OWNERTABLE changed='?'>SR</max:OWNERTABLE>
+    //     <!--Optional:-->
+    //     <max:UPLOAD changed='?'>1</max:UPLOAD>
+    //     <!--Optional:-->
+    //     <max:URLNAME changed='?'>Imagen</max:URLNAME>
+    //     <!--Optional:-->
+    //     <max:URLTYPE changed='?'>FILE</max:URLTYPE>
+    //     </max:DOCLINKS>?
+    //     </max:SR>
+    //     </max:MOP_SR_EMER_DOHSet>
+    //     </max:SyncMOP_SR_EMER_DOH>
+    //   </soapenv:Body>
+    // </soapenv:Envelope>
+    // `
 
-    }
+    sr = `<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' xmlns:max='http://www.ibm.com/maximo'>
+    <soapenv:Header/>
+    <soapenv:Body>
+     <max:SyncMOP_SR_EMER_DOH >
+        <max:MOP_SR_EMER_DOHSet>
+           <max:SR action='Add'>
+              <max:ASSETSITEID>APR</max:ASSETSITEID>
+              <max:STATUS maxvalue='?'>NUEVO</max:STATUS>
+              <max:CLASS maxvalue='?'>SR</max:CLASS>
+              <max:DESCRIPTION changed='?'>titulo de prueba</max:DESCRIPTION>
+              <max:DESCRIPTION_LONGDESCRIPTION changed='?'>Desc de prueba</max:DESCRIPTION_LONGDESCRIPTION>
+              <max:FECHARE changed='?'>2022-07-18T14:56:04.240Z</max:FECHARE>
+              <max:CATEGORIAMOP changed='?'>Leve</max:CATEGORIAMOP>
+              <max:REPORTDATE>2022-07-18T14:56:04.240Z</max:REPORTDATE>
+              <max:REPORTEDBY>mauricio.donoso</max:REPORTEDBY>
+              <max:AFFECTEDPERSON changed='?'></max:AFFECTEDPERSON>
+              <max:LOCATION changed='?'></max:LOCATION>
+              <max:ESTADOLOC changed='?'>OPERATIVO</max:ESTADOLOC>
+              <max:ELEMENTO changed='?'></max:ELEMENTO>
+              <max:COMPETENCIA changed='?'></max:COMPETENCIA> deja en vacio
+              <max:EVENTO changed='?'></max:EVENTO> deja en vacio
+              <max:APUNTALAR changed='?'>False</max:APUNTALAR>
+              <max:ALZAPRIMAR changed='?'>False</max:ALZAPRIMAR>
+              <max:REMOVER changed='?'>0</max:REMOVER>
+              <max:ACORDONAR changed='?'>False</max:ACORDONAR>
+              <max:PROTECCION changed='?'>0</max:PROTECCION>
+              <max:REMCENIZA changed='?'>False</max:REMCENIZA>
+              <max:REMBARRO changed='?'>False</max:REMBARRO>
+              <max:DESTTUBE changed='?'>False</max:DESTTUBE>
+              <max:LIMPCUB changed='?'>0</max:LIMPCUB>
+              <max:CORTESUM changed='?'>False</max:CORTESUM>
+              <max:OTRO changed='?'>0</max:OTRO>
+              <max:NIVOPER changed='?'>ACTIVA</max:NIVOPER>
+              <max:COORX changed='?'>1</max:COORX>
+              <max:COORY changed='?'>2</max:COORY>
+                <max:PROBLEMCODE_LONGDESCRIPTION changed='?'></max:PROBLEMCODE_LONGDESCRIPTION >
+                <max:TKSERVICEADDRESS action='AddChange'>
+                  <max:CITY changed='?'></max:CITY>
+                  <max:COUNTRY changed='?'>CL</max:COUNTRY>
+                  <max:COUNTY changed='?'></max:COUNTY>
+                  <max:LATITUDEY changed='?'>-33.362549</max:LATITUDEY>
+                 <max:LONGITUDEX changed='?'>-70.765262</max:LONGITUDEX>
+                  <max:REFERENCEPOINT changed='?'></max:REFERENCEPOINT>
+                  <max:REGIONDISTRICT changed='?'>13</max:REGIONDISTRICT>
+                  <max:STATEPROVINCE changed='?'></max:STATEPROVINCE>
+                  <max:STREETADDRESS changed='?'></max:STREETADDRESS>
+                  <max:ADDRESSLINE2 changed='?'>1</max:ADDRESSLINE2>
+                  <max:ADDRESSLINE3 changed='?'></max:ADDRESSLINE3>
+              </max:TKSERVICEADDRESS>
+              <max:DOCLINKS action='AddChange' relationship='?' deleteForInsert='?'>
+                 <!--Optional:-->
+                 <max:ADDINFO changed='?'>1</max:ADDINFO>
+                 <!--Optional:-->
+                 <max:COPYLINKTOWO changed='?'>0</max:COPYLINKTOWO>
+                 <!--Optional:-->
+                 <max:DESCRIPTION changed='Ejemplo de archivo'></max:DESCRIPTION>
+                 <!--Optional:-->
+                 <max:DOCTYPE changed='?'>Attachments</max:DOCTYPE>
+                 <!--Optional:-->
+                 <max:DOCUMENT changed='?'>Prueba 1</max:DOCUMENT>
+                 <!--Optional:-->
+                 <max:DOCUMENTDATA changed='?'>`+data.picture+`</max:DOCUMENTDATA>
+                 <!--Optional:-->
+                 <max:OWNERTABLE changed='?'>SR</max:OWNERTABLE>
+                 <!--Optional:-->
+                 <max:UPLOAD changed='?'>1</max:UPLOAD>
+                 <!--Optional:-->
+                 <max:URLNAME changed='?'>Prueba</max:URLNAME>
+                 <!--Optional:-->
+                 <max:URLTYPE changed='?'>FILE</max:URLTYPE>
+              </max:DOCLINKS>
+           </max:SR>
+        </max:MOP_SR_EMER_DOHSet>
+     </max:SyncMOP_SR_EMER_DOH>
+    </soapenv:Body>
+ </soapenv:Envelope>
+ `
+    const options: HttpOptions = {
+      url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+      data:sr,
+      headers:this.headers
+    };
+    // console.log(data.picture)
+    return from(Http.post(options))
+    // if (menu == "DOP" || menu == "DGA" || menu == "DAP") {
+    //   sr = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:max="http://www.ibm.com/maximo">
+    //             <soapenv:Header/>
+    //             <soapenv:Body>
+    //               <max:SyncMOP_SR_EMER_DOH >
+    //                   <max:MOP_SR_EMER_DOHSet>
+    //                     <!--Zero or more repetitions:-->
+    //                     <max:SR action="Add">
+    //                     <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
+    //                         <max:LOCATION maxvalue="?">` + data.location + `</max:LOCATION>
+    //                         <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+    //                         <max:CLASS maxvalue="?">SR</max:CLASS>
+    //                         <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
+    //                         <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
+    //                         <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
+    //                         <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
+    //                         <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
+    //                         <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
+    //                         <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
+    //                         <max:LOCATION changed="?"></max:LOCATION>
+    //                         <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+    //                         <max:ELEMENTO changed="?"></max:ELEMENTO>
+    //                         <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
+    //                         <max:EVENTO changed="?"> </max:EVENTO>
+    //                         <max:APUNTALAR changed="?">False</max:APUNTALAR>
+    //                         <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+    //                         <max:REMOVER changed="?">0</max:REMOVER>
+    //                         <max:ACORDONAR changed="?">False</max:ACORDONAR>
+    //                         <max:PROTECCION changed="?">0</max:PROTECCION>
+    //                         <max:REMCENIZA changed="?">False</max:REMCENIZA>
+    //                         <max:REMBARRO changed="?">False</max:REMBARRO>
+    //                         <max:DESTTUBE changed="?">False</max:DESTTUBE>
+    //                         <max:LIMPCUB changed="?">0</max:LIMPCUB>
+    //                         <max:CORTESUM changed="?">False</max:CORTESUM>
+    //                         <max:OTRO changed="?">0</max:OTRO>
+    //                         <max:COORX changed="?">1</max:COORX>
+    //                         <max:COORY changed="?">2</max:COORY>
+    //                         <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
+    //                         <max:TKSERVICEADDRESS action="AddChange">
+    //                             <max:CITY changed="?"> </max:CITY>
+    //                             <max:COUNTRY changed="?">CL</max:COUNTRY>
+    //                             <max:COUNTY changed="?">100202</max:COUNTY>
+    //                             <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+    //                           <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+    //                             <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+    //                             <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+    //                             <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+    //                             <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+    //                             <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+    //                             <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+    //                         </max:TKSERVICEADDRESS>
+    //                         <!--Zero or more repetitions:-->
+    //                         <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+    //                           <!--Optional:-->
+    //                           <max:ADDINFO changed="?">1</max:ADDINFO>
+    //                           <!--Optional:-->
+    //                           <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+    //                           <!--Optional:-->
+    //                           <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
+    //                           <!--Optional:-->
+    //                           <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+    //                           <!--Optional:-->
+    //                           <max:DOCUMENT changed="?">foto</max:DOCUMENT>
+    //                           <!--Optional:-->
+    //                           <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
+    //                           <!--Optional:-->
+    //                           <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+    //                           <!--Optional:-->
+    //                           <max:UPLOAD changed="?">1</max:UPLOAD>
+    //                           <!--Optional:-->
+    //                           <max:URLNAME changed="?">Imagen</max:URLNAME>
+    //                           <!--Optional:-->
+    //                           <max:URLTYPE changed="?">FILE</max:URLTYPE>
+    //                         </max:DOCLINKS>
+    //                     </max:SR>
+    //                   </max:MOP_SR_EMER_DOHSet>
+    //               </max:SyncMOP_SR_EMER_DOH>
+    //             </soapenv:Body>
+    //         </soapenv:Envelope>`
+    //         const options: HttpOptions = {
+    //           url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+    //           data:sr,
+    //           headers:this.headers
+    //         };
+    //         return from(Http.post(options))
+    // }else{
+    //   console.log(data)
+    //   sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
+    //         <soapenv:Header/>
+    //         <soapenv:Body>
+    //             <max:SyncMOP_SR_EMER_DOH >
+    //                 <max:MOP_SR_EMER_DOHSet>
+    //                     <!--Zero or more repetitions:-->
+    //                     <max:SR action="Add">
+    //                     <max:ASSETSITEID>` + data.destino + `</max:ASSETSITEID>
+    //                     <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+    //                     <max:CLASS maxvalue="?">SR</max:CLASS>
+    //                     <max:DESCRIPTION changed="?">` + data.titulo+ `</max:DESCRIPTION>
+    //                     <max:DESCRIPTION_LONGDESCRIPTION changed="?">` + data.descripcion + `</max:DESCRIPTION_LONGDESCRIPTION>
+    //                     <max:FECHARE changed="?">` + data.date + `</max:FECHARE>
+    //                     <max:CATEGORIAMOP changed="?">` + data.nivelalerta + `</max:CATEGORIAMOP>
+    //                     <max:REPORTDATE>` + data.date + `</max:REPORTDATE>
+    //                     <max:REPORTEDBY>` + data.usuario.toUpperCase() + `</max:REPORTEDBY>
+    //                     <max:AFFECTEDPERSON changed="?"></max:AFFECTEDPERSON>
+    //                     <max:LOCATION changed="?"></max:LOCATION>
+    //                     <max:ESTADOLOC changed="?">` + data.operatividad + `</max:ESTADOLOC>
+    //                     <max:ELEMENTO changed="?"></max:ELEMENTO>
+    //                     <max:COMPETENCIA changed="?"> </max:COMPETENCIA>
+    //                     <max:EVENTO changed="?"> </max:EVENTO>
+    //                     <max:APUNTALAR changed="?">False</max:APUNTALAR>
+    //                     <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+    //                     <max:REMOVER changed="?">0</max:REMOVER>
+    //                     <max:ACORDONAR changed="?">False</max:ACORDONAR>
+    //                     <max:PROTECCION changed="?">0</max:PROTECCION>
+    //                     <max:REMCENIZA changed="?">False</max:REMCENIZA>
+    //                     <max:REMBARRO changed="?">False</max:REMBARRO>
+    //                     <max:DESTTUBE changed="?">False</max:DESTTUBE>
+    //                     <max:LIMPCUB changed="?">0</max:LIMPCUB>
+    //                     <max:CORTESUM changed="?">False</max:CORTESUM>
+    //                     <max:OTRO changed="?">0</max:OTRO>
+    //                     <max:COORX changed="?">1</max:COORX>
+    //                     <max:COORY changed="?">2</max:COORY>
+    //                     <max:PROBLEMCODE_LONGDESCRIPTION changed="?">abandonar</max:PROBLEMCODE_LONGDESCRIPTION >
+    //                     <max:TKSERVICEADDRESS action="AddChange">
+    //                         <max:CITY changed="?"> </max:CITY>
+    //                         <max:COUNTRY changed="?">CL</max:COUNTRY>
+    //                         <max:COUNTY changed="?">100202</max:COUNTY>
+    //                         <max:LATITUDEY changed="?">` + data.lat + `</max:LATITUDEY>
+    //                         <max:LONGITUDEX changed="?">` + data.lng + `</max:LONGITUDEX>
+    //                         <max:REFERENCEPOINT changed="?"> </max:REFERENCEPOINT>
+    //                         <max:REGIONDISTRICT changed="?">` + data.region + `</max:REGIONDISTRICT>
+    //                         <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+    //                         <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+    //                         <max:ADDRESSLINE2 changed="?">1</max:ADDRESSLINE2>
+    //                         <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+    //                     </max:TKSERVICEADDRESS>
+    //                     <!--Zero or more repetitions:-->
+    //                     <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+    //                         <!--Optional:-->
+    //                         <max:ADDINFO changed="?">1</max:ADDINFO>
+    //                         <!--Optional:-->
+    //                         <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+    //                         <!--Optional:-->
+    //                         <max:DESCRIPTION changed="?">` + data.titulo + `</max:DESCRIPTION>
+    //                         <!--Optional:-->
+    //                         <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+    //                         <!--Optional:-->
+    //                         <max:DOCUMENT changed="?">foto</max:DOCUMENT>
+    //                         <!--Optional:-->
+    //                         <max:DOCUMENTDATA changed="?">` + data.picture + `</max:DOCUMENTDATA>
+    //                         <!--Optional:-->
+    //                         <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+    //                         <!--Optional:-->
+    //                         <max:UPLOAD changed="?">1</max:UPLOAD>
+    //                         <!--Optional:-->
+    //                         <max:URLNAME changed="?">Imagen</max:URLNAME>
+    //                         <!--Optional:-->
+    //                         <max:URLTYPE changed="?">FILE</max:URLTYPE>
+    //                     </max:DOCLINKS>
+    //                     </max:SR>
+    //                 </max:MOP_SR_EMER_DOHSet>
+    //             </max:SyncMOP_SR_EMER_DOH>
+    //         </soapenv:Body>
+    //       </soapenv:Envelope>`
+    //       const options: HttpOptions = {
+    //         url:this.URL_SERVICIOS + "MOP_WS_MOP_SR_EMER_DOH",
+    //         data:sr,
+    //         headers:this.headers
+    //       };
+    //       console.log(data)
+    //       return from(Http.post(options))
+
+    // }
 
   }
 

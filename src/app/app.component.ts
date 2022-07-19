@@ -5,10 +5,10 @@ import { UsuarioService } from './services/usuario.service';
 import { Router } from '@angular/router';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
-// import { SplashScreen } from '@awesome-cordova-plugins/splash-screen/ngx';
 import { StatusBar } from '@awesome-cordova-plugins/status-bar/ngx';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from '@capacitor/app';
+import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 
 
 @Component({
@@ -20,6 +20,9 @@ export class AppComponent {
   loader;
   connectSubscription;
   usuario;
+  db:SQLiteObject;
+  pendientes = false;
+  pagina = '';
   constructor(
     public network: Network,
     private platform: Platform,
@@ -33,6 +36,7 @@ export class AppComponent {
     public alertController: AlertController,
     // private splashScreen: SplashScreen,
     private statusBar: StatusBar,
+    private sqlite: SQLite
   ) {
     this.initializeApp()
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
@@ -41,8 +45,20 @@ export class AppComponent {
       localStorage.setItem('conexion','no')
       this._us.cargar_storage().then(()=>{})
     });
-    this.observadorConectado()
+    this.observadorConectado();
+    this._us.cargar_storage().then(()=>{
+      if(this._us.conexion == 'si'){
+        this.buscarAlertasPendientes()
+      }
+    })
     this._us.message.subscribe(res=>{
+      if(res == 'pendiente'){
+        this.pendientes = true;
+      }
+      if(res == 'sin pendiente'){
+        this.pendientes = false;
+        this.cambiarPag('home')
+      }
       this._us.cargar_storage().then(()=>{
         if(this._us.usuario){
           this._mc.enable(true,'first')
@@ -52,25 +68,48 @@ export class AppComponent {
         this._mc.enable(false,'first')
       })
     })
+    this._mc.toggle()
   }
 
   observadorConectado(){
     this.connectSubscription = this.network.onConnect().subscribe(() => {
-      console.log('aca conectado')
       this._us.cargar_storage().then(()=>{        
         if(this._us.conexion == 'no' || !this._us.conexion){
-          this.presentToast('Conexión establecida')
+          this.presentToast('Conexión establecida').then(()=>{
+            setTimeout((()=>{
+              this.buscarAlertasPendientes()
+            }),4000)
+          })
         }
         this.storage.setItem('conexion', 'si');
         localStorage.setItem('conexion','si')
-        this.navCtrl.pop().then(()=>{
-          this.navCtrl.navigateRoot('/home')
-        }).catch(()=>{
-          this.navCtrl.navigateRoot('/home')
-        })
         this._us.cargar_storage().then(()=>{})
       })
     });
+  }
+
+  buscarAlertasPendientes(){
+    if(this.platform.is('capacitor')){
+      this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+        this.db = db;
+        this.db.transaction(async tx=>{
+          this.db.executeSql('SELECT * FROM alerta', []).then((data)=>{
+            if(data.rows.length > 0){
+              this.pendientes = true;
+              this.presentToast('Hay '+data.rows.length +' alertas pendientes por enviar')
+            }else{
+              let options: NativeTransitionOptions ={
+                direction:'right',
+                duration:500
+              }
+              this.nativePageTransitions.fade(options);
+              this.navCtrl.navigateRoot('/home')
+              this.pagina = 'home'
+            }
+          })
+        })
+      })
+    }
   }
 
   async splash(){
@@ -87,15 +126,13 @@ export class AppComponent {
         if(this._us.usuario){
           this._mc.enable(true,'first')
           this.usuario = this._us.usuario
+          this.pagina = 'home'
         }
       }).catch(()=>{
         this._mc.enable(false,'first')
       })
       this.statusBar.overlaysWebView(false);
-      // this.statusBar.backgroundColorByHexString('#000000');
       this.statusBar.hide()
-
-      // this.splashScreen.hide();
       this.registerBackButton()
     });
   }
@@ -114,7 +151,7 @@ export class AppComponent {
   }
 
   cambiarPag(page:string){
-    this._mc.toggle();
+    this._mc.close();
     if(this.router.url != '/'+page){
       let options: NativeTransitionOptions ={
         direction:'right',
@@ -122,6 +159,7 @@ export class AppComponent {
       }
       this.nativePageTransitions.flip(options);
       this.navCtrl.navigateRoot('/'+page)
+      this.pagina = page
     }
   }
 
@@ -145,26 +183,27 @@ export class AppComponent {
               setTimeout(()=>{
                 this._us.cerrarSesion().then(()=>{
                   let options: NativeTransitionOptions ={
-                    direction:'left',
+                    direction:'right',
                     duration:500
                   }
-                  // this.loader.dismiss()
-                  this.nativePageTransitions.flip(options);
+                  this.nativePageTransitions.slide(options);
                   this._mc.toggle()
                   this._mc.enable(false)
                   this.navCtrl.navigateRoot('/login')
+                  this.pagina = 'home'
                 })
               },3000)
             }).catch(()=>{
               this._us.cerrarSesion().then(()=>{
                 let options: NativeTransitionOptions ={
-                  direction:'left',
+                  direction:'right',
                   duration:500
                 }
-                this.nativePageTransitions.flip(options);
+                this.nativePageTransitions.slide(options);
                 this._mc.toggle()
                 this._mc.enable(false)
                 this.navCtrl.navigateRoot('/login')
+                this.pagina = 'home'
               })
             })
            
@@ -173,17 +212,11 @@ export class AppComponent {
       ]
     });
     await alert.present();
-    
-   
   }
 
   registerBackButton() {
     this.platform.backButton.subscribe(() => {
-      // this.navCtrl.pop()
       this._mc.toggle()
-      // if(this.router.url == '/home'){
-      //   App.minimizeApp()
-      // }  
     });
   }
 

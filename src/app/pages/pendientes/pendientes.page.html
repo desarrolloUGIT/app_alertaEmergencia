@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar mode="ios">
+    <ion-buttons slot="start" >
+      <ion-menu-button style="color: white;" ></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Pendientes</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-accordion-group *ngIf="mostrar" mode="ios" style="margin-bottom: 5%;margin-top: 3%;" [value]="alertas.length > 0 ? alertas[0].id : null">
+    <ion-accordion [value]="item.id" *ngFor="let item of alertas;let i = index">
+      <ion-item slot="header" color="accordion">
+        <ion-badge slot="start" color="medium">{{i+1}}</ion-badge>
+        <ion-label style="font-weight: bold;">{{item.titulo}}</ion-label>
+      </ion-item>
+      <div class="ion-padding contenido" slot="content" align="center">
+          <ion-grid>
+            <ion-row>
+              <p style="word-break: break-all;"><span>Descripción:</span> {{item.descripcion}}</p>
+            </ion-row>
+            <ion-row>
+              <ion-col size="8">
+                <ion-row>
+                  <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
+                </ion-row>
+                <ion-row>
+                  <p><span>Operatividad:</span> {{item.operatividad == "NOOPERATIVO" ? "No Operativo" : item.operatividad == "OPERATIVO" ? "Operativo" : item.operatividad == "RESTRICCIÓN" ? "Operativo Con Restricción" : 'N/A'}}</p>
+                </ion-row>
+                <ion-row>
+                  <ion-col size="6"><span>Latitud:</span> {{item.lat}}</ion-col>
+                  <ion-col size="6"><span>Longitud:</span> {{item.lng}}</ion-col>
+                </ion-row>
+              </ion-col>
+              <ion-col size="4">
+                <div align="center">
+                  <ion-img [src]="item.name.data" style="height: 100px;"></ion-img>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          <ion-button color="danger" slot="start" expand="block" (click)="eliminarAlerta(item.id,i)">Eliminar</ion-button>
+          <ion-button color="medium" slot="end" expand="block">Enviar</ion-button>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+  
+</ion-content>

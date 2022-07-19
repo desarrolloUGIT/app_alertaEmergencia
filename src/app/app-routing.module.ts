@@ -27,6 +27,10 @@ const routes: Routes = [
     path: 'modal-activos',
     loadChildren: () => import('./pages/modal-activos/modal-activos.module').then( m => m.ModalActivosPageModule)
   },
+  {
+    path: 'pendientes',
+    loadChildren: () => import('./pages/pendientes/pendientes.module').then( m => m.PendientesPageModule)
+  },
 ];
 
 @NgModule({

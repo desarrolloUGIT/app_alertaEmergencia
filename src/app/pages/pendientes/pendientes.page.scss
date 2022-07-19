@@ -1,0 +1,28 @@
+ion-accordion.accordion-expanding ion-item[slot="header"],
+  ion-accordion.accordion-expanded ion-item[slot="header"] {
+    background: darkgray !important;
+    --ion-color-base:transparent !important;
+    --color: var(--ion-color-primary-contrast);
+}
+.contenido{
+    color: #000;
+    text-align: left;
+    background: #a0a0a045;
+    border: 1px solid grey;
+    margin: 3%;
+}
+ion-label{
+    padding-left: 5%;
+    text-overflow: initial !important;
+    white-space: break-spaces !important;
+    color: #000;
+}
+span{
+    font-weight: bold;
+}
+ion-col{
+    padding: 0;
+}
+ion-grid{
+    padding: 0;
+}
