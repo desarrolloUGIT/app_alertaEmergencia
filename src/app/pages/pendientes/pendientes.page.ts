@@ -43,7 +43,7 @@ db:SQLiteObject;
           })
         })
       }else{
-        this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"b a","nivelalerta":"Moderado","descripcion":"hfjsydgfhtsdfygsduyfgsudgfusdgfudgsuyfgdsuyfgdsuygfuydsgfuydsgfyugdsufgdsuygfuydsgfuydsgfyugsdyufgdsuyfgyusdgfyusdgu","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"},{"id":2,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"gxvb","nivelalerta":"Muy Grave","descripcion":"vgxf","lat":-33.351776,"date":"Fri Jul 15 2022 10:36:03 GMT-0400 (-04)","location":"SSR001501","region":"13","lng":-70.821254,"name":"Fri Jul 15 2022 10:36:03 GMT-0400 (-04)"},{"id":3,"usuario":"mauricio.donoso","destino":"APR","operatividad":"OPERATIVO","titulo":" vcx","nivelalerta":"Leve","descripcion":"vbxchhh","lat":-33.433303,"date":"Fri Jul 15 2022 10:40:59 GMT-0400 (-04)","location":"SSR001157","region":"13","lng":-70.822192,"name":"Fri Jul 15 2022 10:40:59 GMT-0400 (-04)"}]
+        this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"Titulo de la alerta","nivelalerta":"Moderado","descripcion":"Esta es la descripción de la alerta","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"}]
         this.loadFiles()
       }
     }
@@ -69,6 +69,7 @@ db:SQLiteObject;
         this.loadFileData(res.files)
         this.loader.dismiss()
       }).catch(()=>{
+        this.loader.dismiss()
         if(this.alertas.length <= 0){
           this._us.nextmessage('sin pendiente')        
         }

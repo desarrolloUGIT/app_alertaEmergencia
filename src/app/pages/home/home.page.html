@@ -10,6 +10,8 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
+  <!-- <ion-button id="open-modal" expand="block">Open Modal</ion-button> -->
+
   <mat-stepper orientation="vertical"  #stepper>
     <!-- Selección de Activo -->
     <mat-step >
@@ -185,15 +187,23 @@
         </ion-button>
       </div>
       <div align="center" >
-        <ion-button expand="block"  color="medium" (click)="enviar(stepper)" [disabled]="!secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region">
+        <ion-button expand="block"  color="medium" (click)="enviar()" [disabled]="!secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region">
           REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
         </ion-button>
       </div>
-      <!-- <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button (click)="stepper.reset()">Reset</button>
-      </div> -->
     </mat-step>
     <!-- FIn resumen -->
   </mat-stepper>
+  <ion-modal #modal trigger="open-modal" [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation">
+    <ng-template>
+      <ion-content [class.envioExitoso]="estadoEnvioAlerta == 'exitoso'" [class.envioFallido]="estadoEnvioAlerta == 'fallido'" [class.envioPendiente]="estadoEnvioAlerta == 'pendiente'">
+        <ion-fab vertical="top" horizontal="end" slot="fixed" >
+          <ion-fab-button (click)="modal.dismiss()" color="light">
+            <ion-icon name="close"></ion-icon>
+          </ion-fab-button>
+        </ion-fab>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>
+

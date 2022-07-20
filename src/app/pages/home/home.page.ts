@@ -24,6 +24,7 @@ import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 import { Camera, CameraResultType, CameraSource, Photo} from '@capacitor/camera'
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { ActionSheetController } from '@ionic/angular';
+import { AnimationController } from '@ionic/angular';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -96,9 +97,10 @@ export class HomePage implements OnInit,AfterViewInit {
   coordenadas;
   existenActivos = true;
   picture = null;
+  estadoEnvioAlerta = null;
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
-    public toastController:ToastController,public actionSheetController: ActionSheetController) {}
+    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
 
   ngOnInit(){
     if(this.platform.is('capacitor')){
@@ -922,7 +924,7 @@ export class HomePage implements OnInit,AfterViewInit {
   }
   // FIN SECCIÓN FOTO
   // ENVIAR ALERTA
-   enviar(step){
+   enviar(){
      this._us.cargar_storage().then(()=>{
       let data = {
         titulo:this.thirdFormGroup.value.titulo,
@@ -959,28 +961,41 @@ export class HomePage implements OnInit,AfterViewInit {
       }else{ 
         data.locations = '';
       } 
+
       if(this._us.conexion == 'no'){
         this.db.open().then(()=>{
           this.db.transaction( tx1=>{
             this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
               this.db.transaction(async tx=>{
                 if(dat.rows.length > 0){
-                  tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                  [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
-                  this.presentToast('La alerta sera enviada cuando tengas conexión a internet nuevamente');
-                  const savedFile = await Filesystem.writeFile({
-                    directory:Directory.Data,
-                    path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
-                    data:this.images[0].data
-                    }).then(()=>{
-                    this.deleteImage(this.images[0])
-                    this.volverInicio()
-                    this._us.nextmessage('pendiente') 
-                  })
+                  if(dat.rows.length >= 7){
+                    this.alertasMaximas()
+                  }else{
+                    tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                    this.estadoEnvioAlerta = 'pendiente'
+                    var modal = document.querySelector('ion-modal');
+                    modal.present().then(()=>{
+                      this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
+                    })
+                    const savedFile = await Filesystem.writeFile({
+                      directory:Directory.Data,
+                      path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                      data:this.images[0].data
+                      }).then(()=>{
+                      this.deleteImage(this.images[0])
+                      this.volverInicio()
+                      this._us.nextmessage('pendiente') 
+                    })
+                  }
                 }else{
                   tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                   [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
-                  this.presentToast('La alerta sera enviada cuando tengas conexión a internet nuevamente');
+                  this.estadoEnvioAlerta = 'pendiente'
+                  var modal = document.querySelector('ion-modal');
+                  modal.present().then(()=>{
+                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
+                  })
                   const savedFile = await Filesystem.writeFile({
                     directory:Directory.Data, 
                     path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
@@ -998,10 +1013,19 @@ export class HomePage implements OnInit,AfterViewInit {
       }else{
         this._us.enviarAlerta(data).subscribe(res=>{
           console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
-          this.presentToast('Aca se envia la alerta, pero aun no funciona eso');
-          // this.deleteImage(this.images[0])
-          // this.volverInicio()
+          this.estadoEnvioAlerta = 'exitoso'
+          var modal = document.querySelector('ion-modal');
+          this.deleteImage(this.images[0])
+          this.volverInicio()
+          modal.present().then(()=>{
+            this.presentToast('Alerta enviada exitosamente');
+          })
         },err=>{
+          this.estadoEnvioAlerta = 'fallido'
+          var modal = document.querySelector('ion-modal');
+          modal.present().then(()=>{
+            this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
+          })
           console.log('******************** ERROR ENVIAR ******************** ',err)
         })
       }
@@ -1009,6 +1033,16 @@ export class HomePage implements OnInit,AfterViewInit {
      
       // this.stepper.reset()
     })
+  }
+
+  async alertasMaximas() {
+    const alert = await this.alertctrl.create({
+      header: 'Límite de alertas',
+      message: 'Se ha llegado al límite de 7 alertas almacenadas, por lo cual no s epueden guardar más alertas para enviar con posterioridad',
+      buttons: ['OK'],
+      mode:'ios'
+    });
+    await alert.present();
   }
 
   volverInicio(){
@@ -1020,5 +1054,29 @@ export class HomePage implements OnInit,AfterViewInit {
     this.view.setZoom(13)
     this.obtenerUbicacionRegion()
   }
-
+  // Animación para modal de envio de alerta
+  enterAnimation = (baseEl: HTMLElement) => {
+    const root = baseEl.shadowRoot;
+    const backdropAnimation = this.animationCtrl
+      .create()
+      .addElement(root.querySelector('ion-backdrop')!)
+      .fromTo('opacity', '0.01', 'var(--backdrop-opacity)');
+    const wrapperAnimation = this.animationCtrl
+      .create()
+      .addElement(root.querySelector('.modal-wrapper')!)
+      .keyframes([
+        { offset: 0, opacity: '0', transform: 'scale(0)' },
+        { offset: 1, opacity: '0.99', transform: 'scale(1)' },
+      ]);
+    return this.animationCtrl
+      .create()
+      .addElement(baseEl)
+      .easing('ease-out')
+      .duration(300)
+      .addAnimation([backdropAnimation, wrapperAnimation]);
+  };
+  leaveAnimation = (baseEl: HTMLElement) => {
+    return this.enterAnimation(baseEl).direction('reverse');
+  };
+  // FIN Animación para modal de envio de alerta
 }
