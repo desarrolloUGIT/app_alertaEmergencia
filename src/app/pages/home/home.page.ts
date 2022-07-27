@@ -25,6 +25,10 @@ import { Camera, CameraResultType, CameraSource, Photo} from '@capacitor/camera'
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { ActionSheetController } from '@ionic/angular';
 import { AnimationController } from '@ionic/angular';
+import Draw from 'ol/interaction/Draw';
+import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
+import {Image as ImageLayer, Tile } from 'ol/layer';
+import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -62,11 +66,18 @@ export class HomePage implements OnInit,AfterViewInit {
   });
   modo = 'osm'
 
-  dvRedVIal = new TileLayer({
-    source: new TileArcGISRest({
-          url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer'
-      }),
-  });
+  // dvRedVIal = new TileLayer({
+  //   source: new TileArcGISRest({
+  //         url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer'
+  //     }),
+  // });
+  dvRedVIal =  new ImageLayer({
+    source: new ImageArcGISRest({
+      ratio: 1,
+      params: {},
+      url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer',
+    }),
+  })
   regiones = null;
   iconFeature = new Feature({
     geometry: new Point(this.stgo),
@@ -153,7 +164,7 @@ export class HomePage implements OnInit,AfterViewInit {
          this.osm,
          this.baseLayer,
          this.dvRedVIal,
-         this.chile
+        //  this.chile
         ],
         view:this.view,
         // controls: defaultControls().extend([new FullScreen()]),
@@ -170,9 +181,15 @@ export class HomePage implements OnInit,AfterViewInit {
       var lonlat = olProj.toLonLat(this.view.getCenter());
       this.dataPosicion.lng = Number(lonlat[0].toFixed(6))
       this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
+ 
       this.map.getView().on('change:center', ()=>{
         this.obtenerUbicacionRegion()
       });
+      this.map.on('click',(e)=>{
+        this.map.forEachLayerAtPixel(e.pixel,(feature,layer)=>{
+          console.log(feature);
+        })
+      })
     })
   }
 
@@ -1038,7 +1055,7 @@ export class HomePage implements OnInit,AfterViewInit {
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
       header: 'Límite de alertas',
-      message: 'Se ha llegado al límite de 7 alertas almacenadas, por lo cual no s epueden guardar más alertas para enviar con posterioridad',
+      message: 'Se ha llegado al límite de 7 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
       buttons: ['OK'],
       mode:'ios'
     });
