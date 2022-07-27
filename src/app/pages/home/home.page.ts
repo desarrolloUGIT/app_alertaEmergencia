@@ -45,7 +45,7 @@ interface LocalFile {
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements OnInit,AfterViewInit {
+export class HomePage implements OnInit {
   @ViewChild('stepper')  stepper: MatStepper;
   activosEncontrados;
   stgo = olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')
@@ -109,6 +109,10 @@ export class HomePage implements OnInit,AfterViewInit {
   existenActivos = true;
   picture = null;
   estadoEnvioAlerta = null;
+  map2;
+  view2:any;
+  vialidad = false;
+  basemap = "streets-vector"
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
@@ -148,11 +152,151 @@ export class HomePage implements OnInit,AfterViewInit {
     this._mc.enable(true,'first')
     this._us.cargar_storage().then(()=>{
       this._us.nextmessage('usuario_logeado') 
+      if(this._us.usuario.DEFSITE == 'VIALIDAD'){
+        this.loadMapVialidad()
+        this.vialidad = true;
+      }else{
+        this.loadMapNotVialidad()
+        this.vialidad = false;
+      }
     })
+    
   }
 
+  async loadMapVialidad(){
+    const [Map, MapView, FeatureLayer, Locate, Track, Graphic, watchUtils, IdentifyTask, IdentifyParameters, MapImageLayer,Basemap]:any = await loadModules([
+      'esri/Map',
+      'esri/views/MapView',
+      'esri/layers/FeatureLayer',
+      'esri/widgets/Locate',
+      'esri/widgets/Track',
+      'esri/Graphic',
+      'esri/core/watchUtils',
+      'esri/tasks/IdentifyTask',
+      'esri/tasks/support/IdentifyParameters',
+      'esri/layers/MapImageLayer',
+      "esri/Basemap"
+    ])
+      .catch(err => {
+        console.error("ArcGIS: ", err);
+      });
+      let basemap = new Basemap({
+        baseLayers: [
+          new MapImageLayer({
+            url: "https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer",
+            title: "Basemap"
+          })
+        ],
+        title: "basemap",
+        id: "basemap"
+      });
+      this.map2 = new Map({
+        // basemap: 'topo-vector'
+        basemap:basemap
+      });
+      // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
+      const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_VIALES/MapServer';
+
+      let flVialidad = new MapImageLayer({
+        url: vialidadRedVialURL
+      })
+      this.map2.add(flVialidad);
+      this.view2 = new MapView({
+        container: "container", 
+        center: [-70.673676, -33.447487],
+        zoom: 19,
+        map: this.map2,
+        minScale: 50000,
+        maxScale: 0, 
+        constraints : {
+          minZoom :2,
+          maxZoom:21
+        },
+      });
+      this.view2.center = [-70.673676, -33.447487]
+      this.view2.zoom = 10;   
+      this.view2.on("click", (e:any)=>{
+        let point = this.view2.toMap(e);
+        this.coordenadas = ("X: " +point.longitude.toFixed(3) + " Y: " + point.latitude.toFixed(3))
+        let point2 = {
+          type: "point",
+          longitude: point.longitude.toFixed(3),
+          latitude: point.latitude.toFixed(3)
+        };
+        let markerSymbol = {
+          type: "picture-marker",
+          url: "assets/img/pin.png",
+          width: "50px",
+          height: "40px"
+        };
+    
+        let pointGraphic = new Graphic({
+          geometry: point2 as any,
+          symbol: markerSymbol as any,
+          popupTemplate:null
+        });
+        this.view2.graphics.removeAll();
+        this.view2.graphics.add(pointGraphic);
+        setTimeout(()=>{
+          this.view2.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
+        },1000)
+      });
+      this.view2.on("pointer-move", (e:any)=>{
+        let point = this.view2.toMap(e);
+        this.coordenadas = ("X: " +point.longitude.toFixed(3) + " Y: " + point.latitude.toFixed(3))
+        let point2 = {
+          type: "point",
+          longitude: point.longitude.toFixed(3),
+          latitude: point.latitude.toFixed(3)
+        };
+        let markerSymbol = {
+          type: "picture-marker",
+          url: "assets/img/pin.png",
+          width: "50px",
+          height: "40px"
+        };
+    
+        let pointGraphic = new Graphic({
+          geometry: point2 as any,
+          symbol: markerSymbol as any,
+          popupTemplate:null
+        });
+        this.view2.graphics.removeAll();
+        this.view2.graphics.add(pointGraphic);
+        setTimeout(()=>{
+          this.view2.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
+        },1000)
+      });
+      this.view2.on("click", (event) => {
+        let identifyTask = new IdentifyTask(vialidadRedVialURL);
+        let params = new IdentifyParameters();
+        params.tolerance = 20;
+        params.layerIds = [0];
+        params.layerOption = "all";
+        params.width = this.view2.width;
+        params.height = this.view2.height;
+        params.geometry = event.mapPoint;
+        params.mapExtent = this.view2.extent;
+
+        identifyTask.execute(params).then((response) => {
+          console.log(response);
+        });
+      
+  });
+}
+
+customZoom(){
+  if(this.basemap == "streets-vector"){
+    this.map2.basemap = 'satellite' 
+    this.basemap = 'satellite' 
+  }else{
+    this.map2.basemap = 'streets-vector' 
+    this.basemap = 'streets-vector' 
+  }
+}
+
 // INICIO MAPA
-  ngAfterViewInit(): void {
+  loadMapNotVialidad(): void {
     this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
       this.chile = new VectorLayer({
         source:new VectorSource({
@@ -174,6 +318,7 @@ export class HomePage implements OnInit,AfterViewInit {
       }, 500);
       this.chile.setVisible(true)
       this.osm.setVisible(true)
+      this.dvRedVIal.setVisible(true)
       this.baseLayer.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
       this.markers.getSource().addFeature(this.marker);

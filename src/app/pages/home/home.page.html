@@ -10,6 +10,7 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
+  
   <!-- <ion-button id="open-modal" expand="block">Open Modal</ion-button> -->
 
   <mat-stepper orientation="vertical"  #stepper>
@@ -17,14 +18,22 @@
     <mat-step >
       <ng-template matStepLabel>Activo</ng-template>
       <form [formGroup]="firstFormGroup">
-        <div class="map-container" id="map">
-          <div *ngIf="stepper.selectedIndex == 0" id="custom-button" class="custom-button">
+        <div class="map-container" id="map" [style.height]="!vialidad ? '200px' : '0px'">
+          <div *ngIf="(stepper.selectedIndex == 0) && !vialidad" id="custom-button" class="custom-button">
             <div (click)='changeMap()' class="icon-button">
                 <ion-icon name="map-outline"></ion-icon>
             </div>
             <div (click)='geolocate()' class="icon-button">
               <ion-icon name="locate-outline"></ion-icon>
             </div>
+          </div>
+        </div>
+        <div  id="container" [style.height]="vialidad ? '200px' : '0px'"> 
+          <div (click)='customZoom()' class="icon-button2">
+                <ion-icon name="map-outline"></ion-icon>
+          </div>
+          <div (click)='customZoom()' class="icon-button2">
+            <ion-icon name="locate-outline"></ion-icon>
           </div>
         </div>
         <ion-card center>

@@ -157,8 +157,8 @@ export class UsuarioService {
     localStorage.setItem('tokenESRI', String(226));
     localStorage.setItem('menuType', menuType);
     if(usuario){
-      this.storage.setItem('token_user', JSON.stringify(btoa(usuario.user + ':' + usuario.password)));
-      localStorage.setItem('token_user', JSON.stringify(btoa(usuario.user + ':' + usuario.password)));
+      this.storage.setItem('token_user', JSON.stringify(btoa((encodeURIComponent(usuario.user + ':' + usuario.password)))));
+      localStorage.setItem('token_user', JSON.stringify(btoa((encodeURIComponent(usuario.user + ':' + usuario.password)))));
     }
     this.cargar_storage() 
   }
