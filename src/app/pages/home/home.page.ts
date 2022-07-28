@@ -152,7 +152,8 @@ export class HomePage implements OnInit {
     this._mc.enable(true,'first')
     this._us.cargar_storage().then(()=>{
       this._us.nextmessage('usuario_logeado') 
-      if(this._us.usuario.DEFSITE == 'VIALIDAD'){
+      console.log(this._us.usuario)
+      if(this._us.usuario.DEFSITE = 'VIALIDAD'){
         this.loadMapVialidad()
         this.vialidad = true;
       }else{
@@ -173,7 +174,7 @@ export class HomePage implements OnInit {
       'esri/Graphic',
       'esri/core/watchUtils',
       'esri/tasks/IdentifyTask',
-      'esri/tasks/support/IdentifyParameters',
+      'esri/rest/support/IdentifyParameters',
       'esri/layers/MapImageLayer',
       "esri/Basemap"
     ])
@@ -182,8 +183,8 @@ export class HomePage implements OnInit {
       });
       let basemap = new Basemap({
         baseLayers: [
-          new MapImageLayer({
-            url: "https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer",
+          new FeatureLayer({
+            url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
             title: "Basemap"
           })
         ],
@@ -191,8 +192,8 @@ export class HomePage implements OnInit {
         id: "basemap"
       });
       this.map2 = new Map({
-        // basemap: 'topo-vector'
-        basemap:basemap
+        basemap: 'topo-vector'
+        // basemap:basemap
       });
       // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
       const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_VIALES/MapServer';
@@ -203,71 +204,25 @@ export class HomePage implements OnInit {
       this.map2.add(flVialidad);
       this.view2 = new MapView({
         container: "container", 
-        center: [-70.673676, -33.447487],
-        zoom: 19,
+        center: [-70.65266161399654,-33.44286267068381],
+        zoom: 13,
         map: this.map2,
-        minScale: 50000,
+        minScale: 60000,
         maxScale: 0, 
         constraints : {
           minZoom :2,
           maxZoom:21
         },
       });
-      this.view2.center = [-70.673676, -33.447487]
-      this.view2.zoom = 10;   
+      let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
+      this.dataPosicion.lng = Number(-70.65266161399654.toFixed(6))
+      this.dataPosicion.lat = Number(-33.44286267068381.toFixed(6))
+      this.agregarPuntero(pointInicial,Graphic)
       this.view2.on("click", (e:any)=>{
         let point = this.view2.toMap(e);
-        this.coordenadas = ("X: " +point.longitude.toFixed(3) + " Y: " + point.latitude.toFixed(3))
-        let point2 = {
-          type: "point",
-          longitude: point.longitude.toFixed(3),
-          latitude: point.latitude.toFixed(3)
-        };
-        let markerSymbol = {
-          type: "picture-marker",
-          url: "assets/img/pin.png",
-          width: "50px",
-          height: "40px"
-        };
-    
-        let pointGraphic = new Graphic({
-          geometry: point2 as any,
-          symbol: markerSymbol as any,
-          popupTemplate:null
-        });
-        this.view2.graphics.removeAll();
-        this.view2.graphics.add(pointGraphic);
-        setTimeout(()=>{
-          this.view2.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
-        },1000)
-      });
-      this.view2.on("pointer-move", (e:any)=>{
-        let point = this.view2.toMap(e);
-        this.coordenadas = ("X: " +point.longitude.toFixed(3) + " Y: " + point.latitude.toFixed(3))
-        let point2 = {
-          type: "point",
-          longitude: point.longitude.toFixed(3),
-          latitude: point.latitude.toFixed(3)
-        };
-        let markerSymbol = {
-          type: "picture-marker",
-          url: "assets/img/pin.png",
-          width: "50px",
-          height: "40px"
-        };
-    
-        let pointGraphic = new Graphic({
-          geometry: point2 as any,
-          symbol: markerSymbol as any,
-          popupTemplate:null
-        });
-        this.view2.graphics.removeAll();
-        this.view2.graphics.add(pointGraphic);
-        setTimeout(()=>{
-          this.view2.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
-        },1000)
-      });
-      this.view2.on("click", (event) => {
+        this.view2.center = [point.longitude.toFixed(3), point.latitude.toFixed(3)]
+        this.agregarPuntero(point,Graphic)
+        this.obtenerUbicacionRegion(point)
         let identifyTask = new IdentifyTask(vialidadRedVialURL);
         let params = new IdentifyParameters();
         params.tolerance = 20;
@@ -275,24 +230,94 @@ export class HomePage implements OnInit {
         params.layerOption = "all";
         params.width = this.view2.width;
         params.height = this.view2.height;
-        params.geometry = event.mapPoint;
+        params.geometry = e.mapPoint;
         params.mapExtent = this.view2.extent;
-
         identifyTask.execute(params).then((response) => {
           console.log(response);
         });
-      
+      });
+      this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
+        this.chile = new VectorLayer({
+          source:new VectorSource({
+            features: new GeoJSON().readFeatures(chileJSON),
+          })
+        })
+        this.view2.on("drag", (e:any)=>{
+            let point = this.view2.toMap(e);
+            this.agregarPuntero(point,Graphic)
+            this.obtenerUbicacionRegion(point)
+          })
+      })
+}
+
+agregarPuntero(point,Graphic){
+  this.view2.goTo({
+    center:[point.longitude.toFixed(3),point.latitude.toFixed(3),]
+  })
+  let point2 = {
+    type: "point",
+    longitude: this.view2.center.longitude,
+    latitude: this.view2.center.latitude
+  };
+  let markerSymbol = {
+    type: "picture-marker",
+    url: "assets/img/pin.png",
+    width: "50px",
+    height: "40px"
+  };
+
+  let pointGraphic = new Graphic({
+    geometry: point2 as any,
+    symbol: markerSymbol as any,
+    popupTemplate:null
   });
+  this.view2.graphics.removeAll();
+  this.view2.graphics.add(pointGraphic);
 }
 
 customZoom(){
-  if(this.basemap == "streets-vector"){
+  if(this.basemap == "topo-vector"){
     this.map2.basemap = 'satellite' 
     this.basemap = 'satellite' 
   }else{
-    this.map2.basemap = 'streets-vector' 
-    this.basemap = 'streets-vector' 
+    this.map2.basemap = 'topo-vector' 
+    this.basemap = 'topo-vector' 
   }
+}
+
+obtenerGeolocalizacion(){
+  this.presentLoader('Localizando ...').then(()=>{
+  this.geolocation.getCurrentPosition().then((resp) => {
+    console.log(resp)
+    loadModules(['esri/Graphic']).then(([Graphic]) => {
+      this.view2.graphics.removeAll();
+      this.loader.dismiss();
+      this.dataPosicion.lat = resp.coords.latitude
+      this.dataPosicion.lng = resp.coords.longitude
+      let point = {
+        type: "point",
+        longitude: this.dataPosicion.lng,
+        latitude: this.dataPosicion.lat
+      };
+      let markerSymbol = {
+        type: "picture-marker",
+        url: "assets/img/pin.png",
+        width: "50px",
+        height: "40px"
+      };
+      let pointGraphic = new Graphic({
+        geometry: point as any,
+        symbol: markerSymbol as any,
+        popupTemplate:null
+      });
+      this.view2.graphics.add(pointGraphic);
+      this.view2.center = [this.dataPosicion.lng, this.dataPosicion.lat]
+      this.view2.zoom = 15;  
+    })
+   }).catch((error) => {
+     console.log('Error getting location', error);
+   });
+  })
 }
 
 // INICIO MAPA
@@ -330,24 +355,24 @@ customZoom(){
       this.map.getView().on('change:center', ()=>{
         this.obtenerUbicacionRegion()
       });
-      this.map.on('click',(e)=>{
-        this.map.forEachLayerAtPixel(e.pixel,(feature,layer)=>{
-          console.log(feature);
-        })
-      })
+      // this.map.on('click',(e)=>{
+      //   this.map.forEachLayerAtPixel(e.pixel,(feature,layer)=>{
+      //     console.log(feature);
+      //   })
+      // })
     })
   }
 
-  obtenerUbicacionRegion(){
+  obtenerUbicacionRegion(point?){
     this.marker.getGeometry().setCoordinates(this.view.getCenter());
-    var curr = olProj.toLonLat(this.view.getCenter());
+    var curr =  this.vialidad ? [point.longitude,point.latitude] : olProj.toLonLat(this.view.getCenter());
     this.dataPosicion.lat = Number(curr[1].toFixed(6));
     this.dataPosicion.lng = Number(curr[0].toFixed(6));
     var region;
     this.regiones = this.chile.getSource().getFeatures();
     for (var i in this.regiones) {
         var polygonGeometry = this.regiones[i].getGeometry();
-        var coords = olProj.toLonLat(this.marker.getGeometry().getCoordinates());
+        var coords = this.vialidad ? [point.longitude.toFixed(3),point.latitude.toFixed(3)] : olProj.toLonLat(this.marker.getGeometry().getCoordinates());
         if (polygonGeometry && typeof polygonGeometry != "undefined") {
             if (polygonGeometry.intersectsCoordinate(coords)) {
                 region = this.regiones[i].get("region") + "";
@@ -656,7 +681,7 @@ customZoom(){
 
   activos(){
     this._us.cargar_storage().then(()=>{
-      if(this._us.menuType == 'DV' || this._us.menuType == 'DGA' || this._us.menuType == 'DGOP'){
+      if(this._us.menuType == 'DV' || this._us.menuType == 'DGA' || this._us.menuType == 'DGOP' || this._us.menuType == 'VIALIDAD'){
         this.existenActivos = false;
       }else{
         if(!this._us.menuType || this._us.menuType == ''){

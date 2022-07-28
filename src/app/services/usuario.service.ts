@@ -165,12 +165,16 @@ export class UsuarioService {
 
   cerrarSesion(){
     let promesa = new Promise((resolve,reject )=>{
-        localStorage.removeItem('token_user');
-        localStorage.removeItem('conexion');
-        localStorage.removeItem('usuario');
-        this.storage.remove('token_user');
-        this.storage.remove('conexion');
-        this.storage.remove('usuario');
+       
+        if(this.platform.is('capacitor')){
+          this.storage.remove('token_user');
+          this.storage.remove('conexion');
+          this.storage.remove('usuario');
+        }else{
+          localStorage.removeItem('token_user');
+          localStorage.removeItem('conexion');
+          localStorage.removeItem('usuario');
+        }
         this.usuario = {
           DEFSITE:'',
           GROUPUSER:'',

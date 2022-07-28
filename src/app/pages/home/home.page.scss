@@ -29,6 +29,15 @@ form{
   position: absolute;
   left: 18px;
 }
+
+.custom-buttonV {
+  z-index: 1;
+  top: 100px;
+  margin: -15px 0px 0 20px;
+  position: absolute;
+  left: 18px;
+}
+
 .custom-button3 {
   top: 100px;
   margin: 8px 0px 0 15px;
@@ -51,6 +60,23 @@ form{
 }
 
 .custom-button>div {
+  background-color: #003c8880 !important;
+  color: #ffffff !important;
+  width: 33px;
+  border: 2px solid #ffffffa3;
+  height: 32px;
+  padding: 0;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  transition: all 0.3s;
+  // border: solid 1px rgba(110, 110, 110, .3)
+}
+
+.custom-buttonV>div {
   background-color: #003c8880 !important;
   color: #ffffff !important;
   width: 33px;
@@ -147,11 +173,11 @@ form{
 }
 
 ::ng-deep .esri-widget--button {
-  background-color: #6FA5DC !important;
+  background-color: #003c8880 !important;
   color: #ffffff !important;
   margin-bottom: 3px !important;
-  width: 35px !important;
-  height: 35px !important;
+  width: 30px !important;
+  height: 30px !important;
 }
 
 ::ng-deep .esri-ui-corner .esri-component {

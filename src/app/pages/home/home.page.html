@@ -29,11 +29,19 @@
           </div>
         </div>
         <div  id="container" [style.height]="vialidad ? '200px' : '0px'"> 
-          <div (click)='customZoom()' class="icon-button2">
+          <!-- <div (click)='customZoom()' class="icon-button2">
                 <ion-icon name="map-outline"></ion-icon>
           </div>
           <div (click)='customZoom()' class="icon-button2">
             <ion-icon name="locate-outline"></ion-icon>
+          </div> -->
+          <div id="custom-buttonV" class="custom-buttonV" >
+            <div (click)='customZoom()' class="icon-button">
+                <ion-icon name="map-outline"></ion-icon>
+            </div>
+            <div (click)='obtenerGeolocalizacion()' class="icon-button">
+              <ion-icon name="locate-outline"></ion-icon>
+            </div>
           </div>
         </div>
         <ion-card center>
