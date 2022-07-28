@@ -170,10 +170,12 @@ export class UsuarioService {
           this.storage.remove('token_user');
           this.storage.remove('conexion');
           this.storage.remove('usuario');
+          this.storage.remove('menuType');
         }else{
           localStorage.removeItem('token_user');
           localStorage.removeItem('conexion');
           localStorage.removeItem('usuario');
+          localStorage.removeItem('menuType');
         }
         this.usuario = {
           DEFSITE:'',

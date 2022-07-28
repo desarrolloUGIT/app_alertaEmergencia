@@ -153,7 +153,7 @@ export class HomePage implements OnInit {
     this._us.cargar_storage().then(()=>{
       this._us.nextmessage('usuario_logeado') 
       console.log(this._us.usuario)
-      if(this._us.usuario.DEFSITE = 'VIALIDAD'){
+      if(this._us.usuario.DEFSITE == 'VIALIDAD'){
         this.loadMapVialidad()
         this.vialidad = true;
       }else{

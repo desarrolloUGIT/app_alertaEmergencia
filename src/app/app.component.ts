@@ -190,6 +190,7 @@ export class AppComponent {
                   this.nativePageTransitions.slide(options);
                   this._mc.toggle()
                   this._mc.enable(false)
+                  this._us.cargar_storage()
                   this.navCtrl.navigateRoot('/login')
                   this.pagina = 'home'
                 })
@@ -203,6 +204,7 @@ export class AppComponent {
                 this.nativePageTransitions.slide(options);
                 this._mc.toggle()
                 this._mc.enable(false)
+                this._us.cargar_storage()
                 this.navCtrl.navigateRoot('/login')
                 this.pagina = 'home'
               })
