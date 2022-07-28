@@ -62,7 +62,6 @@ export class AppComponent {
       this._us.cargar_storage().then(()=>{
         if(this._us.usuario){
           this._mc.enable(true,'first')
-          console.log(this._us.usuario)
           this.usuario = this._us.usuario
         }
       }).catch(()=>{
