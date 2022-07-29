@@ -158,7 +158,17 @@ export class AppComponent {
         duration:500
       }
       this.nativePageTransitions.flip(options);
-      this.navCtrl.navigateRoot('/'+page)
+      if(page == 'home'){
+        this._us.cargar_storage().then(()=>{
+          if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+            this.navCtrl.navigateRoot('/home_vialidad')  
+          }else{
+            this.navCtrl.navigateRoot('/home')  
+          }
+        })
+      }else{
+        this.navCtrl.navigateRoot('/'+page)
+      }
       this.pagina = page
     }
   }

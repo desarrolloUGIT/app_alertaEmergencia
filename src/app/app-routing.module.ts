@@ -31,6 +31,14 @@ const routes: Routes = [
     path: 'pendientes',
     loadChildren: () => import('./pages/pendientes/pendientes.module').then( m => m.PendientesPageModule)
   },
+  {
+    path: 'home_vialidad',
+    loadChildren: () => import('./pages/home-vialidad/home-vialidad.module').then( m => m.HomeVialidadPageModule)
+  },
+  {
+    path: 'modal-caminos',
+    loadChildren: () => import('./pages/modal-caminos/modal-caminos.module').then( m => m.ModalCaminosPageModule)
+  },
 ];
 
 @NgModule({

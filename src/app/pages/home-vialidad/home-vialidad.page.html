@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar mode="ios">
+    <ion-buttons slot="start" >
+      <ion-menu-button style="color: white;" ></ion-menu-button>
+    </ion-buttons>
+    <ion-title>
+      Crear Alerta
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content force-overscroll="false">
+  <mat-stepper orientation="vertical"  #stepper>
+    <!-- Selección de Activo -->
+    <mat-step >
+      <ng-template matStepLabel>Activo</ng-template>
+      <form [formGroup]="firstFormGroup">
+        <div  id="container"> 
+          <div id="custom-buttonV" class="custom-buttonV" *ngIf="(stepper.selectedIndex == 0)" >
+            <div (click)='customZoom()' class="icon-button">
+                <ion-icon name="map-outline"></ion-icon>
+            </div>
+            <div (click)='obtenerGeolocalizacion()' class="icon-button">
+              <ion-icon name="locate-outline"></ion-icon>
+            </div>
+          </div>
+        </div>
+        <ion-card center>
+          ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
+          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}} ~ Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br></span> Región: {{dataPosicion.region}}</h3>
+          <ion-grid *ngIf="caminosEncontrados.length > 1">
+            <ion-row style="margin-top: -12%;" (click)="openModalCaminos()">
+              <ion-col size="9">
+                <h4 style="margin: 0;margin-top: 8%;margin-left: 8%;">Seleccione Camino </h4>
+              </ion-col>
+              <ion-col size="3" align="left">
+                <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card>        
+      </form>
+      <div align="center" >
+        <ion-button fill="clear" color="dark" (click)="moverStepperr('next')">
+          Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </mat-step>
+  </mat-stepper>
+</ion-content>

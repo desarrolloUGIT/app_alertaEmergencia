@@ -50,7 +50,11 @@ export class SplashPage implements OnInit {
         if(this._us.usuario){
           this._mc.enable(false,'first')
           this._mc.enable(true,'first')
-          this.navctrl.navigateRoot('/home')
+          if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+            this.navctrl.navigateRoot('/home_vialidad')
+          }else{
+            this.navctrl.navigateRoot('/home')
+          }
         }else{
           this._mc.enable(false,'first')
           this.navctrl.navigateRoot('/login')
