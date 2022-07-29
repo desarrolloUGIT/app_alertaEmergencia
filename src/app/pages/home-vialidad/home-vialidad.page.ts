@@ -147,6 +147,121 @@ export class HomeVialidadPage implements OnInit {
     },
   ]
   region = '13'
+  competencia = [{valor:'No',descripcion:'Fuera del Ambito de Competencia MOP'},{valor:'Solo Técnico',descripcion:'Solo Ambito Técnico'},{valor:'Si',descripcion:'Ambito de Competencia MOP'}]
+  elementos =[
+        {
+            "valor": "Otro Elemento",
+            "descripcion": "Otro Elemento"
+        },
+        {
+            "valor": "Puente",
+            "descripcion": "Puente"
+        },
+        {
+            "valor": "Tunel",
+            "descripcion": "Tunel, Trinchera o Cobertizo"
+        },
+        {
+            "valor": "Elementos de Seguridad",
+            "descripcion": "Elementos de Seguridad"
+        },
+        {
+            "valor": "Carpeta de Rodadura",
+            "descripcion": "Tramo de Carpeta de Rodadura"
+        },
+        {
+            "valor": "Pasarela",
+            "descripcion": "Pasarela"
+        },
+        {
+            "valor": "Elementos de Saneamiento",
+            "descripcion": "Elementos de Saneamiento"
+        },
+        {
+            "valor": "Pavimento Camino de Acceso",
+            "descripcion": "Pavimento Camino de Acceso"
+        },
+        {
+            "valor": "Muros - Vigas",
+            "descripcion": "Muros - Vigas"
+        },
+        {
+            "valor": "Pilares",
+            "descripcion": "Pilares"
+        },
+        {
+            "valor": "Cielo Falso",
+            "descripcion": "Cielo Falso"
+        },
+        {
+            "valor": "Techumbre",
+            "descripcion": "Techumbre"
+        },
+        {
+            "valor": "Muros no estructurales",
+            "descripcion": "Muros no estructurales"
+        },
+        {
+            "valor": "Sistema de Comunicación",
+            "descripcion": "Sistema de Comunicación"
+        },
+        {
+            "valor": "Pisos",
+            "descripcion": "Pisos"
+        },
+        {
+            "valor": "Camino de Acceso al Aeródromo",
+            "descripcion": "Camino de Acceso al Aeródromo"
+        },
+        {
+            "valor": "Planta tratamiento agua servidas",
+            "descripcion": "Planta tratamiento agua servidas"
+        }
+  ]
+  transito = [
+    {
+        "valor": "Con Restricción",
+        "descripcion": "Parcialmente Operativo"
+    },
+    {
+        "valor": "Interrumpido",
+        "descripcion": "No Operativo"
+    },
+    {
+        "valor": "Sin Información",
+        "descripcion": "Sin Información"
+    },
+    {
+        "valor": "Transitable",
+        "descripcion": "Operativo"
+    }
+  ]
+  restriccion = [
+    {
+        "valor": "Horario Restringido",
+        "descripcion": "Horario Restringido"
+    },
+    {
+        "valor": "Peso Restringido",
+        "descripcion": "Peso Restringido"
+    },
+    {
+        "valor": "Sólo Vehículos Doble Tracción",
+        "descripcion": "Sólo Vehículos Doble Tracción"
+    },
+    {
+        "valor": "Sólo Vehículos Livianos",
+        "descripcion": "Sólo Vehículos Livianos"
+    },
+    {
+        "valor": "Sólo Vehículos Pesados",
+        "descripcion": "Sólo Vehículos Pesados"
+    },
+    {
+        "valor": "Velocidad Restringida",
+        "descripcion": "Velocidad Restringida"
+    }
+  ]
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
@@ -154,16 +269,12 @@ export class HomeVialidadPage implements OnInit {
   ngOnInit() {
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)')
-        db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)')
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
         db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)');
         this.db = db;
-        this.operatividad();
         this.nivelAlerta();
       })
     }else{
-      this.operatividad();
       this.nivelAlerta();
     }
     this.loadFiles()
@@ -171,13 +282,15 @@ export class HomeVialidadPage implements OnInit {
       activoSeleccionado: [null],
     });
     this.secondFormGroup = this._formBuilder.group({
-      operatividad:[null,Validators.compose([Validators.required])],
+      elemento:[null],
+      transito:[null,Validators.compose([Validators.required])],
+      restriccion:[null],
       nivelAlerta:[null,Validators.compose([Validators.required])],
-      destino:[null,Validators.compose([Validators.required])]
+      competencia:['Si',Validators.compose([Validators.required])]
     })
     this.thirdFormGroup = this._formBuilder.group({
-      titulo: [null,Validators.compose([Validators.maxLength(150),Validators.required])],
-      descripcion: [null,Validators.compose([Validators.maxLength(1000),Validators.required])],
+      titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
+      descripcion: [null,Validators.compose([Validators.maxLength(300),Validators.required])],
     });
     this._mc.enable(true,'first')
     this._us.cargar_storage().then(()=>{
@@ -509,137 +622,21 @@ export class HomeVialidadPage implements OnInit {
       this.stepper.previous()
     }
   }
+
+  sortJSON(data, key, orden) {
+    return data.sort(function (a, b) {
+        var x = a[key],
+            y = b[key];
+        if (orden === 'asc') {
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        }
+        if (orden === 'desc') {
+            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        }
+    });
+  }
+
   // CARGAS INICIALES
-  operatividad(){
-    if(this.platform.is('capacitor')){
-      this.db.open().then(()=>{
-        this.db.executeSql('SELECT * FROM operatividad', []).then((data)=>{
-          if(data.rows.length > 0){
-            var arr = []
-            var AR = Array.from({length: data.rows.length}, (x, i) => i);
-            AR.forEach(i=>{
-              var tmp = {
-                VALUE:data.rows.item(i).id,
-                DESCRIPTION:data.rows.item(i).name,
-              }
-              arr.push(tmp)
-            })
-            this.operatividadArray = arr;
-            this.actualizarOperatividad()
-          }else{
-            this._http.get('assets/operatividad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-              this._us.xmlToJson(res).then((result:any)=>{
-                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-                this.operatividadArray = []
-                path.forEach(f=>{
-                  this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
-                })
-                if(this.platform.is('capacitor')){
-                  this.actualizarOperatividad()
-                }
-              })
-            },err=>{
-              this._us.xmlToJson(err.error.text).then((result:any)=>{
-                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-                this.operatividadArray = []
-                path.forEach(f=>{
-                  this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
-                })
-                if(this.platform.is('capacitor')){
-                  this.actualizarOperatividad()
-                }
-              })
-            })
-          }
-        })
-      })
-    }else{
-      this._http.get('assets/operatividad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-          this.operatividadArray = []
-          path.forEach(f=>{
-            this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
-          })
-          if(this.platform.is('capacitor')){
-            this.actualizarOperatividad()
-          }
-        })
-      },err=>{
-        this._us.xmlToJson(err.error.text).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-          this.operatividadArray = []
-          path.forEach(f=>{
-            this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
-          })
-          if(this.platform.is('capacitor')){
-            this.actualizarOperatividad()
-          }
-        })
-      })
-    }
-  }
-
-  actualizarOperatividad(){
-    this._us.operatividad().subscribe((res:any)=>{
-      console.log('OPERATIVIDAD -> ',res)
-      if(res && res.status == '200'){
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-          this.operatividadArray = []
-          path.forEach(f=>{
-            this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
-          })
-          this.db.open().then(()=>{
-            this.db.transaction(rx=>{
-              rx.executeSql('delete from operatividad', [], ()=>{
-                this.operatividadArray.forEach((activo,i)=>{
-                  this.db.transaction(tx=>{
-                    tx.executeSql('insert into operatividad (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
-                  })
-                })
-              })
-            }).then(()=>{
-              // Termina de ingresar nivelAlerta
-            }).catch(()=>{
-              this.db.executeSql('SELECT * FROM operatividad', []).then((data)=>{
-                if(data.rows.length > 0){
-                  var arr = []
-                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
-                  AR.forEach(i=>{
-                    var tmp = {
-                      VALUE:data.rows.item(i).id,
-                      DESCRIPTION:data.rows.item(i).name,
-                    }
-                    arr.push(tmp)
-                  })
-                  this.operatividadArray = arr;
-                }
-              })     
-            })
-          })
-        })
-      }else{
-        this.db.executeSql('SELECT * FROM operatividad', []).then((data)=>{
-          if(data.rows.length > 0){
-            var arr = []
-            var AR = Array.from({length: data.rows.length}, (x, i) => i);
-            AR.forEach(i=>{
-              var tmp = {
-                VALUE:data.rows.item(i).id,
-                DESCRIPTION:data.rows.item(i).name,
-              }
-              arr.push(tmp)
-            })
-            this.operatividadArray = arr;
-          }
-        })  
-      }
-    },err=>{
-      console.log('ERRRRRRRR POR ACA')
-    })
-  }
-
   nivelAlerta(){
     if(this.platform.is('capacitor')){
       this.db.open().then(()=>{

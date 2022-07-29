@@ -46,5 +46,48 @@
         </ion-button>
       </div>
     </mat-step>
+    <mat-step>
+      <form [formGroup]="secondFormGroup">
+        <ng-template matStepLabel>Operatividad y Daño</ng-template>
+        <ion-card center>
+          <ion-label style="font-size: 17px;">Transito</ion-label>
+          <ion-list>
+            <ion-item lines="none" [class.select]="secondFormGroup.value.transito">
+              <ion-label style="display: none;">Transito</ion-label>
+              <ion-select style="max-width: 100%;width: 100%;" interface="alert" placeholder="Selecciona tipo de tránsito" cancelText="Cancelar" okText="Seleccionar" title="Tránsito" formControlName="transito">
+                <ion-select-option *ngFor="let item of transito" [value]="item.valor">{{item.descripcion}}</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+        <ion-card center>
+           <ion-label style="font-size: 17px;">Nivel de alerta</ion-label>
+          <!-- <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
+            <ion-radio-group formControlName="nivelAlerta">
+              <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of nivelAlertaArray" [class.select]="secondFormGroup.value.nivelAlerta == item.VALUE">
+                <ion-label>{{item.DESCRIPTION}}</ion-label>
+                <ion-radio mode="md" [value]="item.VALUE" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
+              </ion-item>
+            </ion-radio-group>
+          </ion-list> -->
+          <ion-list>
+            <ion-item lines="none" [class.select]="secondFormGroup.value.transito">
+              <ion-label style="display: none;">Nivel de alerta</ion-label>
+              <ion-select style="max-width: 100%;width: 100%;" interface="alert" placeholder="Selecciona tipo de alerta" cancelText="Cancelar" okText="Seleccionar" title="Alerta" formControlName="nivelAlerta">
+                <ion-select-option *ngFor="let item of nivelAlertaArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+        <div align="center" >
+          <ion-button fill="clear" color="dark" (click)="moverStepperr('previus')">
+            Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="clear" color="dark" (click)="moverStepperr('next')">
+            Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </form>
+    </mat-step>
   </mat-stepper>
 </ion-content>
