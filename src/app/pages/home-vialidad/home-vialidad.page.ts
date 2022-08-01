@@ -948,10 +948,10 @@ export class HomeVialidadPage implements OnInit {
        data.codigo = '';
      } 
 
-     if(this._us.conexion == 'no'){
+     if(this._us.conexion){
        this.db.open().then(()=>{
          this.db.transaction( tx1=>{
-           this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+           this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
              this.db.transaction(async tx=>{
                if(dat.rows.length > 0){
                  if(dat.rows.length >= 7){
@@ -995,28 +995,21 @@ export class HomeVialidadPage implements OnInit {
          })
        })
      }else{
-      console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************')
-      this.estadoEnvioAlerta = 'exitoso'
-      this.deleteImage(this.images[0])
-      this.volverInicio()
-      this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-       this.presentToast('Alerta enviada exitosamente');
-      })
-      //  this._us.enviarAlerta(data).subscribe(res=>{
-      //    console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
-      //    this.estadoEnvioAlerta = 'exitoso'
-      //    this.deleteImage(this.images[0])
-      //    this.volverInicio()
-      //    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-      //     this.presentToast('Alerta enviada exitosamente');
-      //    })
-      //  },err=>{
-      //    this.estadoEnvioAlerta = 'fallido'
-      //    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-      //     this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
-      //    })
-      //    console.log('******************** ERROR ENVIAR ******************** ',err)
-      //  })
+       this._us.enviarAlerta(data).subscribe(res=>{
+         console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+         this.estadoEnvioAlerta = 'exitoso'
+         this.deleteImage(this.images[0])
+         this.volverInicio()
+         this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+          this.presentToast('Alerta enviada exitosamente');
+         })
+       },err=>{
+         this.estadoEnvioAlerta = 'fallido'
+         this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+          this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
+         })
+         console.log('******************** ERROR ENVIAR ******************** ',err)
+       })
      }
      
     
