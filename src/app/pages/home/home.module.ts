@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { HttpClientModule } from '@angular/common/http';
 import { ModalActivosPageModule } from '../modal-activos/modal-activos.module';
 import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
+import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
 
 
 @NgModule({
@@ -24,7 +25,8 @@ import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
     MatFormFieldModule,
     MatInputModule,
     HttpClientModule,
-    ModalActivosPageModule
+    ModalActivosPageModule,
+    ModalEnviarPageModule
   ],
   declarations: [HomePage],providers:[SQLite]
 })

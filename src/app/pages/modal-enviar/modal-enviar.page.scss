@@ -1,0 +1,24 @@
+.envioExitoso{
+    --color: #fff;
+    --background:none;
+    background: url(../../../assets/img/pantallas__verde.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
+    background-size: cover;
+    background-position: center;
+  }
+  .envioFallido{
+    --color: #fff;
+    --background:none;
+    background: url(../../../assets/img/pantallas__roja.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
+    background-size: cover;
+    background-position: center;
+  }
+  .envioPendiente{
+    --color: #fff;
+    --background:none;
+    background: url(../../../assets/img/pantallas_amarilla.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
+    background-size: cover;
+    background-position: center;
+  }
+  #modal ion-content::part(scroll) { 
+    overflow: hidden;
+  }

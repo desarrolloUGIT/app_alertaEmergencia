@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { HttpClientModule } from '@angular/common/http';
 import { ModalCaminosPageModule } from '../modal-caminos/modal-caminos.module';
 import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
+import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
 
 @NgModule({
   imports: [
@@ -25,7 +26,8 @@ import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
     MatFormFieldModule,
     MatInputModule,
     HttpClientModule,
-    ModalCaminosPageModule
+    ModalCaminosPageModule,
+    ModalEnviarPageModule
   ],
   declarations: [HomeVialidadPage]
 })

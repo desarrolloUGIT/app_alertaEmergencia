@@ -1,9 +1,38 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>modal-caminos</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content>
+  <h3>Caminos encontrados en el punto seleccionado</h3>
+  <div *ngIf="caminos[0]">
+    <ion-accordion-group mode="ios" style="margin-bottom: 5%;margin-top: 3%;">
+      <ion-accordion [value]="item.codigo" *ngFor="let item of caminos">
+        <ion-item slot="header" color="light">
+          <!-- <ion-icon name="location-sharp"></ion-icon> -->
+          <ion-badge slot="start" color="medium">Región<br>{{item.region}}</ion-badge>
+          <ion-label>{{item.nombre_camino}}</ion-label>
+        </ion-item>
+        <div class="ion-padding contenido" slot="content">
+          <ion-list>
+            <ion-item>
+              <ion-icon name="distance" slot="start"></ion-icon>
+              <ion-label>KM Inicio: {{item.km_i}}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-icon name="distance" slot="start"></ion-icon>
+              <ion-label>KM Termino: {{item.km_f}}</ion-label>
+            </ion-item>
+            <ion-item>
+              <ion-icon name="ruta" slot="start"></ion-icon>
+              <ion-label>Rol: {{item.rol}}</ion-label>
+            </ion-item>
+            <!-- <ion-item>
+              <ion-icon name="map" slot="start"></ion-icon>
+              <ion-label>Región: {{item.activo.SERVICEADDRESS.REGIONDISTRICT}}</ion-label>
+            </ion-item> -->
+            <ion-item lines="none">
+              <ion-button (click)="selectActivo(item)" class="botoninicia" slot="end" size="small">Seleccionar</ion-button>
+            </ion-item>
+          </ion-list>
+        </div>
+      </ion-accordion>
+    </ion-accordion-group>
+  </div>
 
 </ion-content>

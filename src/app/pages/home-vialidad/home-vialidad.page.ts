@@ -17,6 +17,7 @@ import { ActionSheetController } from '@ionic/angular';
 import { AnimationController } from '@ionic/angular';
 import {Image as ImageLayer, Tile } from 'ol/layer';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
+import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -262,6 +263,8 @@ export class HomeVialidadPage implements OnInit {
         "descripcion": "Velocidad Restringida"
     }
   ]
+  km_i = 65.8;
+  km_f = 95.5;
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
@@ -270,16 +273,23 @@ export class HomeVialidadPage implements OnInit {
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
-        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)');
+        db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f)');
         this.db = db;
         this.nivelAlerta();
       })
     }else{
       this.nivelAlerta();
     }
+    this.competencia = this.sortJSON(this.competencia,'valor','asc')
+    this.elementos = this.sortJSON(this.elementos,'valor','asc')
+    this.transito = this.sortJSON(this.transito,'valor','asc')
+    this.restriccion = this.sortJSON(this.restriccion,'valor','asc')
     this.loadFiles()
     this.firstFormGroup = this._formBuilder.group({
-      activoSeleccionado: [null],
+      activoSeleccionado: [null,Validators.compose([Validators.required])],
+      fechaEmergencia: [null,Validators.compose([Validators.required])],
+      km_i: [null,Validators.compose([Validators.required])],
+      km_f: [null,Validators.compose([Validators.required])],
     });
     this.secondFormGroup = this._formBuilder.group({
       elemento:[null],
@@ -301,6 +311,8 @@ export class HomeVialidadPage implements OnInit {
     this.loadMapVialidad()
   }
 
+
+
   async loadMapVialidad(){
     const [Map, MapView, FeatureLayer, Locate, Track, Graphic, watchUtils, IdentifyTask, IdentifyParameters, MapImageLayer,Basemap]:any = await loadModules([
       'esri/Map',
@@ -311,7 +323,7 @@ export class HomeVialidadPage implements OnInit {
       'esri/Graphic',
       'esri/core/watchUtils',
       'esri/tasks/IdentifyTask',
-      'esri/tasks/support/IdentifyParameters',
+      'esri/rest/support/IdentifyParameters',
       'esri/layers/MapImageLayer',
       "esri/Basemap"
     ])
@@ -402,7 +414,6 @@ export class HomeVialidadPage implements OnInit {
         this.caminosEncontrados = []
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         if(response.results.length > 0){
-          console.log(response.results)
           response.results.forEach(r=>{
             let region = r.feature.attributes.REGION || r.feature.attributes['REGIÓN'];
             region = this.reverseRegion(region)            
@@ -412,20 +423,23 @@ export class HomeVialidadPage implements OnInit {
               this.caminosEncontrados.push({
                 codigo:r.feature.attributes.CODIGO ? r.feature.attributes.CODIGO : 'codigo temporal',
                 nombre_camino:r.feature.attributes.NOMBRE_CAMINO ? r.feature.attributes.NOMBRE_CAMINO : r.feature.attributes['NOMBRE DEL CAMINO'],
-                km_i:r.feature.attributes.KM_I ? r.feature.attributes.KM_I : r.feature.attributes['KM INICIAL'],
-                km_f:r.feature.attributes.KM_F ? r.feature.attributes.KM_F : r.feature.attributes['KM FINAL'],
+                km_i:r.feature.attributes.KM_I ? new Intl.NumberFormat("en-US").format((r.feature.attributes.KM_I)/1000) :  new Intl.NumberFormat("en-US").format(r.feature.attributes['KM INICIAL']/1000),
+                km_f:r.feature.attributes.KM_F ?  new Intl.NumberFormat("en-US").format(r.feature.attributes.KM_F/1000) :  new Intl.NumberFormat("en-US").format(r.feature.attributes['KM FINAL']/1000),
                 objectid:r.feature.attributes.OBJECTID,
                 rol:r.feature.attributes.ROL,
                 clasificacion:r.feature.attributes.CLASIFICACION ? r.feature.attributes.CLASIFICACION : r.feature.attributes['CLASIFICACIÓN'],
-                tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ? r.feature.attributes['LONGITUD DEL TRAMO'] : (r.feature.attributes.KM_F ? r.feature.attributes.KM_F : r.feature.attributes['KM FINAL']) - (r.feature.attributes.KM_I ? r.feature.attributes.KM_I : r.feature.attributes['KM INICIAL']) ,
+                tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.feature.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.feature.attributes.KM_F ? r.feature.attributes.KM_F : r.feature.attributes['KM FINAL']) - (r.feature.attributes.KM_I ? r.feature.attributes.KM_I : r.feature.attributes['KM INICIAL'])) ,
                 latitude:e.mapPoint.latitude,
-                longitude:e.mapPoint.longitude
+                longitude:e.mapPoint.longitude,
+                region:region
               })
             }
           })
           this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
           if(this.caminosEncontrados.length == 1){
             this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
+            this.km_i = this.caminosEncontrados[0].km_i;
+            this.km_f = this.caminosEncontrados[0].km_f;
           }
         }else{
           this.caminosEncontrados = []
@@ -612,6 +626,8 @@ export class HomeVialidadPage implements OnInit {
     const { data } = await modal.onWillDismiss();
     if (data) {
       this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
+      this.km_i = data.km_i;
+      this.km_f = data.km_f;
     }
   }
 
@@ -636,6 +652,10 @@ export class HomeVialidadPage implements OnInit {
     });
   }
 
+  abrirModal(){
+    var modal = document.querySelector('ion-modal');
+    modal.present().then(()=>{})
+  }
   // CARGAS INICIALES
   nivelAlerta(){
     if(this.platform.is('capacitor')){
@@ -894,15 +914,146 @@ export class HomeVialidadPage implements OnInit {
     });
     this.loadFiles()
   }
+  // FIN SECCIÓN FOTO
+  // ENVIAR ALERTA
+  enviar(){
+    this._us.cargar_storage().then(()=>{
+     let data = {
+       titulo:this.thirdFormGroup.value.titulo,
+       descripcion:this.thirdFormGroup.value.descripcion,
+       fechaEmergencia:this.firstFormGroup.value.fechaEmergencia,
+       km_i:this.firstFormGroup.value.km_i,
+       km_f:this.firstFormGroup.value.km_f,
+       usuario:this._us.user.user,
+       lat:this.dataPosicion.lat,
+       lng:this.dataPosicion.lng,
+       nivelalerta:this.secondFormGroup.value.nivelAlerta,
+       transito:this.secondFormGroup.value.transito,
+       elemento:this.secondFormGroup.value.elemento,
+       restriccion:this.secondFormGroup.value.restriccion,
+       competencia:this.secondFormGroup.value.competencia,
+       region:this.dataPosicion.region,
+       codigo:'',
+       date:new Date(),
+       picture:this.picture,
+       name:new Date()
+     }
+     if(this.firstFormGroup.value.activoSeleccionado){
+       if(this.firstFormGroup.value.activoSeleccionado){
+         data.codigo = this.firstFormGroup.value.activoSeleccionado.activo.ASSETNUM
+       }else{
+         data.codigo = '';
+       }
+     }else{ 
+       data.codigo = '';
+     } 
+
+     if(this._us.conexion == 'no'){
+       this.db.open().then(()=>{
+         this.db.transaction( tx1=>{
+           this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+             this.db.transaction(async tx=>{
+               if(dat.rows.length > 0){
+                 if(dat.rows.length >= 7){
+                   this.alertasMaximas()
+                 }else{
+                   tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                   [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.transito,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                   this.estadoEnvioAlerta = 'pendiente'
+                   this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
+                   })                
+                   const savedFile = await Filesystem.writeFile({
+                     directory:Directory.Data,
+                     path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                     data:this.images[0].data
+                     }).then(()=>{
+                     this.deleteImage(this.images[0])
+                     this.volverInicio()
+                     this._us.nextmessage('pendiente') 
+                   })
+                 }
+               }else{
+                 tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                 [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.transito,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                 this.estadoEnvioAlerta = 'pendiente'
+                 this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+                  this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
+                 })
+                 const savedFile = await Filesystem.writeFile({
+                   directory:Directory.Data, 
+                   path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                   data:this.images[0].data
+                   }).then(()=>{
+                   this.deleteImage(this.images[0])
+                   this.volverInicio()
+                   this._us.nextmessage('pendiente') 
+                 })
+               }
+             })
+           })
+         })
+       })
+     }else{
+      console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************')
+      this.estadoEnvioAlerta = 'exitoso'
+      this.deleteImage(this.images[0])
+      this.volverInicio()
+      this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+       this.presentToast('Alerta enviada exitosamente');
+      })
+      //  this._us.enviarAlerta(data).subscribe(res=>{
+      //    console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+      //    this.estadoEnvioAlerta = 'exitoso'
+      //    this.deleteImage(this.images[0])
+      //    this.volverInicio()
+      //    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+      //     this.presentToast('Alerta enviada exitosamente');
+      //    })
+      //  },err=>{
+      //    this.estadoEnvioAlerta = 'fallido'
+      //    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+      //     this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
+      //    })
+      //    console.log('******************** ERROR ENVIAR ******************** ',err)
+      //  })
+     }
+     
+    
+     // this.stepper.reset()
+   })
+ }
+
+  async alertasMaximas() {
+    const alert = await this.alertctrl.create({
+      header: 'Límite de alertas',
+      message: 'Se ha llegado al límite de 7 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
+      buttons: ['OK'],
+      mode:'ios'
+    });
+    await alert.present();
+  }
 
   volverInicio(){
-    this.firstFormGroup.reset();
-    this.secondFormGroup.reset();
-    this.thirdFormGroup.reset();
-    this.stepper.reset();
-    // this.view.setCenter(this.stgo)
-    // this.view.setZoom(13)
-    // this.obtenerUbicacionRegion()
+    loadModules(['esri/Graphic']).then(([Graphic]) => {
+      this.firstFormGroup.reset();
+      this.secondFormGroup.reset();
+      this.thirdFormGroup.reset();
+      this.stepper.reset();
+      this.secondFormGroup.controls['competencia'].setValue('Si')
+      this.view2.zoom = 13
+      let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
+      this.coordenadasRegion.forEach(c=>{
+        if(c.region == this.region){
+          this.view2.center = [c.lng,c.lat]
+          pointInicial = {longitude:c.lng,latitude:c.lat};
+          this.dataPosicion.lng = Number(c.lng.toFixed(6))
+          this.dataPosicion.lat = Number(c.lat.toFixed(6))
+          this.dataPosicion.region = this.region;
+        }
+      })
+      this.agregarPuntero(pointInicial,Graphic)
+    })
   }
   // Animación para modal de envio de alerta
   enterAnimation = (baseEl: HTMLElement) => {
@@ -929,4 +1080,19 @@ export class HomeVialidadPage implements OnInit {
   leaveAnimation = (baseEl: HTMLElement) => {
     return this.enterAnimation(baseEl).direction('reverse');
   };
+
+  async openModalEnvio(estado) {
+    const modal = await this._modalCtrl.create({
+      component: ModalEnviarPage,
+      showBackdrop:true,
+      mode:'ios',
+      swipeToClose:true,
+      cssClass: 'my-custom-class',
+      backdropDismiss:false,
+      componentProps:{
+        estadoEnvioAlerta:estado,
+      }
+    });
+    modal.present();
+  }
 }

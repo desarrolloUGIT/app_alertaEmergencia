@@ -31,16 +31,32 @@ db:SQLiteObject;
       if(this.platform.is('capacitor')){
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
           this.db = db;
-          db.executeSql('SELECT * FROM alerta', []).then((data)=>{
-            if(data.rows.length > 0){
-              for(let i = 0;i<data.rows.length;i++){
-                this.alertas.push(data.rows.item(i))
-              }
-              this.loadFiles()
+          this._us.cargar_storage().then(()=>{
+            if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
+              db.executeSql('SELECT * FROM alerta', []).then((data)=>{
+                if(data.rows.length > 0){
+                  for(let i = 0;i<data.rows.length;i++){
+                    this.alertas.push(data.rows.item(i))
+                  }
+                  this.loadFiles()
+                }else{
+                  this._us.nextmessage('sin pendiente') 
+                }
+              })
             }else{
-              this._us.nextmessage('sin pendiente') 
+              db.executeSql('SELECT * FROM alertaVialidad', []).then((data)=>{
+                if(data.rows.length > 0){
+                  for(let i = 0;i<data.rows.length;i++){
+                    this.alertas.push(data.rows.item(i))
+                  }
+                  this.loadFiles()
+                }else{
+                  this._us.nextmessage('sin pendiente') 
+                }
+              })
             }
           })
+         
         })
       }else{
         this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"Titulo de la alerta","nivelalerta":"Moderado","descripcion":"Esta es la descripción de la alerta","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"}]
@@ -139,21 +155,42 @@ db:SQLiteObject;
           handler: () => {
             this.presentLoader('Eliminando ...').then(()=>{
               this.mostrar = false;
-              this.db.executeSql('DELETE FROM alerta WHERE id = '+id, []).then((data)=>{
-                if(data.rowsAffected > 0){
-                  this.deleteImage(this.alertas[i].name).then(()=>{
-                    this.alertas.splice(i,1)
-                    this.loader.dismiss()
-                    if(this.alertas.length <= 0){
-                      this.mostrar = false;
-                      this._us.nextmessage('sin pendiente')        
+              this._us.cargar_storage().then(()=>{
+                if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
+                  this.db.executeSql('DELETE FROM alerta WHERE id = '+id, []).then((data)=>{
+                    if(data.rowsAffected > 0){
+                      this.deleteImage(this.alertas[i].name).then(()=>{
+                        this.alertas.splice(i,1)
+                        this.loader.dismiss()
+                        if(this.alertas.length <= 0){
+                          this.mostrar = false;
+                          this._us.nextmessage('sin pendiente')        
+                        }
+                      })
+                    }else{
+                      this.loader.dismiss
+                      this.presentToast('No se pudo eliminar la alerta');
                     }
                   })
                 }else{
-                  this.loader.dismiss
-                  this.presentToast('No se pudo eliminar la alerta');
+                  this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
+                    if(data.rowsAffected > 0){
+                      this.deleteImage(this.alertas[i].name).then(()=>{
+                        this.alertas.splice(i,1)
+                        this.loader.dismiss()
+                        if(this.alertas.length <= 0){
+                          this.mostrar = false;
+                          this._us.nextmessage('sin pendiente')        
+                        }
+                      })
+                    }else{
+                      this.loader.dismiss
+                      this.presentToast('No se pudo eliminar la alerta');
+                    }
+                  })
                 }
               })
+
             })
           }
         }

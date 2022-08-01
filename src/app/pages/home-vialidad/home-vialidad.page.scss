@@ -140,6 +140,7 @@ form{
     text-align: center;
     border:1px solid;
     padding-top: 3%;
+    padding-bottom: 3%;
   }
   
   ion-button[shape=circle] {
@@ -153,6 +154,7 @@ form{
   .select{
     --background: #bababaa1;
     color:black !important;
+    padding-bottom: 1%;
   }
   
   .tituloTable{
@@ -189,3 +191,52 @@ form{
     overflow: hidden;
   }
 
+  .select-text{
+    width: 60%;
+    max-width: 60%;
+  }
+
+  ion-select::part(text) {
+    text-overflow: unset;
+    white-space: break-spaces;
+}
+
+ion-modal {
+  // --height: 50%;
+  // --border-radius: 16px;
+  // --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --background: rgba(44,39,45,0.2);
+  &::part(content){
+    backdrop-filter: blur(6px);
+  }
+  ion-content{
+    background: transparent !important;
+    --background:transparent;
+    --padding-top:25vh;
+    --padding-start:20px;
+    --padding-end:20px;
+    
+    ion-datetime{
+      border-radius: 8px;
+      ::ng-deep .calendar-day{
+        padding: 5% !important;
+      }
+    }
+  }
+}
+
+ion-modal::part(backdrop) {
+  // background: rgba(209, 213, 219);
+  opacity: 1;
+}
+
+ion-modal ion-toolbar {
+  --background: rgb(14 116 144);
+  --color: white;
+}
+.error{
+  border-color: red !important;
+}
+.p_error{
+  float: right;padding-right: 3%;color: red;font-size: 12px;
+}

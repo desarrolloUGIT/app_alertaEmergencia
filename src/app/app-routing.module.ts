@@ -39,6 +39,10 @@ const routes: Routes = [
     path: 'modal-caminos',
     loadChildren: () => import('./pages/modal-caminos/modal-caminos.module').then( m => m.ModalCaminosPageModule)
   },
+  {
+    path: 'modal-enviar',
+    loadChildren: () => import('./pages/modal-enviar/modal-enviar.module').then( m => m.ModalEnviarPageModule)
+  }
 ];
 
 @NgModule({

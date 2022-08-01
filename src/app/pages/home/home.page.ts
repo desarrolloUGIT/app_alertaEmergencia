@@ -29,6 +29,7 @@ import Draw from 'ol/interaction/Draw';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import {Image as ImageLayer, Tile } from 'ol/layer';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
+import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -997,10 +998,9 @@ export class HomePage implements OnInit {
                     tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                     [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
                     this.estadoEnvioAlerta = 'pendiente'
-                    var modal = document.querySelector('ion-modal');
-                    modal.present().then(()=>{
+                    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
                       this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
-                    })
+                     })  
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data,
                       path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1015,10 +1015,9 @@ export class HomePage implements OnInit {
                   tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                   [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
                   this.estadoEnvioAlerta = 'pendiente'
-                  var modal = document.querySelector('ion-modal');
-                  modal.present().then(()=>{
+                  this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
                     this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
-                  })
+                   })  
                   const savedFile = await Filesystem.writeFile({
                     directory:Directory.Data, 
                     path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
@@ -1037,16 +1036,14 @@ export class HomePage implements OnInit {
         this._us.enviarAlerta(data).subscribe(res=>{
           console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
           this.estadoEnvioAlerta = 'exitoso'
-          var modal = document.querySelector('ion-modal');
           this.deleteImage(this.images[0])
           this.volverInicio()
-          modal.present().then(()=>{
+          this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
             this.presentToast('Alerta enviada exitosamente');
-          })
+           })
         },err=>{
           this.estadoEnvioAlerta = 'fallido'
-          var modal = document.querySelector('ion-modal');
-          modal.present().then(()=>{
+          this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
             this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
           })
           console.log('******************** ERROR ENVIAR ******************** ',err)
@@ -1056,6 +1053,21 @@ export class HomePage implements OnInit {
      
       // this.stepper.reset()
     })
+  }
+  
+  async openModalEnvio(estado) {
+    const modal = await this._modalCtrl.create({
+      component: ModalEnviarPage,
+      showBackdrop:true,
+      mode:'ios',
+      swipeToClose:true,
+      cssClass: 'my-custom-class',
+      backdropDismiss:false,
+      componentProps:{
+        estadoEnvioAlerta:estado,
+      }
+    });
+    modal.present();
   }
 
   async alertasMaximas() {

@@ -195,16 +195,5 @@
     </mat-step>
     <!-- FIn resumen -->
   </mat-stepper>
-  <ion-modal #modal trigger="open-modal" [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation">
-    <ng-template>
-      <ion-content [class.envioExitoso]="estadoEnvioAlerta == 'exitoso'" [class.envioFallido]="estadoEnvioAlerta == 'fallido'" [class.envioPendiente]="estadoEnvioAlerta == 'pendiente'">
-        <ion-fab vertical="top" horizontal="end" slot="fixed" >
-          <ion-fab-button (click)="modal.dismiss()" color="light">
-            <ion-icon name="close"></ion-icon>
-          </ion-fab-button>
-        </ion-fab>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
 </ion-content>
 

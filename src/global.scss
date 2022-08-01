@@ -27,7 +27,7 @@
 @import "../node_modules/ol/ol.css";
 
 ion-content {
-    --color: #fff;
+    // --color: #fff;
     --background:none;
     background: url(./assets/img/background-img.jpg), linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)) ;
     background-size: cover;
@@ -45,9 +45,17 @@ ion-toolbar{
     --background:#006CB5;  
     --background-activated:#006CB5ce;
 }
-
-
-  .pulse {
+.alert-radio-label.sc-ion-alert-md,
+    .alert-radio-label.sc-ion-alert-ios {
+    white-space: pre-line;
+}
+.alert-tappable.sc-ion-alert-ios,.alert-tappable.sc-ion-alert-md {
+     display: contents;
+}
+.alert-button-inner.sc-ion-alert-ios {
+    border-bottom: 1px solid lightgrey;
+}
+.pulse {
     overflow: visible;
     position: relative;
 }

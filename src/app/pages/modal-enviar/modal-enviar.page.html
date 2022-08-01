@@ -1,0 +1,7 @@
+<ion-content [class.envioExitoso]="estadoEnvioAlerta == 'exitoso'" [class.envioFallido]="estadoEnvioAlerta == 'fallido'" [class.envioPendiente]="estadoEnvioAlerta == 'pendiente'">
+  <ion-fab vertical="top" horizontal="end" slot="fixed" >
+    <ion-fab-button (click)="modalCtrl.dismiss()" color="light">
+      <ion-icon name="close"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
