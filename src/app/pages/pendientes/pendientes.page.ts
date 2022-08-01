@@ -26,6 +26,7 @@ images = [];
 loader;
 mostrar = false;
 db:SQLiteObject;
+tipo = 'novialidad'
   constructor(private sqlite: SQLite,
     public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService) { 
       if(this.platform.is('capacitor')){
@@ -44,6 +45,7 @@ db:SQLiteObject;
                 }
               })
             }else{
+              this.tipo = 'vialidad';
               db.executeSql('SELECT * FROM alertaVialidad', []).then((data)=>{
                 if(data.rows.length > 0){
                   for(let i = 0;i<data.rows.length;i++){

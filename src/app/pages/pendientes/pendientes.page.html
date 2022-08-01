@@ -19,13 +19,28 @@
             <ion-row>
               <p style="word-break: break-all;"><span>Descripción:</span> {{item.descripcion}}</p>
             </ion-row>
-            <ion-row>
-              <ion-col size="8">
+            <ion-row >
+              <ion-col size="8" *ngIf="tipo != 'vialidad'">
                 <ion-row>
                   <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
                 </ion-row>
                 <ion-row>
                   <p><span>Operatividad:</span> {{item.operatividad == "NOOPERATIVO" ? "No Operativo" : item.operatividad == "OPERATIVO" ? "Operativo" : item.operatividad == "RESTRICCIÓN" ? "Operativo Con Restricción" : 'N/A'}}</p>
+                </ion-row>
+                <ion-row>
+                  <ion-col size="6"><span>Latitud:</span> {{item.lat}}</ion-col>
+                  <ion-col size="6"><span>Longitud:</span> {{item.lng}}</ion-col>
+                </ion-row>
+              </ion-col>
+              <ion-col size="8" *ngIf="tipo == 'vialidad'">
+                <ion-row>
+                  <p><span>Camino:</span> {{item.name}}</p>
+                </ion-row>
+                <ion-row>
+                  <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
+                </ion-row>
+                <ion-row>
+                  <p><span>Fecha Emergencia:</span>{{item.fechaEmergencia | date:'dd/MM/yy hh:mm a'}</p>
                 </ion-row>
                 <ion-row>
                   <ion-col size="6"><span>Latitud:</span> {{item.lat}}</ion-col>

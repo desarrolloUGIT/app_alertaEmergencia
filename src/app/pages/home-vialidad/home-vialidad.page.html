@@ -46,13 +46,13 @@
             </ion-item>
             <ion-item lines="none" style="width: 100%;">
               <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Inicio</ion-label>
-              <ion-input formControlName="km_i" enterkeyhint="send" mode="ios" required placeholder="{{km_i}}" [class.error]="(firstFormGroup.value.km_i) &&  (firstFormGroup.value.km_i < km_i) || (firstFormGroup.value.km_i) &&  (firstFormGroup.value.km_i > km_f)" clearInput="true" type="number" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
+              <ion-input formControlName="km_i" enterkeyhint="send" mode="ios" required placeholder="{{km_i}}" [class.error]="(firstFormGroup.value.km_i) &&  (firstFormGroup.value.km_i < km_i) || (firstFormGroup.value.km_i) &&  (firstFormGroup.value.km_i > km_f)" clearInput="true" type="text" pattern="\d*" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
             </ion-item>
             <p *ngIf="(firstFormGroup.value.km_i) &&  (firstFormGroup.value.km_i < km_i)" class="p_error">No puede ser menor al km {{km_i}}</p>
             <p *ngIf="(firstFormGroup.value.km_i) &&  (firstFormGroup.value.km_i > km_f)" class="p_error">No puede ser mayor al km {{km_f}}</p>
             <ion-item lines="none" style="width: 100%;">
               <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Termino</ion-label>
-              <ion-input formControlName="km_f" enterkeyhint="send" mode="ios" required placeholder="{{km_f}}" [class.error]="(firstFormGroup.value.km_f) &&  (firstFormGroup.value.km_f > km_f) || (firstFormGroup.value.km_f) &&  (firstFormGroup.value.km_f < km_i)" clearInput="true" type="number" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
+              <ion-input formControlName="km_f" enterkeyhint="send" mode="ios" required placeholder="{{km_f}}" [class.error]="(firstFormGroup.value.km_f) &&  (firstFormGroup.value.km_f > km_f) || (firstFormGroup.value.km_f) &&  (firstFormGroup.value.km_f < km_i)" clearInput="true" type="text" pattern="\d*" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
             </ion-item>
             <p *ngIf="(firstFormGroup.value.km_f) &&  (firstFormGroup.value.km_f < km_i)" class="p_error">No puede ser menor al km {{km_i}}</p>
             <p *ngIf="(firstFormGroup.value.km_f) &&  (firstFormGroup.value.km_f > km_f)" class="p_error">No puede ser mayor al km {{km_f}}</p>

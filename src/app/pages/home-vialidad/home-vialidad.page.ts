@@ -933,20 +933,11 @@ export class HomeVialidadPage implements OnInit {
        restriccion:this.secondFormGroup.value.restriccion,
        competencia:this.secondFormGroup.value.competencia,
        region:this.dataPosicion.region,
-       codigo:'',
+       codigo:this.firstFormGroup.value.activoSeleccionado.codigo,
        date:new Date(),
        picture:this.picture,
-       name:new Date()
+       name:this.firstFormGroup.value.activoSeleccionado.nombre_camino
      }
-     if(this.firstFormGroup.value.activoSeleccionado){
-       if(this.firstFormGroup.value.activoSeleccionado){
-         data.codigo = this.firstFormGroup.value.activoSeleccionado.activo.ASSETNUM
-       }else{
-         data.codigo = '';
-       }
-     }else{ 
-       data.codigo = '';
-     } 
 
      if(this._us.conexion){
        this.db.open().then(()=>{
