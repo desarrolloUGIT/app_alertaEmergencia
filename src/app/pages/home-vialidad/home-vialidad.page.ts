@@ -270,10 +270,16 @@ export class HomeVialidadPage implements OnInit {
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
 
   ngOnInit() {
-    this.loadMapVialidad()
+    this._mc.enable(true,'first')
+    this._us.cargar_storage().then(()=>{
+      this.region = this._us.usuario.PERSON.STATEPROVINCE
+      this.region = this.region == '20' ? '13' : this.region;
+      this._us.nextmessage('usuario_logeado') 
+      this.loadMapVialidad()
+    })
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
+        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)');
         db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f)');
         this.db = db;
         this.nivelAlerta();
@@ -303,12 +309,7 @@ export class HomeVialidadPage implements OnInit {
       titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
       descripcion: [null,Validators.compose([Validators.maxLength(300),Validators.required])],
     });
-    this._mc.enable(true,'first')
-    this._us.cargar_storage().then(()=>{
-      this.region = this._us.usuario.PERSON.STATEPROVINCE
-      this.region = this.region == '20' ? '13' : this.region;
-      this._us.nextmessage('usuario_logeado') 
-    })
+   
   }
 
 
