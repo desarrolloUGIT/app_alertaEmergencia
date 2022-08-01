@@ -270,6 +270,7 @@ export class HomeVialidadPage implements OnInit {
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
 
   ngOnInit() {
+    this.loadMapVialidad()
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
@@ -308,7 +309,6 @@ export class HomeVialidadPage implements OnInit {
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
     })
-    this.loadMapVialidad()
   }
 
 
