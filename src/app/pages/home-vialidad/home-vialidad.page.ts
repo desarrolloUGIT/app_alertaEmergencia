@@ -379,8 +379,8 @@ export class HomeVialidadPage implements OnInit {
         basemap: 'topo-vector'
         // basemap:basemap
       });
-      // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
-      const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_VIALES/MapServer';
+      const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
+      // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_VIALES/MapServer';
       // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/Pruebas/Red_Vial_Chile_Cache/MapServer';
       let flVialidad = new MapImageLayer({
         url: vialidadRedVialURL
@@ -435,7 +435,7 @@ export class HomeVialidadPage implements OnInit {
   }
 
   async buscarCamino(e,vialidadRedVialURL){
-    const [ IdentifyTask, IdentifyParameters]:any = await loadModules(['esri/tasks/IdentifyTask','esri/tasks/support/IdentifyParameters'])
+    const [ IdentifyTask, IdentifyParameters]:any = await loadModules(['esri/tasks/IdentifyTask','esri/rest/support/IdentifyParameters'])
       let identifyTask = new IdentifyTask(vialidadRedVialURL);
       let params = new IdentifyParameters();
       params.tolerance = 20;
@@ -450,20 +450,20 @@ export class HomeVialidadPage implements OnInit {
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         if(response.results.length > 0){
           response.results.forEach(r=>{
-            let region = r.feature.attributes.REGION || r.feature.attributes['REGIÓN'];
+            let region = r.feature.attributes['REGIÓN'];
             region = this.reverseRegion(region)            
             if(region != this.region){
               this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',3000)
             }else{
               this.caminosEncontrados.push({
-                codigo:r.feature.attributes.CODIGO ? r.feature.attributes.CODIGO : 'codigo temporal',
-                nombre_camino:r.feature.attributes.NOMBRE_CAMINO ? r.feature.attributes.NOMBRE_CAMINO : r.feature.attributes['NOMBRE DEL CAMINO'],
-                km_i:r.feature.attributes.KM_I ? new Intl.NumberFormat("en-US").format((r.feature.attributes.KM_I)/1000) :  new Intl.NumberFormat("en-US").format(r.feature.attributes['KM INICIAL']/1000),
-                km_f:r.feature.attributes.KM_F ?  new Intl.NumberFormat("en-US").format(r.feature.attributes.KM_F/1000) :  new Intl.NumberFormat("en-US").format(r.feature.attributes['KM FINAL']/1000),
+                codigo:r.feature.attributes['CÓDIGO DEL CAMINO'],
+                nombre_camino:r.feature.attributes['NOMBRE DEL CAMINO'],
+                km_i:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM INICIAL']/1000),
+                km_f:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM FINAL']/1000),
                 objectid:r.feature.attributes.OBJECTID,
                 rol:r.feature.attributes.ROL,
-                clasificacion:r.feature.attributes.CLASIFICACION ? r.feature.attributes.CLASIFICACION : r.feature.attributes['CLASIFICACIÓN'],
-                tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.feature.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.feature.attributes.KM_F ? r.feature.attributes.KM_F : r.feature.attributes['KM FINAL']) - (r.feature.attributes.KM_I ? r.feature.attributes.KM_I : r.feature.attributes['KM INICIAL'])) ,
+                clasificacion:r.feature.attributes['CLASIFICACIÓN'],
+                tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.feature.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.feature.attributes['KM FINAL']) - (r.feature.attributes['KM INICIAL'])) ,
                 latitude:e.mapPoint.latitude,
                 longitude:e.mapPoint.longitude,
                 region:region
