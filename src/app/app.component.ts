@@ -68,7 +68,6 @@ export class AppComponent {
         this._mc.enable(false,'first')
       })
     })
-    this._mc.toggle()
   }
 
   observadorConectado(){
@@ -93,20 +92,28 @@ export class AppComponent {
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         this.db = db;
         this.db.transaction(async tx=>{
-          this.db.executeSql('SELECT * FROM alerta', []).then((data)=>{
-            if(data.rows.length > 0){
-              this.pendientes = true;
-              this.presentToast('Hay '+data.rows.length +' alertas pendientes por enviar')
-            }else{
-              let options: NativeTransitionOptions ={
-                direction:'right',
-                duration:500
+          this._us.cargar_storage().then(()=>{
+            var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
+            this.db.executeSql(sql, []).then((data)=>{
+              if(data.rows.length > 0){
+                this.pendientes = true;
+                this.presentToast('Hay '+data.rows.length +' alertas pendientes por enviar')
+              }else{
+                let options: NativeTransitionOptions ={
+                  direction:'right',
+                  duration:500
+                }
+                this.nativePageTransitions.fade(options);
+                if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                  this.navCtrl.navigateRoot('/home_vialidad')
+                }else{
+                  this.navCtrl.navigateRoot('/home')
+                }
+                this.pagina = 'home'
               }
-              this.nativePageTransitions.fade(options);
-              this.navCtrl.navigateRoot('/home')
-              this.pagina = 'home'
-            }
+            })
           })
+
         })
       })
     }
@@ -118,6 +125,7 @@ export class AppComponent {
       autoHide: true
     });
   }
+
   initializeApp() {
     this.platform.ready().then(() => {
       this.splash()
@@ -161,6 +169,7 @@ export class AppComponent {
       if(page == 'home'){
         this._us.cargar_storage().then(()=>{
           if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+            console.log('aca?')
             this.navCtrl.navigateRoot('/home_vialidad')  
           }else{
             this.navCtrl.navigateRoot('/home')  

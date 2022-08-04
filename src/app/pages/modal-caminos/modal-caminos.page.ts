@@ -14,8 +14,6 @@ export class ModalCaminosPage implements OnInit {
   @Input() caminos;
   constructor(public modalCtrl:ModalController,public navParams: NavParams) {
     this.caminos = navParams.get('caminos');
-    console.log(this.caminos)
-
    }
 
   ngOnInit() {

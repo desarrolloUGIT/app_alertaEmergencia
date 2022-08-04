@@ -61,7 +61,8 @@ tipo = 'novialidad'
          
         })
       }else{
-        this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"Titulo de la alerta","nivelalerta":"Moderado","descripcion":"Esta es la descripción de la alerta","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"}]
+        // this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"Titulo de la alerta","nivelalerta":"Moderado","descripcion":"Esta es la descripción de la alerta","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"}]
+        this.alertas = [{"id":1,"usuario":"maximo.emrdv","nivelalerta":"Muy Grave","elemento":"Elementos de Saneamiento","titulo":"jbivksn isno s","competencia":"Si","km_f":"84.754","descripcion":"ñsjs. jxbdi ceyv js hce lc eunidbud. ke uce lceblc ei. dl cie cei celg elg el cel cel ","km_i":"68.5","lat":-33.036,"codigo":"65A10602","date":"Tue Aug 02 2022 10:58:46 GMT-0400 (-04)","region":"05","transito":"Con Restricción","lng":-71.655293,"fechaEmergencia":"2022-08-16T10:58:00-04:00","restriccion":"Sólo Vehículos Livianos","name":"Cruce Ruta 68 (Placilla) - Camino La Pólvora - Valparaíso (Puerto)"}]
         this.loadFiles()
       }
     }
@@ -111,7 +112,7 @@ tipo = 'novialidad'
     this.images.forEach(i=>{
       this.alertas.forEach(a=>{
         if('save_'+a.id+'_foto.jpg' == i.name){
-          a.name = i;
+          a.foto = i;
         }
       })
     })
@@ -127,7 +128,7 @@ tipo = 'novialidad'
       directory:Directory.Data,
       path:file.path
     });
-    this.loadFiles()
+    // this.loadFiles()
   }
 
   async presentToast(message) {
@@ -177,7 +178,7 @@ tipo = 'novialidad'
                 }else{
                   this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
                     if(data.rowsAffected > 0){
-                      this.deleteImage(this.alertas[i].name).then(()=>{
+                      this.deleteImage(this.alertas[i].foto).then(()=>{
                         this.alertas.splice(i,1)
                         this.loader.dismiss()
                         if(this.alertas.length <= 0){

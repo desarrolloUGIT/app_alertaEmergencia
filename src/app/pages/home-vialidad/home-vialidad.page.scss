@@ -202,9 +202,6 @@ form{
 }
 
 ion-modal {
-  // --height: 50%;
-  // --border-radius: 16px;
-  // --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --background: rgba(44,39,45,0.2);
   &::part(content){
     backdrop-filter: blur(6px);
@@ -239,4 +236,11 @@ ion-modal ion-toolbar {
 }
 .p_error{
   float: right;padding-right: 3%;color: red;font-size: 12px;
+}
+
+.fechaHora{
+  border: 1px solid darkgray;
+  padding: 2%;
+  border-radius: 5px;
+  font-size: 15px;;
 }

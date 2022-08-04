@@ -263,8 +263,12 @@ export class HomeVialidadPage implements OnInit {
         "descripcion": "Velocidad Restringida"
     }
   ]
-  km_i = 65.8;
-  km_f = 95.5;
+  km_i:Number;
+  km_f:Number;
+  menorI:Boolean;
+  mayorI:Boolean;
+  menorF:Boolean;
+  mayorF:Boolean;
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
@@ -275,12 +279,13 @@ export class HomeVialidadPage implements OnInit {
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
+      this.loadFiles()
       this.loadMapVialidad()
     })
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)');
-        db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f)');
+        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f)',[]);
         this.db = db;
         this.nivelAlerta();
       })
@@ -291,7 +296,6 @@ export class HomeVialidadPage implements OnInit {
     this.elementos = this.sortJSON(this.elementos,'valor','asc')
     this.transito = this.sortJSON(this.transito,'valor','asc')
     this.restriccion = this.sortJSON(this.restriccion,'valor','asc')
-    this.loadFiles()
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null,Validators.compose([Validators.required])],
       fechaEmergencia: [null,Validators.compose([Validators.required])],
@@ -312,7 +316,37 @@ export class HomeVialidadPage implements OnInit {
    
   }
 
-
+  myFunction(ev,lugar){
+    if(lugar == 'i'){
+      this.firstFormGroup.controls['km_i'].setValue(((ev.target.value).replace(',','.')))
+      if(Number(this.firstFormGroup.value.km_i) > Number(this.km_f)){
+        this.mayorI = true;
+        this.menorI = false;
+      }else{
+        if(Number(this.firstFormGroup.value.km_i) < Number(this.km_i)){
+          this.menorI = true;
+          this.mayorI = false;
+        }else{
+          this.menorI = false;
+          this.mayorI = false;
+        }
+      }
+    }else{
+      this.firstFormGroup.controls['km_f'].setValue(((ev.target.value).replace(',','.')))
+      if(Number(this.firstFormGroup.value.km_f) > Number(this.km_f)){
+        this.mayorF = true;
+        this.menorF = false;
+      }else{
+        if(Number(this.firstFormGroup.value.km_f) < Number(this.km_i)){
+          this.menorF = true;
+          this.mayorF = false;
+        }else{
+          this.menorF = false;
+          this.mayorF = false;
+        }
+      }
+    }
+  }
 
   async loadMapVialidad(){
     const [Map, MapView, FeatureLayer, Locate, Track, Graphic, watchUtils, IdentifyTask, IdentifyParameters, MapImageLayer,Basemap]:any = await loadModules([
@@ -404,7 +438,7 @@ export class HomeVialidadPage implements OnInit {
     const [ IdentifyTask, IdentifyParameters]:any = await loadModules(['esri/tasks/IdentifyTask','esri/tasks/support/IdentifyParameters'])
       let identifyTask = new IdentifyTask(vialidadRedVialURL);
       let params = new IdentifyParameters();
-      params.tolerance = 40;
+      params.tolerance = 20;
       // params.layerIds = [0];
       params.layerOption = "all";
       params.width = this.view2.width;
@@ -439,8 +473,8 @@ export class HomeVialidadPage implements OnInit {
           this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
           if(this.caminosEncontrados.length == 1){
             this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-            this.km_i = this.caminosEncontrados[0].km_i;
-            this.km_f = this.caminosEncontrados[0].km_f;
+            this.km_i = this.caminosEncontrados[0].km_i.replace(',','.');
+            this.km_f = this.caminosEncontrados[0].km_f.replace(',','.');
           }
         }else{
           this.caminosEncontrados = []
@@ -617,7 +651,7 @@ export class HomeVialidadPage implements OnInit {
       swipeToClose:true,
       cssClass: 'my-custom-class',
       backdropDismiss:true,
-      breakpoints:[0, 0.5, 0.75, 0.95],
+      breakpoints:[0, 0.5, 0.75, 0.95, 1],
       initialBreakpoint:0.75,
       componentProps:{
         caminos:this.caminosEncontrados,
@@ -949,8 +983,8 @@ export class HomeVialidadPage implements OnInit {
                  if(dat.rows.length >= 7){
                    this.alertasMaximas()
                  }else{
-                   tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                   [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.transito,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                   tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                   [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
                    this.estadoEnvioAlerta = 'pendiente'
                    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
                     this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
@@ -966,8 +1000,8 @@ export class HomeVialidadPage implements OnInit {
                    })
                  }
                }else{
-                 tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, transito, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                 [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.transito,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                 tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                 [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
                  this.estadoEnvioAlerta = 'pendiente'
                  this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
                   this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');

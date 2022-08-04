@@ -8,8 +8,17 @@ import { Platform, ToastController } from '@ionic/angular';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { BehaviorSubject } from 'rxjs';
 import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
+import { Camera, CameraResultType, CameraSource, Photo} from '@capacitor/camera'
+import { Directory, Filesystem } from '@capacitor/filesystem';
 
+const IMAGE_DIR = 'stored-images';
+const SAVE_IMAGE_DIR = 'save-stored-images';
 
+interface LocalFile {
+  name:string;
+  path:string;
+  data:string;
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -44,6 +53,7 @@ export class UsuarioService {
     'Accept': "text/plain",
     'Content-Type': "text/plain",
   };
+  images = [];
   // URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_udp/service/"; //PROD
   URL_SERVICIOS = "https://emergencias-doh.mop.gob.cl/bypass_ugit2/restservice/service/"; //QA
   constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite ) { 
@@ -197,17 +207,59 @@ export class UsuarioService {
          };
          if(this.platform.is('capacitor')){
           this.sqlite.deleteDatabase({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((re)=>{
+            this.loadFiles(IMAGE_DIR)
+            this.loadFiles(SAVE_IMAGE_DIR)
             resolve(true)
           }).catch(err=>{
+            this.loadFiles(IMAGE_DIR)
+            this.loadFiles(SAVE_IMAGE_DIR)
             resolve(true)
           })
          }else{
+          this.loadFiles(IMAGE_DIR)
+          this.loadFiles(SAVE_IMAGE_DIR)
           resolve(true);
          }
 
     })
     return promesa;
   }
+
+  async loadFiles(RUTA){
+    this.images = [];
+      Filesystem.readdir({
+        directory:Directory.Data,
+        path:RUTA
+      }).then(res=>{
+        this.loadFileData(res.files,RUTA)
+      })
+  }
+
+  async loadFileData(fileNames:string[],RUTA){
+    for (let f of fileNames){
+      const filePath = RUTA+'/'+f;
+      const readFile = await Filesystem.readFile({
+        directory:Directory.Data,
+        path:filePath
+      });
+      this.deleteImage({
+        name:f,
+        path:filePath,
+        data:'data:image/jpeg;base64,'+readFile.data
+      })
+    }
+  }
+  async deleteImage(file:LocalFile){
+    await Filesystem.deleteFile({
+      directory:Directory.Data,
+      path:file.path
+    });
+  }
+
+
+
+
+
 
   operatividad(){
     this.token_user = JSON.parse(localStorage.getItem("token_user"));

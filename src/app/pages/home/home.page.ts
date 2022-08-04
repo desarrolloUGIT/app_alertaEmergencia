@@ -120,10 +120,10 @@ export class HomePage implements OnInit {
   ngOnInit(){
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)')
-        db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)')
-        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)')
-        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)');
+        db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
+        db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
+        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
+        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)',[]);
         this.db = db;
         this.operatividad();
         this.nivelAlerta();

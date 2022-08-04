@@ -113,7 +113,11 @@ export class LoginPage implements OnInit {
                     }
                     this.nativePageTransitions.slide(options);    
                     this._us.nextmessage('usuario_logeado') 
-                  this.navctrl.navigateRoot('/home')
+                    if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                      this.navctrl.navigateRoot('/home_vialidad')
+                    }else{
+                      this.navctrl.navigateRoot('/home')
+                    }
                  })
                }else{
                 this.presentAlert('¡Atención!','EL usuario esta inactivo')
