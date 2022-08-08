@@ -68,19 +68,6 @@ export class HomePage implements OnInit {
     })
   });
   modo = 'osm'
-
-  // dvRedVIal = new TileLayer({
-  //   source: new TileArcGISRest({
-  //         url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer'
-  //     }),
-  // });
-  dvRedVIal =  new ImageLayer({
-    source: new ImageArcGISRest({
-      ratio: 1,
-      params: {},
-      url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer',
-    }),
-  })
   regiones = null;
   iconFeature = new Feature({
     geometry: new Point(this.stgo),
@@ -112,12 +99,20 @@ export class HomePage implements OnInit {
   existenActivos = true;
   picture = null;
   estadoEnvioAlerta = null;
+  region = '13'
 
   constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
 
   ngOnInit(){
+    this._us.cargar_storage().then(()=>{
+      this.region = this._us.usuario.PERSON.STATEPROVINCE
+      this.region = this.region == '20' ? '13' : this.region;
+      this._us.nextmessage('usuario_logeado') 
+      this.loadFiles()
+      this.loadMapNotVialidad()
+    })
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
@@ -136,7 +131,6 @@ export class HomePage implements OnInit {
       this.destinos();
       this.activos();
     }
-    this.loadFiles()
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
     });
@@ -148,13 +142,7 @@ export class HomePage implements OnInit {
     this.thirdFormGroup = this._formBuilder.group({
       titulo: [null,Validators.compose([Validators.maxLength(150),Validators.required])],
       descripcion: [null,Validators.compose([Validators.maxLength(1000),Validators.required])],
-    });
-    this._mc.enable(true,'first')
-    this._us.cargar_storage().then(()=>{
-      this._us.nextmessage('usuario_logeado') 
-    })
-    this.loadMapNotVialidad()
-    
+    });  
   }
 
 // INICIO MAPA
@@ -169,7 +157,6 @@ export class HomePage implements OnInit {
         layers: [
          this.osm,
          this.baseLayer,
-        //  this.dvRedVIal,
         //  this.chile
         ],
         view:this.view,
@@ -178,9 +165,17 @@ export class HomePage implements OnInit {
       setTimeout(() => {
         this.map.setTarget("map");
       }, 500);
+      this._us.coordenadasRegion.forEach(c=>{
+        if(c.region == this.region){
+          this.view.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+          this.dataPosicion.lng = Number(c.lng.toFixed(6))
+          this.dataPosicion.lat = Number(c.lat.toFixed(6))
+          this.dataPosicion.region = this.region;
+        }
+      })
+      this.marker.getGeometry().setCoordinates(this.view.getCenter());
       this.chile.setVisible(true)
       this.osm.setVisible(true)
-      this.dvRedVIal.setVisible(true)
       this.baseLayer.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
       this.markers.getSource().addFeature(this.marker);
@@ -1085,7 +1080,16 @@ export class HomePage implements OnInit {
     this.secondFormGroup.reset();
     this.thirdFormGroup.reset();
     this.stepper.reset();
-    this.view.setCenter(this.stgo)
+    // this.view.setCenter(this.stgo)
+    this._us.coordenadasRegion.forEach(c=>{
+      if(c.region == this.region){
+        this.view.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+        this.dataPosicion.lng = Number(c.lng.toFixed(6))
+        this.dataPosicion.lat = Number(c.lat.toFixed(6))
+        this.dataPosicion.region = this.region;
+      }
+    })
+    this.marker.getGeometry().setCoordinates(this.view.getCenter());
     this.view.setZoom(13)
     this.obtenerUbicacionRegion()
   }

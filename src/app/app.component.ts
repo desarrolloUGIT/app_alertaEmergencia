@@ -206,7 +206,7 @@ export class AppComponent {
                     duration:500
                   }
                   this.nativePageTransitions.slide(options);
-                  this._mc.toggle()
+                  this._mc.close()
                   this._mc.enable(false)
                   this._us.cargar_storage()
                   this.navCtrl.navigateRoot('/login')
@@ -220,7 +220,7 @@ export class AppComponent {
                   duration:500
                 }
                 this.nativePageTransitions.slide(options);
-                this._mc.toggle()
+                this._mc.close()
                 this._mc.enable(false)
                 this._us.cargar_storage()
                 this.navCtrl.navigateRoot('/login')

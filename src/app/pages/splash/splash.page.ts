@@ -48,7 +48,6 @@ export class SplashPage implements OnInit {
       }
       this._us.cargar_storage().then(()=>{
         if(this._us.usuario){
-          this._mc.enable(false,'first')
           this._mc.enable(true,'first')
           if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
             this.navctrl.navigateRoot('/home_vialidad')

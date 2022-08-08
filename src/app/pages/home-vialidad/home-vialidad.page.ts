@@ -60,93 +60,6 @@ export class HomeVialidadPage implements OnInit {
   operatividadArray = [];
   nivelAlertaArray = [];
   caminosEncontrados = []
-  coordenadasRegion = [
-    {
-      region:'01',
-      lat:-18.4746,
-      lng:-70.29792
-    },
-    {
-      region:'02',
-      lat:-23.65236,
-      lng:-70.3954
-    },
-    {
-      region:'03',
-      lat:-27.36679,
-      lng:-70.3314
-    },
-    {
-      region:'04',
-      lat:-29.90453,
-      lng:-71.24894
-    },
-    {
-      region:'05',
-      lat:-33.036,
-      lng:-71.62963
-    },
-    {
-      region:'06',
-      lat:-34.17083,
-      lng:-70.74444
-    },
-    {
-      region:'07',
-      lat:-35.4264,
-      lng:-71.65542
-    },
-    {
-      region:'08',
-      lat:-36.82699,
-      lng:-73.04977
-    },
-    {
-      region:'09',
-      lat:-38.73965,
-      lng:-72.59842
-    },
-    {
-      region:'10',
-      lat:-41.4693,
-      lng:-72.94237
-    },
-    {
-      region:'11',
-      lat:-45.57524,
-      lng:-72.06619
-    },
-    {
-      region:'12',
-      lat:-53.15483,
-      lng:-70.91129
-    },
-    {
-      region:'13',
-      lat:-33.44286267068381,
-      lng:-70.65266161399654
-    },
-    {
-      region:'14',
-      lat:-39.81422,
-      lng:-73.24589
-    },
-    {
-      region:'15',
-      lat:-18.4746,
-      lng:-70.29792
-    },
-    {
-      region:'16',
-      lat:-36.60664,
-      lng:-72.10344
-    },
-    {
-      region:'20',
-      lat:-33.44286267068381,
-      lng:-70.65266161399654
-    },
-  ]
   region = '13'
   competencia = [{valor:'No',descripcion:'Fuera del Ambito de Competencia MOP'},{valor:'Solo Técnico',descripcion:'Solo Ambito Técnico'},{valor:'Si',descripcion:'Ambito de Competencia MOP'}]
   elementos =[
@@ -274,7 +187,6 @@ export class HomeVialidadPage implements OnInit {
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
 
   ngOnInit() {
-    this._mc.enable(true,'first')
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
@@ -399,7 +311,7 @@ export class HomeVialidadPage implements OnInit {
         },
       });
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
-      this.coordenadasRegion.forEach(c=>{
+      this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
           this.view2.center = [c.lng,c.lat]
           pointInicial = {longitude:c.lng,latitude:c.lat};
@@ -1062,7 +974,7 @@ export class HomeVialidadPage implements OnInit {
       this.secondFormGroup.controls['competencia'].setValue('Si')
       this.view2.zoom = 13
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
-      this.coordenadasRegion.forEach(c=>{
+      this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
           this.view2.center = [c.lng,c.lat]
           pointInicial = {longitude:c.lng,latitude:c.lat};
