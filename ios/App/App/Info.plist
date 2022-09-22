@@ -27,6 +27,18 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Se necesita permiso para acceder a tus fotos</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Se necesita permiso para acceder a tu ubicación</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Se necesita permiso para acceder a tu ubicación</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Se necesita permiso para acceder a tu ubicación</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Se necesita permiso para acceder a tus fotos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Se necesita permiso para acceder a tus fotos</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -43,22 +55,8 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Se necesita permiso para acceder a tu ubicación</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-		<string>Se necesita permiso para acceder a tu ubicación</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Se necesita permiso para acceder a tu ubicación</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-		<string>Se necesita permiso para acceder a tus fotos</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Se necesita permiso para acceder a tus fotos</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-		<string>Se necesita permiso para acceder a tus fotos</string>
 </dict>
 </plist>

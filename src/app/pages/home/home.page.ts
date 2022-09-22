@@ -1,7 +1,6 @@
-import { AfterViewInit, Component, Input, OnInit, Output, EventEmitter, NgZone, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { loadModules } from 'esri-loader';
-import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService } from '../../services/usuario/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController } from '@ionic/angular';
@@ -14,10 +13,7 @@ import Icon from 'ol/style/Icon';
 import VectorSource from 'ol/source/Vector';
 import Point from 'ol/geom/Point';
 import VectorLayer from 'ol/layer/Vector';
-import XYZ from 'ol/source/XYZ';
 import GeoJSON from 'ol/format/GeoJSON';
-import TileArcGISRest from 'ol/source/TileArcGISRest';
-import {FullScreen, defaults as defaultControls} from 'ol/control';
 import { ModalActivosPage } from '../modal-activos/modal-activos.page';
 import { MatStepper } from '@angular/material/stepper';
 import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
@@ -25,11 +21,8 @@ import { Camera, CameraResultType, CameraSource, Photo} from '@capacitor/camera'
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { ActionSheetController } from '@ionic/angular';
 import { AnimationController } from '@ionic/angular';
-import Draw from 'ol/interaction/Draw';
-import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
-import {Image as ImageLayer, Tile } from 'ol/layer';
-import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
+import { DireccionService } from '../../services/direccion/direccion.service';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -101,12 +94,15 @@ export class HomePage implements OnInit {
   estadoEnvioAlerta = null;
   region = '13'
 
-  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
+  constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
 
   ngOnInit(){
     this._us.cargar_storage().then(()=>{
+      // this._us.dominios('PLUSSSTATEPROV1').subscribe(res=>{
+      //   console.log('DOMINIIOS-> ',res)
+      // })
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
@@ -120,16 +116,16 @@ export class HomePage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
         db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)',[]);
         this.db = db;
-        this.operatividad();
-        this.nivelAlerta();
-        this.destinos();
+        // this.operatividad();
+        // this.nivelAlerta();
+        // this.destinos();
         this.activos();
       })
     }else{
-      this.operatividad();
-      this.nivelAlerta();
-      this.destinos();
-      this.activos();
+      // this.operatividad();
+      // this.nivelAlerta();
+      // this.destinos();
+      // this.activos();
     }
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
@@ -315,7 +311,7 @@ export class HomePage implements OnInit {
   }
 
   actualizarOperatividad(){
-    this._us.operatividad().subscribe((res:any)=>{
+    this._ds.dominios('TRANSEMER').subscribe((res:any)=>{
       console.log('OPERATIVIDAD -> ',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
@@ -445,7 +441,7 @@ export class HomePage implements OnInit {
   }
 
   actualizarNivelAlerta(){
-    this._us.nivelAlerta().subscribe((res:any)=>{
+    this._ds.dominios('SIECATEGORIA').subscribe((res:any)=>{
       console.log('ALERTA -> ',res) 
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
@@ -649,7 +645,7 @@ export class HomePage implements OnInit {
   }
 
   actualizarActivos(){ 
-    this._us.activos().subscribe((res:any)=>{
+    this._ds.activos().subscribe((res:any)=>{
       console.log('ACTIVOS ->',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
@@ -1028,7 +1024,7 @@ export class HomePage implements OnInit {
           })
         })
       }else{
-        this._us.enviarAlerta(data).subscribe(res=>{
+        this._ds.enviar(data).subscribe(res=>{
           console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
           this.estadoEnvioAlerta = 'exitoso'
           this.deleteImage(this.images[0])

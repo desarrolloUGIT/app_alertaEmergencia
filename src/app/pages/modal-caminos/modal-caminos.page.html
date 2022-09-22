@@ -1,5 +1,5 @@
 <ion-content>
-  <h3>Caminos encontrados en el punto seleccionado</h3>
+  <h3>Caminos encontrados en el <br>punto seleccionado</h3>
   <div *ngIf="caminos[0]">
     <ion-accordion-group mode="ios" style="margin-bottom: 5%;margin-top: 3%;" [style.height]="caminos.length > 8 ? '200vh' : 'auto'">
       <ion-accordion [value]="item.codigo" *ngFor="let item of caminos">

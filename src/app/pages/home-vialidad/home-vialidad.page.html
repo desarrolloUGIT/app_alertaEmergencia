@@ -41,16 +41,18 @@
           <div *ngIf="firstFormGroup.value.activoSeleccionado">
             <ion-item lines="none" style="width: 100%;">
               <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Inicio</ion-label>
-              <ion-input formControlName="km_i" mode="ios" placeholder="{{km_i}}" [class.error]="menorI || mayorI" (ionInput)="myFunction($event,'i')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
+              <ion-input formControlName="km_i" mode="ios" placeholder="{{km_i}}" [class.error]="menorI || mayorI || mayorIF" (ionInput)="myFunction($event,'i')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
             </ion-item>
             <p *ngIf="menorI" class="p_error">No puede ser menor al km {{km_i}}</p>
             <p *ngIf="mayorI" class="p_error">No puede ser mayor al km {{km_f}}</p>
+            <p *ngIf="mayorIF" class="p_error">No puede ser mayor al km final</p>
             <ion-item lines="none" style="width: 100%;">
               <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Término</ion-label>
-              <ion-input formControlName="km_f" mode="ios" placeholder="{{km_f}}" [class.error]="mayorF || menorF" (ionInput)="myFunction($event,'f')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
+              <ion-input formControlName="km_f" mode="ios" placeholder="{{km_f}}" [class.error]="mayorF || menorF || menorFI" (ionInput)="myFunction($event,'f')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
             </ion-item>
             <p *ngIf="menorF" class="p_error">No puede ser menor al km {{km_i}}</p>
             <p *ngIf="mayorF" class="p_error">No puede ser mayor al km {{km_f}}</p>
+            <p *ngIf="menorFI" class="p_error">No puede ser menor al km  inicial</p>
             <ion-item lines="none" style="width: 100%;">
               <ion-label  style="font-size: 15px;font-weight: bold;">Fecha Emergencia</ion-label>
               <span  *ngIf="!firstFormGroup.value.fechaEmergencia" (click)="abrirModal()" class="fechaHora">dd/mm/yy hh:mm</span>
@@ -74,31 +76,31 @@
           <ion-list style="margin-top: 3%;margin-bottom: 3%;">
             <ion-item lines="none" [class.select]="secondFormGroup.value.transito">
               <ion-label >Tránsito</ion-label>
-              <ion-select  interface="alert" placeholder="Selecciona tránsito" class="select-text" cancelText="Cancelar" okText="OK" title="Tránsito" formControlName="transito">
-                <ion-select-option *ngFor="let item of transito" [value]="item.valor">{{item.valor}}</ion-select-option>
+              <ion-select mode="ios" interface="alert" placeholder="Selecciona tránsito" class="select-text" cancelText="Cancelar" okText="OK" title="Tránsito" formControlName="transito">
+                <ion-select-option *ngFor="let item of transito" [value]="item.VALUE">{{item.VALUE}}</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-item lines="none" *ngIf="secondFormGroup.value.transito == 'Con Restricción'" [class.select]="secondFormGroup.value.restriccion">
               <ion-label >Restricción</ion-label>
-              <ion-select  interface="alert" placeholder="Selecciona restricción" class="select-text" cancelText="Cancelar" okText="OK" title="Restricción" formControlName="restriccion">
-                <ion-select-option *ngFor="let item of restriccion" [value]="item.valor">{{item.valor}}</ion-select-option>
+              <ion-select mode="ios" interface="alert" placeholder="Selecciona restricción" class="select-text" cancelText="Cancelar" okText="OK" title="Restricción" formControlName="restriccion">
+                <ion-select-option *ngFor="let item of restriccion" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-item lines="none" [class.select]="secondFormGroup.value.nivelAlerta">
               <ion-label>Nivel de alerta</ion-label>
-              <ion-select interface="alert" placeholder="Selecciona alerta" class="select-text"  cancelText="Cancelar" okText="OK" title="Alerta" formControlName="nivelAlerta">
+              <ion-select mode="ios" interface="alert" placeholder="Selecciona alerta" class="select-text"  cancelText="Cancelar" okText="OK" title="Alerta" formControlName="nivelAlerta">
                 <ion-select-option *ngFor="let item of nivelAlertaArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-item lines="none" [class.select]="secondFormGroup.value.elemento">
               <ion-label>Elemento</ion-label>
-              <ion-select interface="alert" placeholder="Selecciona elemento" class="select-text"  cancelText="Cancelar" okText="OK" title="Elemento" formControlName="elemento">
-                <ion-select-option *ngFor="let item of elementos" [value]="item.valor">{{item.valor}}</ion-select-option>
+              <ion-select mode="ios" interface="alert" placeholder="Selecciona elemento" class="select-text"  cancelText="Cancelar" okText="OK" title="Elemento" formControlName="elemento">
+                <ion-select-option *ngFor="let item of elementos" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
               <ion-label>Competencia</ion-label>
-              <ion-select interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
+              <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
                 <ion-select-option *ngFor="let item of competencia" [value]="item.valor">{{item.valor}} - {{item.descripcion}}</ion-select-option>
               </ion-select>
             </ion-item>
@@ -225,7 +227,7 @@
         </ion-button>
       </div>
       <div align="center" >
-        <ion-button expand="block"  color="medium" (click)="enviar()"  [disabled]="!firstFormGroup.valid  || !secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region || mayorI || mayorF || menorI || menorF">
+        <ion-button expand="block"  color="medium" (click)="enviar()"  [disabled]="!firstFormGroup.valid  || !secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region || mayorI || mayorF || menorI || menorF || menorFI || mayorIF">
           REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
         </ion-button>
       </div>

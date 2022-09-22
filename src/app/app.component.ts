@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Network } from '@awesome-cordova-plugins/network/ngx';
 import { Platform, NavController, MenuController, ToastController, LoadingController, AlertController } from '@ionic/angular';
-import { UsuarioService } from './services/usuario.service';
+import { UsuarioService } from './services/usuario/usuario.service';
 import { Router } from '@angular/router';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';

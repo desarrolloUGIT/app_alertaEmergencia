@@ -3,7 +3,7 @@ import { Component, OnInit,AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavController, AlertController, LoadingController, Platform, MenuController } from '@ionic/angular';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
-import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService } from '../../services/usuario/usuario.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
@@ -163,7 +163,6 @@ export class LoginPage implements OnInit {
               STATUS:path.STATUS[0]['_'],
               USERID:path.USERID[0]
              }
-            //  console.log('json de acrchivo xml-> ',this._us.usuario)
               if(this._us.usuario.STATUS == 'ACTIVE'){
                 this._us.saveStorage(this._us.usuario,this.form.value)
                 this._us.cargar_storage().then(()=>{

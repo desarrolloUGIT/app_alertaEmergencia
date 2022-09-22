@@ -208,10 +208,18 @@ ion-modal {
   }
   ion-content{
     background: transparent !important;
-    --background:transparent;
-    --padding-top:25vh;
-    --padding-start:20px;
-    --padding-end:20px;
+    // --background:transparent;
+    // --padding-top:25vh;
+    // --padding-start:20px;
+    // --padding-end:20px;
+    --background: transparent;
+    /* --padding-top: 20vh; */
+    --padding-start: 20px;
+    text-align: center;
+    --padding-end: 20px;
+    margin: 0 auto !important;
+    position: absolute;
+    top: 15%;
     
     ion-datetime{
       border-radius: 8px;

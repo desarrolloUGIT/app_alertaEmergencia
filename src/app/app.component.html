@@ -1,8 +1,11 @@
 <ion-app>
-  <ion-menu side="start" menuId="first" type="overlay" contentId="main" mode="ios">
+  <ion-menu side="start" swipe-gesture="false" menuId="first" type="overlay" contentId="main" mode="ios">
     <ion-header>
-      <ion-toolbar>
+      <ion-toolbar mode="ios">
         <ion-title>Menu</ion-title>
+        <ion-button fill="clear" slot="end" (click)="_mc.close()">
+          <ion-icon slot="icon-only" color="light"   name="close"></ion-icon>
+        </ion-button>
       </ion-toolbar>
     </ion-header>
     <ion-content [fullscreen]="true" [forceOverscroll]="false" style="--background: #093F75;">

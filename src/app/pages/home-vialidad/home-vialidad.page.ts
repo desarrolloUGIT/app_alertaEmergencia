@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { loadModules } from 'esri-loader';
-import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService } from '../../services/usuario/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController } from '@ionic/angular';
@@ -18,6 +18,7 @@ import { AnimationController } from '@ionic/angular';
 import {Image as ImageLayer, Tile } from 'ol/layer';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
+import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -62,152 +63,67 @@ export class HomeVialidadPage implements OnInit {
   caminosEncontrados = []
   region = '13'
   competencia = [{valor:'No',descripcion:'Fuera del Ambito de Competencia MOP'},{valor:'Solo Técnico',descripcion:'Solo Ambito Técnico'},{valor:'Si',descripcion:'Ambito de Competencia MOP'}]
-  elementos =[
-        {
-            "valor": "Otro Elemento",
-            "descripcion": "Otro Elemento"
-        },
-        {
-            "valor": "Puente",
-            "descripcion": "Puente"
-        },
-        {
-            "valor": "Tunel",
-            "descripcion": "Tunel, Trinchera o Cobertizo"
-        },
-        {
-            "valor": "Elementos de Seguridad",
-            "descripcion": "Elementos de Seguridad"
-        },
-        {
-            "valor": "Carpeta de Rodadura",
-            "descripcion": "Tramo de Carpeta de Rodadura"
-        },
-        {
-            "valor": "Pasarela",
-            "descripcion": "Pasarela"
-        },
-        {
-            "valor": "Elementos de Saneamiento",
-            "descripcion": "Elementos de Saneamiento"
-        },
-        {
-            "valor": "Pavimento Camino de Acceso",
-            "descripcion": "Pavimento Camino de Acceso"
-        },
-        {
-            "valor": "Muros - Vigas",
-            "descripcion": "Muros - Vigas"
-        },
-        {
-            "valor": "Pilares",
-            "descripcion": "Pilares"
-        },
-        {
-            "valor": "Cielo Falso",
-            "descripcion": "Cielo Falso"
-        },
-        {
-            "valor": "Techumbre",
-            "descripcion": "Techumbre"
-        },
-        {
-            "valor": "Muros no estructurales",
-            "descripcion": "Muros no estructurales"
-        },
-        {
-            "valor": "Sistema de Comunicación",
-            "descripcion": "Sistema de Comunicación"
-        },
-        {
-            "valor": "Pisos",
-            "descripcion": "Pisos"
-        },
-        {
-            "valor": "Camino de Acceso al Aeródromo",
-            "descripcion": "Camino de Acceso al Aeródromo"
-        },
-        {
-            "valor": "Planta tratamiento agua servidas",
-            "descripcion": "Planta tratamiento agua servidas"
-        }
-  ]
-  transito = [
-    {
-        "valor": "Con Restricción",
-        "descripcion": "Parcialmente Operativo"
-    },
-    {
-        "valor": "Interrumpido",
-        "descripcion": "No Operativo"
-    },
-    {
-        "valor": "Sin Información",
-        "descripcion": "Sin Información"
-    },
-    {
-        "valor": "Transitable",
-        "descripcion": "Operativo"
-    }
-  ]
-  restriccion = [
-    {
-        "valor": "Horario Restringido",
-        "descripcion": "Horario Restringido"
-    },
-    {
-        "valor": "Peso Restringido",
-        "descripcion": "Peso Restringido"
-    },
-    {
-        "valor": "Sólo Vehículos Doble Tracción",
-        "descripcion": "Sólo Vehículos Doble Tracción"
-    },
-    {
-        "valor": "Sólo Vehículos Livianos",
-        "descripcion": "Sólo Vehículos Livianos"
-    },
-    {
-        "valor": "Sólo Vehículos Pesados",
-        "descripcion": "Sólo Vehículos Pesados"
-    },
-    {
-        "valor": "Velocidad Restringida",
-        "descripcion": "Velocidad Restringida"
-    }
-  ]
+  elementos = []
+  transito = []
+  restriccion = []
+  activosVial = []
   km_i:Number;
   km_f:Number;
   menorI:Boolean;
   mayorI:Boolean;
+  mayorIF:Boolean;
   menorF:Boolean;
+  menorFI:Boolean;
   mayorF:Boolean;
-  constructor(private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
+  toast;
+  enviando = false;
+  constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
+      this._vs.activosVialidad().subscribe((res:any)=>{
+        // console.log('ACTIVOS VIALIDAD-> ',res)
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+          console.log(path[0]) 
+        })
+      })
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
       this.loadMapVialidad()
-    })
+    
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS transito (id unique, name)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS restriccion (id unique, name)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS activosVialidad (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f)',[]);
         this.db = db;
         this.nivelAlerta();
+        this.elemento();
+        this.transitos()
+        this.restriccioN();
+        // this.activosVialidad();s
+        this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
+        // this._us.dominios('RESTEMER').subscribe((res:any)=>{
+        //   console.log(res)
+        // })
       })
+    
     }else{
       this.nivelAlerta();
+      this.elemento();
+      this.transitos()
+      this.restriccioN();
+      this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
     }
-    this.competencia = this.sortJSON(this.competencia,'valor','asc')
-    this.elementos = this.sortJSON(this.elementos,'valor','asc')
-    this.transito = this.sortJSON(this.transito,'valor','asc')
-    this.restriccion = this.sortJSON(this.restriccion,'valor','asc')
+  })
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null,Validators.compose([Validators.required])],
       fechaEmergencia: [null,Validators.compose([Validators.required])],
@@ -234,13 +150,57 @@ export class HomeVialidadPage implements OnInit {
       if(Number(this.firstFormGroup.value.km_i) > Number(this.km_f)){
         this.mayorI = true;
         this.menorI = false;
+        if(this.firstFormGroup.value.km_f && (Number(this.firstFormGroup.value.km_i) > Number(this.firstFormGroup.value.km_f))){
+          this.mayorIF = true;
+        }else{
+          this.mayorIF = false;
+        }
       }else{
         if(Number(this.firstFormGroup.value.km_i) < Number(this.km_i)){
           this.menorI = true;
           this.mayorI = false;
+          if(this.firstFormGroup.value.km_f && (Number(this.firstFormGroup.value.km_i) > Number(this.firstFormGroup.value.km_f))){
+            this.mayorIF = true;
+          }else{
+            this.mayorIF = false;
+          }
         }else{
           this.menorI = false;
           this.mayorI = false;
+          if(this.firstFormGroup.value.km_f && (Number(this.firstFormGroup.value.km_i) > Number(this.firstFormGroup.value.km_f))){
+            this.mayorIF = true;
+          }else{
+            this.mayorIF = false;
+          }
+        }
+      }
+      if(this.firstFormGroup.value.km_f){
+        if(Number(this.firstFormGroup.value.km_f) > Number(this.km_f)){
+          this.mayorF = true;
+          this.menorF = false;
+          if(this.firstFormGroup.value.km_i && (Number(this.firstFormGroup.value.km_f) < Number(this.firstFormGroup.value.km_i))){
+            this.menorFI = true;
+          }else{
+            this.menorFI = false;
+          }
+        }else{
+          if(Number(this.firstFormGroup.value.km_f) < Number(this.km_i)){
+            this.menorF = true;
+            this.mayorF = false;
+            if(this.firstFormGroup.value.km_i && (Number(this.firstFormGroup.value.km_f) < Number(this.firstFormGroup.value.km_i))){
+              this.menorFI = true;
+            }else{
+              this.menorFI = false;
+            }
+          }else{
+            this.menorF = false;
+            this.mayorF = false;
+            if(this.firstFormGroup.value.km_i && (Number(this.firstFormGroup.value.km_f) < Number(this.firstFormGroup.value.km_i))){
+              this.menorFI = true;
+            }else{
+              this.menorFI = false;
+            }
+          }
         }
       }
     }else{
@@ -248,13 +208,57 @@ export class HomeVialidadPage implements OnInit {
       if(Number(this.firstFormGroup.value.km_f) > Number(this.km_f)){
         this.mayorF = true;
         this.menorF = false;
+        if(this.firstFormGroup.value.km_i && (Number(this.firstFormGroup.value.km_f) < Number(this.firstFormGroup.value.km_i))){
+          this.menorFI = true;
+        }else{
+          this.menorFI = false;
+        }
       }else{
         if(Number(this.firstFormGroup.value.km_f) < Number(this.km_i)){
           this.menorF = true;
           this.mayorF = false;
+          if(this.firstFormGroup.value.km_i && (Number(this.firstFormGroup.value.km_f) < Number(this.firstFormGroup.value.km_i))){
+            this.menorFI = true;
+          }else{
+            this.menorFI = false;
+          }
         }else{
           this.menorF = false;
           this.mayorF = false;
+          if(this.firstFormGroup.value.km_i && (Number(this.firstFormGroup.value.km_f) < Number(this.firstFormGroup.value.km_i))){
+            this.menorFI = true;
+          }else{
+            this.menorFI = false;
+          }
+        }
+      }
+      if(this.firstFormGroup.value.km_i){
+        if(Number(this.firstFormGroup.value.km_i) > Number(this.km_f)){
+          this.mayorI = true;
+          this.menorI = false;
+          if(this.firstFormGroup.value.km_f && (Number(this.firstFormGroup.value.km_i) > Number(this.firstFormGroup.value.km_f))){
+            this.mayorIF = true;
+          }else{
+            this.mayorIF = false;
+          }
+        }else{
+          if(Number(this.firstFormGroup.value.km_i) < Number(this.km_i)){
+            this.menorI = true;
+            this.mayorI = false;
+            if(this.firstFormGroup.value.km_f && (Number(this.firstFormGroup.value.km_i) > Number(this.firstFormGroup.value.km_f))){
+              this.mayorIF = true;
+            }else{
+              this.mayorIF = false;
+            }
+          }else{
+            this.menorI = false;
+            this.mayorI = false;
+            if(this.firstFormGroup.value.km_f && (Number(this.firstFormGroup.value.km_i) > Number(this.firstFormGroup.value.km_f))){
+              this.mayorIF = true;
+            }else{
+              this.mayorIF = false;
+            }
+          }
         }
       }
     }
@@ -292,8 +296,6 @@ export class HomeVialidadPage implements OnInit {
         // basemap:basemap
       });
       const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
-      // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_VIALES/MapServer';
-      // const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/Pruebas/Red_Vial_Chile_Cache/MapServer';
       let flVialidad = new MapImageLayer({
         url: vialidadRedVialURL
       })
@@ -539,20 +541,19 @@ export class HomeVialidadPage implements OnInit {
     await this.loader.present();
   }
 
-  async presentToast(message,duration?) {
-    const toast = await this.toastController.create({
+  async presentToast(message,duration?,cerrar?) {
+    this.toast = await this.toastController.create({
       message: message,
       cssClass: 'toast-custom-class',
-      keyboardClose:true,
-      duration: duration ? duration : 4000,
-      buttons: [
+      duration: !cerrar ?(duration ? duration : 4000) : false,
+      buttons: !cerrar ? [
         {
           icon: 'close',
           role: 'cancel',
         }
-      ]
+      ] : null
     });
-    toast.present();
+    await this.toast.present();
   }
 
   async openModalCaminos() {
@@ -675,8 +676,7 @@ export class HomeVialidadPage implements OnInit {
   }
 
   actualizarNivelAlerta(){
-    this._us.nivelAlerta().subscribe((res:any)=>{
-      console.log('ALERTA -> ',res) 
+    this._vs.dominios('SIECATEGORIA').subscribe((res:any)=>{
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -726,6 +726,526 @@ export class HomeVialidadPage implements OnInit {
               arr.push(tmp)
             })
             this.nivelAlertaArray = arr;
+          }
+        })  
+      }
+    })
+  }
+
+  elemento(){
+    if(this.platform.is('capacitor')){
+      this.db.open().then(()=>{
+        this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.elementos = arr;
+            this.actualizarElementos()
+          }else{
+            this._http.get('assets/elementos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+              this._us.xmlToJson(res).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.elementos = [];
+                path.forEach(f=>{
+                  this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.actualizarElementos()
+                }
+              })
+            },err=>{
+              this._us.xmlToJson(err.error.text).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.elementos = [];
+                path.forEach(f=>{
+                  this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.actualizarElementos()
+                }
+              })
+            })
+          }
+        })
+      })
+    }else{
+      this._http.get('assets/elementos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.elementos = [];
+          path.forEach(f=>{
+            this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarElementos()
+          }
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.elementos = [];
+          path.forEach(f=>{
+            this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarElementos()
+          }
+        })
+      })
+    }
+  }
+
+  actualizarElementos(){
+    this._vs.dominios('ELEMENTOSIE').subscribe((res:any)=>{
+      if(res && res.status == '200'){
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.elementos = [];
+          path.forEach(f=>{
+            this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
+          this.db.open().then(()=>{
+            this.db.transaction(rx=>{
+              rx.executeSql('delete from elemento', [], ()=>{
+                this.elementos.forEach((activo,i)=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into elemento (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
+                  })
+                })
+              })
+            }).then(()=>{
+              // Termina de ingresar nivelAlerta
+            }).catch(()=>{
+              this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
+                if(data.rows.length > 0){
+                  var arr = []
+                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                  AR.forEach(i=>{
+                    var tmp = {
+                      VALUE:data.rows.item(i).id,
+                      DESCRIPTION:data.rows.item(i).name,
+                    }
+                    arr.push(tmp)
+                  })
+                  this.elementos = arr;
+                  this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
+                }
+              })     
+            })
+          })
+        })
+      }else{
+        this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.elementos = arr;
+            this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
+          }
+        })  
+      }
+    })
+  }
+
+  transitos(){
+    if(this.platform.is('capacitor')){
+      this.db.open().then(()=>{
+        this.db.executeSql('SELECT * FROM transito', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.transito = arr;
+            this.actualizarTransito()
+          }else{
+            this._http.get('assets/transito.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+              this._us.xmlToJson(res).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.transito = [];
+                path.forEach(f=>{
+                  this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.actualizarTransito()
+                }
+              })
+            },err=>{
+              this._us.xmlToJson(err.error.text).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.transito = [];
+                path.forEach(f=>{
+                  this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.actualizarTransito()
+                }
+              })
+            })
+          }
+        })
+      })
+    }else{
+      this._http.get('assets/transito.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.transito = [];
+          path.forEach(f=>{
+            this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarTransito()
+          }
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.transito = [];
+          path.forEach(f=>{
+            this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarTransito()
+          }
+        })
+      })
+    }
+  }
+
+  actualizarTransito(){
+    this._vs.dominios('TRANSEMER').subscribe((res:any)=>{
+      if(res && res.status == '200'){
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.transito = [];
+          path.forEach(f=>{
+            this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          this.transito = this.sortJSON(this.transito,'VALUE','asc')
+          this.db.open().then(()=>{
+            this.db.transaction(rx=>{
+              rx.executeSql('delete from transito', [], ()=>{
+                this.transito.forEach((activo,i)=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into transito (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
+                  })
+                })
+              })
+            }).then(()=>{
+              // Termina de ingresar nivelAlerta
+            }).catch(()=>{
+              this.db.executeSql('SELECT * FROM transito', []).then((data)=>{
+                if(data.rows.length > 0){
+                  var arr = []
+                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                  AR.forEach(i=>{
+                    var tmp = {
+                      VALUE:data.rows.item(i).id,
+                      DESCRIPTION:data.rows.item(i).name,
+                    }
+                    arr.push(tmp)
+                  })
+                  this.transito = arr;
+                  this.transito = this.sortJSON(this.transito,'VALUE','asc')
+                }
+              })     
+            })
+          })
+        })
+      }else{
+        this.db.executeSql('SELECT * FROM transito', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.transito = arr;
+            this.transito = this.sortJSON(this.transito,'VALUE','asc')
+          }
+        })  
+      }
+    })
+  }
+
+  restriccioN(){
+    if(this.platform.is('capacitor')){
+      this.db.open().then(()=>{
+        this.db.executeSql('SELECT * FROM restriccion', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.restriccion = arr;
+            this.actualizarRestriccion()
+          }else{
+            this._http.get('assets/restriccion.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+              this._us.xmlToJson(res).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.restriccion = [];
+                path.forEach(f=>{
+                  this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.actualizarRestriccion()
+                }
+              })
+            },err=>{
+              this._us.xmlToJson(err.error.text).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.restriccion = [];
+                path.forEach(f=>{
+                  this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.actualizarRestriccion()
+                }
+              })
+            })
+          }
+        })
+      })
+    }else{
+      this._http.get('assets/restriccion.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.restriccion = [];
+          path.forEach(f=>{
+            this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarRestriccion()
+          }
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.restriccion = [];
+          path.forEach(f=>{
+            this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarRestriccion()
+          }
+        })
+      })
+    }
+  }
+
+  actualizarRestriccion(){
+    this._vs.dominios('RESTEMER').subscribe((res:any)=>{
+      if(res && res.status == '200'){
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.restriccion = [];
+          path.forEach(f=>{
+            this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          this.restriccion = this.sortJSON(this.restriccion,'VALUE','asc')
+          this.db.open().then(()=>{
+            this.db.transaction(rx=>{
+              rx.executeSql('delete from restriccion', [], ()=>{
+                this.restriccion.forEach((activo,i)=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into restriccion (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
+                  })
+                })
+              })
+            }).then(()=>{
+              // Termina de ingresar nivelAlerta
+            }).catch(()=>{
+              this.db.executeSql('SELECT * FROM restriccion', []).then((data)=>{
+                if(data.rows.length > 0){
+                  var arr = []
+                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                  AR.forEach(i=>{
+                    var tmp = {
+                      VALUE:data.rows.item(i).id,
+                      DESCRIPTION:data.rows.item(i).name,
+                    }
+                    arr.push(tmp)
+                  })
+                  this.restriccion = arr;
+                  this.restriccion = this.sortJSON(this.restriccion,'VALUE','asc')
+                }
+              })     
+            })
+          })
+        })
+      }else{
+        this.db.executeSql('SELECT * FROM restriccion', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.restriccion = arr;
+            this.restriccion = this.sortJSON(this.restriccion,'VALUE','asc')
+          }
+        })  
+      }
+    })
+  }
+
+  activosVialidad(){
+    if(this.platform.is('capacitor')){
+      this.db.open().then(()=>{
+        this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.activosVial = arr;
+            this.activosVialidad()
+          }else{
+            this._http.get('assets/activosVialidad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+              this._us.xmlToJson(res).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.activosVial = [];
+                path.forEach(f=>{
+                  this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.activosVialidad()
+                }
+              })
+            },err=>{
+              this._us.xmlToJson(err.error.text).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.activosVial = [];
+                path.forEach(f=>{
+                  this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                })
+                if(this.platform.is('capacitor')){
+                  this.activosVialidad()
+                }
+              })
+            })
+          }
+        })
+      })
+    }else{
+      this._http.get('assets/activosVialidad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.activosVial = [];
+          path.forEach(f=>{
+            this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.activosVialidad()
+          }
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.activosVial = [];
+          path.forEach(f=>{
+            this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          if(this.platform.is('capacitor')){
+            this.activosVialidad()
+          }
+        })
+      })
+    }
+  }
+
+  actualizarActivosVialidad(){
+    this._vs.dominios('RESTEMER').subscribe((res:any)=>{
+      if(res && res.status == '200'){
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.activosVial = [];
+          path.forEach(f=>{
+            this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+          })
+          this.activosVial = this.sortJSON(this.activosVial,'VALUE','asc')
+          this.db.open().then(()=>{
+            this.db.transaction(rx=>{
+              rx.executeSql('delete from activosVialidad', [], ()=>{
+                this.restriccion.forEach((activo,i)=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into activosVialidad (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
+                  })
+                })
+              })
+            }).then(()=>{
+              // Termina de ingresar nivelAlerta
+            }).catch(()=>{
+              this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+                if(data.rows.length > 0){
+                  var arr = []
+                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                  AR.forEach(i=>{
+                    var tmp = {
+                      VALUE:data.rows.item(i).id,
+                      DESCRIPTION:data.rows.item(i).name,
+                    }
+                    arr.push(tmp)
+                  })
+                  this.activosVial = arr;
+                  this.activosVial = this.sortJSON(this.activosVial,'VALUE','asc')
+                }
+              })     
+            })
+          })
+        })
+      }else{
+        this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+              }
+              arr.push(tmp)
+            })
+            this.activosVial = arr;
+            this.activosVial = this.sortJSON(this.activosVial,'VALUE','asc')
           }
         })  
       }
@@ -885,70 +1405,81 @@ export class HomeVialidadPage implements OnInit {
        picture:this.picture,
        name:this.firstFormGroup.value.activoSeleccionado.nombre_camino
      }
-
-     if(this._us.conexion){
-       this.db.open().then(()=>{
-         this.db.transaction( tx1=>{
-           this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
-             this.db.transaction(async tx=>{
-               if(dat.rows.length > 0){
-                 if(dat.rows.length >= 7){
-                   this.alertasMaximas()
-                 }else{
-                   tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                   [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
-                   this.estadoEnvioAlerta = 'pendiente'
-                   this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
-                   })                
-                   const savedFile = await Filesystem.writeFile({
-                     directory:Directory.Data,
-                     path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
-                     data:this.images[0].data
-                     }).then(()=>{
-                     this.deleteImage(this.images[0])
-                     this.volverInicio()
-                     this._us.nextmessage('pendiente') 
-                   })
-                 }
-               }else{
-                 tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                 [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
-                 this.estadoEnvioAlerta = 'pendiente'
-                 this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-                  this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
-                 })
-                 const savedFile = await Filesystem.writeFile({
-                   directory:Directory.Data, 
-                   path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
-                   data:this.images[0].data
-                   }).then(()=>{
-                   this.deleteImage(this.images[0])
-                   this.volverInicio()
-                   this._us.nextmessage('pendiente') 
-                 })
-               }
-             })
+     this.presentLoader('Enviando Alerta ...').then(()=>{
+      if(this._us.conexion == 'si'){
+        this.db.open().then(()=>{
+          this.db.transaction( tx1=>{
+            this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
+              this.db.transaction(async tx=>{
+                if(dat.rows.length > 0){
+                  if(dat.rows.length >= 7){
+                    this.loader.dismiss()
+                    this.alertasMaximas()
+                  }else{
+                    tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                    this.loader.dismiss()
+                    this.estadoEnvioAlerta = 'pendiente'
+                    this.openModalEnvio(this.estadoEnvioAlerta)
+                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null,true); 
+                    const savedFile = await Filesystem.writeFile({
+                      directory:Directory.Data,
+                      path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                      data:this.images[0].data
+                      }).then(()=>{
+                      this.deleteImage(this.images[0])
+                      this.volverInicio()
+                      this._us.nextmessage('pendiente') 
+                    })
+                  }
+                }else{
+                  tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                  [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                  this.loader.dismiss()
+                  this.estadoEnvioAlerta = 'pendiente'
+                  this.openModalEnvio(this.estadoEnvioAlerta)
+                  this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null,true);
+                  const savedFile = await Filesystem.writeFile({
+                    directory:Directory.Data, 
+                    path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                    data:this.images[0].data
+                    }).then(()=>{
+                    this.deleteImage(this.images[0])
+                    this.volverInicio()
+                    this._us.nextmessage('pendiente') 
+                  })
+                }
+              })
+            })
+          })
+        })
+      }else{
+        this._vs.enviarAlerta(data).subscribe((res:any)=>{
+          console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+          this.loader.dismiss()
+          if(res && res.status == '200'){
+           this.estadoEnvioAlerta = 'exitoso'
+           this.deleteImage(this.images[0])
+           this.volverInicio()
+           this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
+            this.presentToast('Alerta enviada exitosamente');
            })
-         })
-       })
-     }else{
-       this._us.enviarAlerta(data).subscribe(res=>{
-         console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
-         this.estadoEnvioAlerta = 'exitoso'
-         this.deleteImage(this.images[0])
-         this.volverInicio()
-         this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-          this.presentToast('Alerta enviada exitosamente');
-         })
-       },err=>{
-         this.estadoEnvioAlerta = 'fallido'
-         this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-          this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
-         })
-         console.log('******************** ERROR ENVIAR ******************** ',err)
-       })
-     }
+          }else{
+           this.estadoEnvioAlerta = 'fallido'
+           this.openModalEnvio(this.estadoEnvioAlerta)
+           this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+           console.log('******************** ERROR ENVIAR ******************** ')
+          }
+        },err=>{
+          this.loader.dismiss()
+          this.estadoEnvioAlerta = 'fallido'
+          this.openModalEnvio(this.estadoEnvioAlerta)
+          this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+          console.log('******************** ERROR ENVIAR ******************** ',err)
+        })
+      }
+     })
+     
      
     
      // this.stepper.reset()
@@ -973,6 +1504,13 @@ export class HomeVialidadPage implements OnInit {
       this.stepper.reset();
       this.secondFormGroup.controls['competencia'].setValue('Si')
       this.view2.zoom = 13
+      this.enviando = false;
+      this.menorI = false;
+      this.mayorI = false;
+      this.menorF = false;
+      this.mayorF = false;
+      this.menorFI = false;
+      this.mayorIF = false;
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
@@ -1017,7 +1555,7 @@ export class HomeVialidadPage implements OnInit {
       component: ModalEnviarPage,
       showBackdrop:true,
       mode:'ios',
-      swipeToClose:true,
+      swipeToClose:false,
       cssClass: 'my-custom-class',
       backdropDismiss:false,
       componentProps:{
@@ -1025,5 +1563,8 @@ export class HomeVialidadPage implements OnInit {
       }
     });
     modal.present();
+    const { data } = await modal.onWillDismiss();
+    this.toast.dismiss()
+
   }
 }

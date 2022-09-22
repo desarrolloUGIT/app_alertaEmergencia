@@ -10,11 +10,11 @@
   <div class="formulario">
     <form [formGroup]="form" (ngSubmit)="iniciar()">
       <ion-item lines="none" class="login input" [class.invalid]="!form.controls.user.valid && form.controls['user'].touched">
-        <ion-input formControlName="user" placeholder="Usuario" clearInput="true" type="text" style="--placeholder-color:black;"></ion-input>
+        <ion-input enterkeyhint="next" formControlName="user" placeholder="Usuario" clearInput="true" type="text" style="--placeholder-color:black;"></ion-input>
       </ion-item>
       <p *ngIf="form.controls['user'].hasError('required') && form.controls['user'].touched" class="mensaje-error"><ion-icon name="alert-circle-outline"></ion-icon>&nbsp;Debes ingresar un usuario</p>  
       <ion-item lines="none" class="login input" [class.invalid]="!form.controls.password.valid && form.controls['password'].touched">
-        <ion-input enterkeyhint="Ingresar" formControlName="password" [type]="passwordType" placeholder="Contraseña" style="--placeholder-color:black;"></ion-input>
+        <ion-input enterkeyhint="enter" enterkeyhint="Ingresar" formControlName="password" [type]="passwordType" placeholder="Contraseña" style="--placeholder-color:black;"></ion-input>
         <ion-icon (click)="showpassword()" slot="end" color="medium" [name]="eye"></ion-icon>
       </ion-item>
       <p *ngIf="form.controls['password'].hasError('required') && form.controls['password'].touched" class="mensaje-error"><ion-icon name="alert-circle-outline"></ion-icon>&nbsp;Debes ingresar una contraseña</p>

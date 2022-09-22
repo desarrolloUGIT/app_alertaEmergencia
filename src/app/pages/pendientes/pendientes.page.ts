@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController } from '@ionic/angular';
-import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioService } from '../../services/usuario/usuario.service';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
 
@@ -168,10 +168,12 @@ tipo = 'novialidad'
                         if(this.alertas.length <= 0){
                           this.mostrar = false;
                           this._us.nextmessage('sin pendiente')        
+                        }else{
+                          this.mostrar = true;
                         }
                       })
                     }else{
-                      this.loader.dismiss
+                      this.loader.dismiss()
                       this.presentToast('No se pudo eliminar la alerta');
                     }
                   })
@@ -184,10 +186,12 @@ tipo = 'novialidad'
                         if(this.alertas.length <= 0){
                           this.mostrar = false;
                           this._us.nextmessage('sin pendiente')        
+                        }else{
+                          this.mostrar = true;
                         }
                       })
                     }else{
-                      this.loader.dismiss
+                      this.loader.dismiss()
                       this.presentToast('No se pudo eliminar la alerta');
                     }
                   })
