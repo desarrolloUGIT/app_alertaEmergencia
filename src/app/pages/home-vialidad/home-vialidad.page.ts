@@ -83,13 +83,12 @@ export class HomeVialidadPage implements OnInit {
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
-      this._vs.activosVialidad().subscribe((res:any)=>{
-        // console.log('ACTIVOS VIALIDAD-> ',res)
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
-          console.log(path[0]) 
-        })
-      })
+      // this._vs.activosVialidad().subscribe((res:any)=>{
+      //   this._us.xmlToJson(res).then((result:any)=>{
+      //     var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+      //     console.log(path[0]) 
+      //   })
+      // })
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
@@ -109,13 +108,9 @@ export class HomeVialidadPage implements OnInit {
         this.elemento();
         this.transitos()
         this.restriccioN();
-        // this.activosVialidad();s
+        this.activosVialidad();
         this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
-        // this._us.dominios('RESTEMER').subscribe((res:any)=>{
-        //   console.log(res)
-        // })
       })
-    
     }else{
       this.nivelAlerta();
       this.elemento();
@@ -1406,7 +1401,7 @@ export class HomeVialidadPage implements OnInit {
        name:this.firstFormGroup.value.activoSeleccionado.nombre_camino
      }
      this.presentLoader('Enviando Alerta ...').then(()=>{
-      if(this._us.conexion == 'si'){
+      if(this._us.conexion == 'no'){
         this.db.open().then(()=>{
           this.db.transaction( tx1=>{
             this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{

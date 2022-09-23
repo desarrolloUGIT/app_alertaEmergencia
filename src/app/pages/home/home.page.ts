@@ -93,16 +93,13 @@ export class HomePage implements OnInit {
   picture = null;
   estadoEnvioAlerta = null;
   region = '13'
-
+  toast;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
 
   ngOnInit(){
     this._us.cargar_storage().then(()=>{
-      // this._us.dominios('PLUSSSTATEPROV1').subscribe(res=>{
-      //   console.log('DOMINIIOS-> ',res)
-      // })
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
@@ -116,16 +113,16 @@ export class HomePage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
         db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)',[]);
         this.db = db;
-        // this.operatividad();
-        // this.nivelAlerta();
-        // this.destinos();
+        this.operatividad();
+        this.nivelAlerta();
+        this.destinos();
         this.activos();
       })
     }else{
-      // this.operatividad();
-      // this.nivelAlerta();
-      // this.destinos();
-      // this.activos();
+      this.operatividad();
+      this.nivelAlerta();
+      this.destinos();
+      this.activos();
     }
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
@@ -791,12 +788,19 @@ export class HomePage implements OnInit {
     }
   }
 
-  async presentToast(message) {
-    const toast = await this.toastController.create({
+  async presentToast(message,duration?,cerrar?) {
+    this.toast = await this.toastController.create({
       message: message,
-      duration: 4000
+      cssClass: 'toast-custom-class',
+      duration: !cerrar ?(duration ? duration : 4000) : false,
+      buttons: !cerrar ? [
+        {
+          icon: 'close',
+          role: 'cancel',
+        }
+      ] : null
     });
-    toast.present();
+    await this.toast.present();
   }
 
   moverStepperr(direction){
@@ -976,25 +980,43 @@ export class HomePage implements OnInit {
       }else{ 
         data.locations = '';
       } 
-
-      if(this._us.conexion == 'no'){
-        this.db.open().then(()=>{
-          this.db.transaction( tx1=>{
-            this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
-              this.db.transaction(async tx=>{
-                if(dat.rows.length > 0){
-                  if(dat.rows.length >= 7){
-                    this.alertasMaximas()
+      this.presentLoader('Enviando Alerta ...').then(()=>{
+        if(this._us.conexion == 'no'){
+          this.db.open().then(()=>{
+            this.db.transaction( tx1=>{
+              this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+                this.db.transaction(async tx=>{
+                  if(dat.rows.length > 0){
+                    if(dat.rows.length >= 7){
+                      this.loader.dismiss()
+                      this.alertasMaximas()
+                    }else{
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                      this.loader.dismiss()
+                      this.estadoEnvioAlerta = 'pendiente'
+                      this.openModalEnvio(this.estadoEnvioAlerta)
+                      this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null, true);
+                      const savedFile = await Filesystem.writeFile({
+                        directory:Directory.Data,
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                        data:this.images[0].data
+                        }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      })
+                    }
                   }else{
                     tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                    [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                    this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
-                    this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-                      this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
-                     })  
+                    this.openModalEnvio(this.estadoEnvioAlerta)
+                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null,true);
                     const savedFile = await Filesystem.writeFile({
-                      directory:Directory.Data,
-                      path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                      directory:Directory.Data, 
+                      path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
                       data:this.images[0].data
                       }).then(()=>{
                       this.deleteImage(this.images[0])
@@ -1002,45 +1024,36 @@ export class HomePage implements OnInit {
                       this._us.nextmessage('pendiente') 
                     })
                   }
-                }else{
-                  tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                  [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
-                  this.estadoEnvioAlerta = 'pendiente'
-                  this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente');
-                   })  
-                  const savedFile = await Filesystem.writeFile({
-                    directory:Directory.Data, 
-                    path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
-                    data:this.images[0].data
-                    }).then(()=>{
-                    this.deleteImage(this.images[0])
-                    this.volverInicio()
-                    this._us.nextmessage('pendiente') 
-                  })
-                }
+                })
               })
             })
           })
-        })
-      }else{
-        this._ds.enviar(data).subscribe(res=>{
-          console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
-          this.estadoEnvioAlerta = 'exitoso'
-          this.deleteImage(this.images[0])
-          this.volverInicio()
-          this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-            this.presentToast('Alerta enviada exitosamente');
-           })
-        },err=>{
-          this.estadoEnvioAlerta = 'fallido'
-          this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-            this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente');
+        }else{
+          this._ds.enviar(data).subscribe((res:any)=>{
+            console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+            if(res && res.status == '200'){
+              this.loader.dismiss()
+              this.estadoEnvioAlerta = 'exitoso'
+              this.deleteImage(this.images[0])
+              this.volverInicio()
+              this.openModalEnvio(this.estadoEnvioAlerta)
+              this.presentToast('Alerta enviada exitosamente',null,true);
+            }else{
+              this.loader.dismiss()
+              this.estadoEnvioAlerta = 'fallido'
+              this.openModalEnvio(this.estadoEnvioAlerta)
+              this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+              console.log('******************** ERROR ENVIAR ******************** ')
+            }
+          },err=>{
+            this.loader.dismiss()
+            this.estadoEnvioAlerta = 'fallido'
+            this.openModalEnvio(this.estadoEnvioAlerta)
+            this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+            console.log('******************** ERROR ENVIAR ******************** ',err)
           })
-          console.log('******************** ERROR ENVIAR ******************** ',err)
-        })
-      }
-      
+        }
+      })
      
       // this.stepper.reset()
     })
