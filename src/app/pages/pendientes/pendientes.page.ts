@@ -47,6 +47,7 @@ tipo = 'novialidad'
             }else{
               this.tipo = 'vialidad';
               db.executeSql('SELECT * FROM alertaVialidad', []).then((data)=>{
+                console.log(data)
                 if(data.rows.length > 0){
                   for(let i = 0;i<data.rows.length;i++){
                     this.alertas.push(data.rows.item(i))
@@ -180,7 +181,8 @@ tipo = 'novialidad'
                 }else{
                   this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
                     if(data.rowsAffected > 0){
-                      this.deleteImage(this.alertas[i].foto).then(()=>{
+                      this.deleteImage(this.alertas[i].foto).then((a)=>{
+                        console.log('ELIMINADO A-> ',a)
                         this.alertas.splice(i,1)
                         this.loader.dismiss()
                         if(this.alertas.length <= 0){
@@ -189,6 +191,11 @@ tipo = 'novialidad'
                         }else{
                           this.mostrar = true;
                         }
+                      }).catch(err=>{
+                        console.log('ERROR-> ',err)
+                        this.mostrar = true;
+                        this.loader.dismiss()
+                        this.presentToast('No se pudo eliminar la alerta');
                       })
                     }else{
                       this.loader.dismiss()
@@ -204,6 +211,10 @@ tipo = 'novialidad'
       ]
     });
     await alert.present();
+  }
+
+  enviar(data){
+    
   }
 }
     

@@ -94,6 +94,7 @@ export class HomePage implements OnInit {
   estadoEnvioAlerta = null;
   region = '13'
   toast;
+  intento = 0;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
@@ -980,14 +981,14 @@ export class HomePage implements OnInit {
       }else{ 
         data.locations = '';
       } 
-      this.presentLoader('Enviando Alerta ...').then(()=>{
+      this.presentLoader('Enviando Emergencia ...').then(()=>{
         if(this._us.conexion == 'no'){
           this.db.open().then(()=>{
             this.db.transaction( tx1=>{
               this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
                 this.db.transaction(async tx=>{
                   if(dat.rows.length > 0){
-                    if(dat.rows.length >= 7){
+                    if(dat.rows.length >= 20){
                       this.loader.dismiss()
                       this.alertasMaximas()
                     }else{
@@ -996,7 +997,7 @@ export class HomePage implements OnInit {
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
-                      this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null, true);
+                      this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1013,7 +1014,7 @@ export class HomePage implements OnInit {
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
-                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null,true);
+                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data, 
                       path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
@@ -1037,28 +1038,72 @@ export class HomePage implements OnInit {
               this.deleteImage(this.images[0])
               this.volverInicio()
               this.openModalEnvio(this.estadoEnvioAlerta)
-              this.presentToast('Alerta enviada exitosamente',null,true);
+              this.presentToast('Emergencia enviada exitosamente',null,true);
             }else{
               this.loader.dismiss()
               this.estadoEnvioAlerta = 'fallido'
               this.openModalEnvio(this.estadoEnvioAlerta)
-              this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+              if(this.intento > 1){
+                this.guardarAlerta(data)
+              }else{
+                this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+              }
               console.log('******************** ERROR ENVIAR ******************** ')
             }
           },err=>{
             this.loader.dismiss()
             this.estadoEnvioAlerta = 'fallido'
             this.openModalEnvio(this.estadoEnvioAlerta)
-            this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+            this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
             console.log('******************** ERROR ENVIAR ******************** ',err)
           })
         }
       })
-     
       // this.stepper.reset()
     })
   }
   
+  async guardarAlerta(data){
+    const alert = await this.alertctrl.create({
+      header: 'Guardar Emergencia',
+      message: 'Se ha intentado mas de una vez enviar la emergencia sin resultado exitoso, ¿quisieras guardar la emergencia para enviar con posterioridad?',
+      mode:'ios',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: (blah) => {
+          }
+        }, {
+          text: 'Si, guardar',
+          id: 'confirm-button',
+          handler: () => {
+            this.db.open().then(()=>{
+              this.db.transaction( tx1=>{
+                this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
+                  this.db.transaction(async tx=>{
+                    if(dat.rows.length > 0){
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                    }else{
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                    }
+                    this.presentToast('La emergencia se almacenó y la podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
+                    this.intento = 0;
+                    this._us.nextmessage('pendiente') 
+                  })
+                })
+              })
+            })
+          }
+        }
+      ]
+    })
+    await alert.present();
+  }
+
   async openModalEnvio(estado) {
     const modal = await this._modalCtrl.create({
       component: ModalEnviarPage,
@@ -1089,6 +1134,7 @@ export class HomePage implements OnInit {
     this.secondFormGroup.reset();
     this.thirdFormGroup.reset();
     this.stepper.reset();
+    this.intento = 0;
     // this.view.setCenter(this.stgo)
     this._us.coordenadasRegion.forEach(c=>{
       if(c.region == this.region){

@@ -77,6 +77,7 @@ export class HomeVialidadPage implements OnInit {
   mayorF:Boolean;
   toast;
   enviando = false;
+  intento = 0;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
@@ -1400,14 +1401,14 @@ export class HomeVialidadPage implements OnInit {
        picture:this.picture,
        name:this.firstFormGroup.value.activoSeleccionado.nombre_camino
      }
-     this.presentLoader('Enviando Alerta ...').then(()=>{
+     this.presentLoader('Enviando Emergencia ...').then(()=>{
       if(this._us.conexion == 'no'){
         this.db.open().then(()=>{
           this.db.transaction( tx1=>{
             this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
               this.db.transaction(async tx=>{
                 if(dat.rows.length > 0){
-                  if(dat.rows.length >= 7){
+                  if(dat.rows.length >= 20){
                     this.loader.dismiss()
                     this.alertasMaximas()
                   }else{
@@ -1416,7 +1417,7 @@ export class HomeVialidadPage implements OnInit {
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
-                    this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null,true); 
+                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data,
                       path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1433,7 +1434,7 @@ export class HomeVialidadPage implements OnInit {
                   this.loader.dismiss()
                   this.estadoEnvioAlerta = 'pendiente'
                   this.openModalEnvio(this.estadoEnvioAlerta)
-                  this.presentToast('La alerta será enviada cuando tengas conexión a internet nuevamente',null,true);
+                  this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
                   const savedFile = await Filesystem.writeFile({
                     directory:Directory.Data, 
                     path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
@@ -1457,34 +1458,94 @@ export class HomeVialidadPage implements OnInit {
            this.deleteImage(this.images[0])
            this.volverInicio()
            this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-            this.presentToast('Alerta enviada exitosamente');
+            this.presentToast('Emergencia enviada exitosamente');
            })
           }else{
-           this.estadoEnvioAlerta = 'fallido'
-           this.openModalEnvio(this.estadoEnvioAlerta)
-           this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
-           console.log('******************** ERROR ENVIAR ******************** ')
+            this.intento++
+            this.estadoEnvioAlerta = 'fallido'
+            this.openModalEnvio(this.estadoEnvioAlerta)
+            if(this.intento > 1){
+              this.guardarAlerta(data)
+            }else{
+              this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+            }
+            console.log('******************** ERROR ENVIAR ******************** ')
           }
         },err=>{
           this.loader.dismiss()
           this.estadoEnvioAlerta = 'fallido'
           this.openModalEnvio(this.estadoEnvioAlerta)
-          this.presentToast('La alerta no pudo ser enviada, favor interlo nuevamente',null,true);
+          this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
           console.log('******************** ERROR ENVIAR ******************** ',err)
         })
       }
      })
-     
-     
-    
      // this.stepper.reset()
    })
  }
 
+  async guardarAlerta(data){
+    const alert = await this.alertctrl.create({
+      header: 'Guardar Emergencia',
+      message: 'Se ha intentado mas de una vez enviar la emergencia sin resultado exitoso, ¿quisieras guardar la emergencia para enviar con posterioridad?',
+      mode:'ios',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: (blah) => {
+          }
+        }, {
+          text: 'Si, guardar',
+          id: 'confirm-button',
+          handler: () => {
+            this.db.open().then(()=>{
+              this.db.transaction( tx1=>{
+                this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
+                  this.db.transaction(async tx=>{
+                    if(dat.rows.length > 0){
+                      tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                      const savedFile = await Filesystem.writeFile({
+                        directory:Directory.Data,
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                        data:this.images[0].data
+                        }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      })
+                    }else{
+                      tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                      const savedFile = await Filesystem.writeFile({
+                        directory:Directory.Data, 
+                        path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                        data:this.images[0].data
+                        }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      })
+                    }
+                    this.presentToast('La emergencia se almacenó y la podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
+                    this.intento = 0;
+                  })
+                })
+              })
+            })
+          }
+        }
+      ]
+    })
+    await alert.present();
+  }
+
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
       header: 'Límite de alertas',
-      message: 'Se ha llegado al límite de 7 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
+      message: 'Se ha llegado al límite de 20 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
       buttons: ['OK'],
       mode:'ios'
     });
@@ -1506,6 +1567,7 @@ export class HomeVialidadPage implements OnInit {
       this.mayorF = false;
       this.menorFI = false;
       this.mayorIF = false;
+      this.intento = 0;
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
