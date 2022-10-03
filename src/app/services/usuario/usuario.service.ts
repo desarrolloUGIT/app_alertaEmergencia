@@ -52,6 +52,7 @@ export class UsuarioService {
     'Content-Type': "text/plain",
   };
   images = [];
+  seleccionMapa = 'si';
   coordenadasRegion = [
     {
       region:'01',
@@ -157,6 +158,11 @@ export class UsuarioService {
               this.conexion = conexion;
             }
           });
+          this.storage.getItem("seleccionMapa").then(seleccionMapa=>{
+            if(seleccionMapa){
+              this.seleccionMapa = seleccionMapa;
+            }
+          });
           this.storage.getItem("user").then(user=>{
             if(user){
               this.user =JSON.parse(user);
@@ -252,6 +258,7 @@ export class UsuarioService {
     this.storage.setItem('conexion', 'si');
     this.storage.setItem('user', JSON.stringify(usuario));
     this.storage.setItem('tokenESRI', String(226));
+    this.storage.setItem('seleccionMapa', 'si');
     var menuType = '';
     if (res.DEFSITE == "APR" || res.DEFSITE == "DOH-ALL" || res.DEFSITE == "DOH-CAUC" || res.DEFSITE == "DOH-RIEG") {
       menuType = "APR";
@@ -261,6 +268,7 @@ export class UsuarioService {
     this.storage.setItem('menuType', menuType);
     localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');
+    localStorage.setItem('seleccionMapa', 'si');
     localStorage.setItem('user', JSON.stringify(usuario));
     localStorage.setItem('tokenESRI', String(226));
     localStorage.setItem('menuType', menuType);
@@ -277,11 +285,13 @@ export class UsuarioService {
         if(this.platform.is('capacitor')){
           this.storage.remove('token_user');
           this.storage.remove('conexion');
+          this.storage.remove('seleccionMapa');
           this.storage.remove('usuario');
           this.storage.remove('menuType');
         }else{
           localStorage.removeItem('token_user');
           localStorage.removeItem('conexion');
+          localStorage.removeItem('seleccionMapa');
           localStorage.removeItem('usuario');
           localStorage.removeItem('menuType');
         }

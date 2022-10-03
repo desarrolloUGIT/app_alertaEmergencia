@@ -70,7 +70,7 @@ export class LoginPage implements OnInit {
 
   iniciar(){
     this.presentLoader().then(()=>{
-      this.form.disable()
+      this.form.disable();
       if(this.platform.is('capacitor')){
         this._us.login(this.form.value).subscribe((res:any)=>{
           console.log('LOGIN ->>> ',res)

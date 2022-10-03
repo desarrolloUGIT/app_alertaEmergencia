@@ -15,7 +15,7 @@
     <mat-step >
       <ng-template matStepLabel>Activo</ng-template>
       <form [formGroup]="firstFormGroup">
-        <div  id="container"> 
+        <div  id="container" *ngIf="mostrarMapa"> 
           <div id="custom-buttonV" class="custom-buttonV" *ngIf="(stepper.selectedIndex == 0)" >
             <div (click)='customZoom()' class="icon-button">
                 <ion-icon name="map-outline"></ion-icon>
@@ -26,7 +26,7 @@
           </div>
         </div>
         <ion-card center>
-          ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
+          <span>({{dataPosicion.lat}},{{dataPosicion.lng}})</span><br>
           <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}} ~ Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br></span> Región: {{dataPosicion.region}}</h3>
           <ion-grid *ngIf="caminosEncontrados.length > 1">
             <ion-row style="margin-top: -12%;" (click)="openModalCaminos()">
@@ -70,7 +70,7 @@
     <!-- Operatividad y Daño -->
     <mat-step>
       <form [formGroup]="secondFormGroup">
-        <ng-template matStepLabel>Tránsito</ng-template>
+        <ng-template matStepLabel>Operatividad y daño</ng-template>
         <ion-card center>
           <ion-label style="font-size: 17px;">Detalle Emergencia</ion-label>
           <ion-list style="margin-top: 3%;margin-bottom: 3%;">

@@ -19,6 +19,7 @@ import {Image as ImageLayer, Tile } from 'ol/layer';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
+import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -78,18 +79,38 @@ export class HomeVialidadPage implements OnInit {
   toast;
   enviando = false;
   intento = 0;
+  mostrarMapa = true;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,
-    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { }
+    private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
+    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
+      this._us.message.subscribe(res=>{
+        if(res == 'conexión establecida'){
+          this.mostrarMapa = true;
+          this.storage.setItem('seleccionMapa', 'si');
+          localStorage.setItem('seleccionMapa','si')
+          this._us.cargar_storage().then(()=>{})
+          this.loadMapVialidad()
+        }
+        if(res == 'sin conexión'){
+          this.mostrarMapa = false;
+          this.storage.setItem('seleccionMapa', 'no');
+          localStorage.setItem('seleccionMapa','no')
+          this._us.cargar_storage().then(()=>{})
+        }
+      })
+    }
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
-      // this._vs.activosVialidad().subscribe((res:any)=>{
-      //   this._us.xmlToJson(res).then((result:any)=>{
-      //     var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
-      //     console.log(path[0]) 
-      //   })
-      // })
+      if(this._us.conexion == 'si'){
+        this.storage.setItem('seleccionMapa', 'si');
+        localStorage.setItem('seleccionMapa','si')
+        this._us.cargar_storage().then(()=>{})
+      }else{
+        this.storage.setItem('seleccionMapa', 'no');
+        localStorage.setItem('seleccionMapa','no')
+        this._us.cargar_storage().then(()=>{})
+      }
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
@@ -137,7 +158,6 @@ export class HomeVialidadPage implements OnInit {
       titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
       descripcion: [null,Validators.compose([Validators.maxLength(300),Validators.required])],
     });
-   
   }
 
   myFunction(ev,lugar){

@@ -43,11 +43,14 @@ export class AppComponent {
       this.presentToast('Sin conexión ...')
       this.storage.setItem('conexion', 'no');
       localStorage.setItem('conexion','no')
+      this._us.nextmessage('sin conexión') 
       this._us.cargar_storage().then(()=>{})
     });
     this.observadorConectado();
     this._us.cargar_storage().then(()=>{
       if(this._us.conexion == 'si'){
+        this.storage.setItem('seleccionMapa', 'si');
+        localStorage.setItem('seleccionMapa','si')
         this.buscarAlertasPendientes()
       }
     })
@@ -70,15 +73,27 @@ export class AppComponent {
     })
   }
 
-  observadorConectado(){
+   observadorConectado(){
     this.connectSubscription = this.network.onConnect().subscribe(() => {
-      this._us.cargar_storage().then(()=>{        
+      this._us.cargar_storage().then(async ()=>{        
         if(this._us.conexion == 'no' || !this._us.conexion){
-          this.presentToast('Conexión establecida').then(()=>{
-            setTimeout((()=>{
-              this.buscarAlertasPendientes()
-            }),4000)
-          })
+          console.log('RUTA-> ',this.router.url,this._us.seleccionMapa)
+          if((String(this.router.url).includes('home_vialidad') || String(this.router.url).includes('modal-caminos')) && this._us.seleccionMapa == 'no'){
+            this._us.nextmessage('conexión establecida') 
+              const alert = await this.alertController.create({
+                header: 'Conexión Establecida',
+                message: 'Se reactivo el mapa para seleccionar punto de la emergencia, por tanto se limpio el formulario en la sección de datos del Activo ',
+                buttons: ['OK'],
+                mode:'ios'
+              });
+              await alert.present();
+          }else{
+            this.presentToast('Conexión establecida').then(()=>{
+              setTimeout((()=>{
+                this.buscarAlertasPendientes()
+              }),4000)
+            })
+          }
         }
         this.storage.setItem('conexion', 'si');
         localStorage.setItem('conexion','si')
