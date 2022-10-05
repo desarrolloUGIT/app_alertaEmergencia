@@ -77,9 +77,8 @@ export class AppComponent {
     this.connectSubscription = this.network.onConnect().subscribe(() => {
       this._us.cargar_storage().then(async ()=>{        
         if(this._us.conexion == 'no' || !this._us.conexion){
-          console.log('RUTA-> ',this.router.url,this._us.seleccionMapa)
           if((String(this.router.url).includes('home_vialidad') || String(this.router.url).includes('modal-caminos')) && this._us.seleccionMapa == 'no'){
-            this._us.nextmessage('conexión establecida') 
+            this._us.nextmessage('conexión establecida sin mapa') 
               const alert = await this.alertController.create({
                 header: 'Conexión Establecida',
                 message: 'Se reactivo el mapa para seleccionar punto de la emergencia, por tanto se limpio el formulario en la sección de datos del Activo ',
@@ -88,6 +87,7 @@ export class AppComponent {
               });
               await alert.present();
           }else{
+            this._us.nextmessage('conexión establecida') 
             this.presentToast('Conexión establecida').then(()=>{
               setTimeout((()=>{
                 this.buscarAlertasPendientes()

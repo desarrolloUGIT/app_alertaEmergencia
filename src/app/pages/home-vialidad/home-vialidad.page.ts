@@ -80,6 +80,8 @@ export class HomeVialidadPage implements OnInit {
   enviando = false;
   intento = 0;
   mostrarMapa = true;
+  activosDVJSON = [];
+  buscandoActivos = [];
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -91,22 +93,36 @@ export class HomeVialidadPage implements OnInit {
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
+        if(res == 'conexión establecida sin mapa'){
+          this.mostrarMapa = true;
+          this.firstFormGroup.reset();
+          this.storage.setItem('seleccionMapa', 'si');
+          localStorage.setItem('seleccionMapa','si')
+          this._us.cargar_storage().then(()=>{})
+          this.loadMapVialidad()
+        }
         if(res == 'sin conexión'){
           this.mostrarMapa = false;
-          this.storage.setItem('seleccionMapa', 'no');
-          localStorage.setItem('seleccionMapa','no')
-          this._us.cargar_storage().then(()=>{})
+          this.buscandoActivos = [];
+          // this.storage.setItem('seleccionMapa', 'no');
+          // localStorage.setItem('seleccionMapa','no')
+          // this._us.cargar_storage().then(()=>{})
         }
       })
+      var a = new Date()
+      console.log(a)
+      console.log(JSON.stringify(a).replace(/[\\"]/gi,''))
     }
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
       if(this._us.conexion == 'si'){
+        this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
         localStorage.setItem('seleccionMapa','si')
         this._us.cargar_storage().then(()=>{})
       }else{
+        this.mostrarMapa = false;
         this.storage.setItem('seleccionMapa', 'no');
         localStorage.setItem('seleccionMapa','no')
         this._us.cargar_storage().then(()=>{})
@@ -131,6 +147,7 @@ export class HomeVialidadPage implements OnInit {
         this.transitos()
         this.restriccioN();
         this.activosVialidad();
+        this.activosDV();
         this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
       })
     }else{
@@ -138,6 +155,7 @@ export class HomeVialidadPage implements OnInit {
       this.elemento();
       this.transitos()
       this.restriccioN();
+      this.activosDV();
       this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
     }
   })
@@ -592,6 +610,8 @@ export class HomeVialidadPage implements OnInit {
       this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
       this.km_i = data.km_i;
       this.km_f = data.km_f;
+      this._us.seleccionMapa = 'si';
+      this._us.cargar_storage().then(()=>{})
     }
   }
 
@@ -620,7 +640,60 @@ export class HomeVialidadPage implements OnInit {
     var modal = document.querySelector('ion-modal');
     modal.present().then(()=>{})
   }
+
+  buscarActivos(ev: any) {
+    const val = ev.target.value;
+    if (val && val.trim() != '' && val.length >=3 ) {
+      this.buscandoActivos = this.activosDVJSON.filter((item) => {
+        return (item.NOMBRE_CAMINO.toLowerCase().indexOf(val.toLowerCase()) > -1);
+      })
+    }else{
+      if(val.length == 0 || val == null){
+        this.activosDV()
+      }
+    }
+  }
+
+  seleccionarActivo(data){
+    let body = {
+      codigo:data.CODIGO_CAMINO,
+      nombre_camino:data.NOMBRE_CAMINO,
+      rol:data.ROL
+    }
+    this.firstFormGroup.controls['activoSeleccionado'].setValue(body)
+    this.km_i = data.KM_I;
+    this.km_f = data.KM_F;
+    this.buscandoActivos = [];
+    this._us.seleccionMapa = 'no';
+    this._us.cargar_storage().then(()=>{})
+  }
   // CARGAS INICIALES
+
+  activosDV(){
+    let decimalFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+    this._http.get('assets/activosDV.json',{ responseType: 'json' }).subscribe((res:any)=>{
+      console.log(res)
+      res = this.eliminarObjetosDuplicados(res,'CODIGO_CAMINO')
+      res.forEach(f=>{
+        f.REGION = this.reverseRegion(f.REGION)
+        if(f.REGION == this.region){
+          f.KM_I = Number(decimalFormat.format(f.KM_I / 1000));
+          f.KM_F = Number(decimalFormat.format(f.KM_F / 1000));
+          this.activosDVJSON.push(f)
+        }
+      })
+    },err=>{
+      err = this.eliminarObjetosDuplicados(err,'CODIGO_CAMINO')
+      err.forEach(f=>{
+        f.REGION = this.reverseRegion(f.REGION)
+        if(f.REGION == this.region){
+          f.KM_I = Number(decimalFormat.format(f.KM_I / 1000));
+          f.KM_F = Number(decimalFormat.format(f.KM_F / 1000));
+          this.activosDVJSON.push(f)
+        }
+      })
+    })
+  }
   nivelAlerta(){
     if(this.platform.is('capacitor')){
       this.db.open().then(()=>{
@@ -1302,11 +1375,12 @@ export class HomeVialidadPage implements OnInit {
 
   async selectImage(tipe:CameraSource){
     const image = await Camera.getPhoto({
-      quality:45,
+      quality:40,
       allowEditing:true,
       resultType:CameraResultType.Uri,
       source:tipe,
-      
+      width:500,
+      height:500
     });
     if(image){
       this.saveImage(image)
@@ -1404,7 +1478,7 @@ export class HomeVialidadPage implements OnInit {
      let data = {
        titulo:this.thirdFormGroup.value.titulo,
        descripcion:this.thirdFormGroup.value.descripcion,
-       fechaEmergencia:this.firstFormGroup.value.fechaEmergencia,
+       fechaEmergencia:JSON.stringify(new Date(this.firstFormGroup.value.fechaEmergencia)).replace(/[\\"]/gi,''),
        km_i:this.firstFormGroup.value.km_i,
        km_f:this.firstFormGroup.value.km_f,
        usuario:this._us.user.user,
@@ -1417,7 +1491,7 @@ export class HomeVialidadPage implements OnInit {
        competencia:this.secondFormGroup.value.competencia,
        region:this.dataPosicion.region,
        codigo:this.firstFormGroup.value.activoSeleccionado.codigo,
-       date:new Date(),
+       date:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
        picture:this.picture,
        name:this.firstFormGroup.value.activoSeleccionado.nombre_camino
      }
@@ -1477,9 +1551,8 @@ export class HomeVialidadPage implements OnInit {
            this.estadoEnvioAlerta = 'exitoso'
            this.deleteImage(this.images[0])
            this.volverInicio()
-           this.openModalEnvio(this.estadoEnvioAlerta).then(()=>{
-            this.presentToast('Emergencia enviada exitosamente');
-           })
+           this.openModalEnvio(this.estadoEnvioAlerta)
+           this.presentToast('La emergencia fue enviada exitosamente',null,true);
           }else{
             this.intento++
             this.estadoEnvioAlerta = 'fallido'

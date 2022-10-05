@@ -134,8 +134,8 @@ export class HomePage implements OnInit {
       destino:[null,Validators.compose([Validators.required])]
     })
     this.thirdFormGroup = this._formBuilder.group({
-      titulo: [null,Validators.compose([Validators.maxLength(150),Validators.required])],
-      descripcion: [null,Validators.compose([Validators.maxLength(1000),Validators.required])],
+      titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
+      descripcion: [null,Validators.compose([Validators.maxLength(300),Validators.required])],
     });  
   }
 

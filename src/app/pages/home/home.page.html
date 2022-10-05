@@ -63,7 +63,7 @@
       <form [formGroup]="secondFormGroup">
         <ng-template matStepLabel>Operatividad y Daño</ng-template>
         <ion-card center>
-          <ion-label style="font-size: 17px;">Tránsito</ion-label>
+          <ion-label style="font-size: 17px;">Operatividad</ion-label>
           <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
             <ion-radio-group formControlName="operatividad">
               <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of operatividadArray" [class.select]="secondFormGroup.value.operatividad == item.VALUE">
@@ -108,21 +108,21 @@
     <!-- Fin operatividad y daño -->
     <!-- Datos adicionales -->
     <mat-step>
-      <ng-template matStepLabel>Datos Adicioanles</ng-template>
+      <ng-template matStepLabel>Datos Adicionales</ng-template>
       <form [formGroup]="thirdFormGroup">
         <ion-card center>
           <ion-item>
-            <ion-label position="stacked">Título de la Alerta</ion-label>
-            <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="150"></ion-textarea>
+            <ion-label position="stacked">Resumen</ion-label>
+            <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100"></ion-textarea>
           </ion-item>
-          <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/150</span>
+          <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/100</span>
         </ion-card>
         <ion-card center>
           <ion-item>
-            <ion-label position="stacked">Descripción del Evento</ion-label>
-            <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="5" maxlength="1000"></ion-textarea>
+            <ion-label position="stacked">Descripción de la emergencia</ion-label>
+            <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="5" maxlength="300"></ion-textarea>
           </ion-item>
-          <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/1000</span>
+          <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/300</span>
         </ion-card>
 
         <ion-list style="margin-top: 5%;background: transparent;" lines="none">
