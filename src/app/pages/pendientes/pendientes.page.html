@@ -17,6 +17,9 @@
       <div class="ion-padding contenido" slot="content" align="center">
           <ion-grid>
             <ion-row>
+              <p style="color: red;"><span>Pendiente por: </span> {{item.error == 'internet' ? 'Sin conexión a internet' : 'Error desconocido'}}</p>
+            </ion-row>
+            <ion-row>
               <p style="word-break: break-all;"><span>Descripción:</span> {{item.descripcion}}</p>
             </ion-row>
             <ion-row *ngIf="tipo != 'vialidad'">
@@ -50,7 +53,7 @@
                 </ion-col>
                 <ion-col size="4">
                   <div align="center">
-                    <ion-img [src]="item.foto ? item.foto.data : item.name.data" style="height: 100px;"></ion-img>
+                    <ion-img [src]="item.foto ? 'data:image/jpeg;base64,'+item.foto.data : 'data:image/jpeg;base64,'+item.name.data" style="height: 100px;"></ion-img>
                   </div>
                 </ion-col>
               </ion-row>
@@ -80,7 +83,7 @@
             </ion-row>
           </ion-grid>
           <ion-button color="danger" slot="start" expand="block" (click)="eliminarAlerta(item.id,i)">Eliminar</ion-button>
-          <ion-button color="medium" slot="end" expand="block" (click)="enviar(item)">Enviar</ion-button>
+          <ion-button color="medium" slot="end" expand="block" (click)="enviar(item,item.id,i)">Enviar</ion-button>
       </div>
     </ion-accordion>
   </ion-accordion-group>

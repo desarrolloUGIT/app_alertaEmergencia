@@ -9,7 +9,16 @@ import { StatusBar } from '@awesome-cordova-plugins/status-bar/ngx';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from '@capacitor/app';
 import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { VialidadService } from './services/vialidad/vialidad.service';
 
+const SAVE_IMAGE_DIR = 'save-stored-images';
+
+interface LocalFile {
+  name:string;
+  path:string;
+  data:string;
+}
 
 @Component({
   selector: 'app-root',
@@ -23,6 +32,8 @@ export class AppComponent {
   db:SQLiteObject;
   pendientes = false;
   pagina = '';
+  images = [];
+  alertas = [];
   constructor(
     public network: Network,
     private platform: Platform,
@@ -36,7 +47,8 @@ export class AppComponent {
     public alertController: AlertController,
     // private splashScreen: SplashScreen,
     private statusBar: StatusBar,
-    private sqlite: SQLite
+    private sqlite: SQLite,
+    public _vs:VialidadService
   ) {
     this.initializeApp()
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
@@ -111,9 +123,15 @@ export class AppComponent {
             var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
             this.db.executeSql(sql, []).then((data)=>{
               if(data.rows.length > 0){
-                this.pendientes = true;
-                this.presentToast('Hay '+data.rows.length +' alertas pendientes por enviar')
+                // this.pendientes = true;
+                // this.presentToast('Hay '+data.rows.length +' alertas pendientes por enviar')
+                for(let i = 0;i<data.rows.length;i++){
+                  if(data.rows.item(i).error == 'internet'){
+                    this.alertas.push(data.rows.item(i))
+                  }
+                }
               }else{
+                this.pendientes = false;
                 let options: NativeTransitionOptions ={
                   direction:'right',
                   duration:500
@@ -134,6 +152,117 @@ export class AppComponent {
     }
   }
 
+
+
+  async loadFiles(){
+    this.images = [];
+      Filesystem.readdir({
+        directory:Directory.Data,
+        path:SAVE_IMAGE_DIR
+      }).then(res=>{
+        if(res.files.length == 0){
+          this._us.nextmessage('sin pendiente')        
+        }
+        this.loadFileData(res.files)
+      })
+    
+  }
+
+  async loadFileData(fileNames:string[]){
+    for (let f of fileNames){
+      const filePath = SAVE_IMAGE_DIR+'/'+f;
+      const readFile = await Filesystem.readFile({
+        directory:Directory.Data,
+        path:filePath
+      });
+      this.images.push({
+        name:f,
+        path:filePath,
+        data:readFile.data
+      })
+    }
+    this.images.forEach(i=>{
+      this.alertas.forEach(a=>{
+        if('save_'+a.id+'_foto.jpg' == i.name){
+          a.foto = i;
+        }
+      })
+    })
+    if(this.alertas.length > 0){
+      // ENVIAR
+      this.enviar(this.alertas[0],this.alertas[0].id,0,0)
+    }
+  }
+
+  eliminar(id,i){
+      this._us.cargar_storage().then(()=>{
+        if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
+          this.db.executeSql('DELETE FROM alerta WHERE id = '+id, []).then((data)=>{
+            if(data.rowsAffected > 0){
+              this.deleteImage(this.alertas[i].name).then(()=>{
+                this.alertas.splice(i,1)
+                if(this.alertas.length <= 0){
+                  this._us.nextmessage('sin pendiente')        
+                }
+              })
+            }else{
+              this.presentToast('No se pudo eliminar la alerta');
+            }
+          })
+        }else{
+          this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
+            if(data.rowsAffected > 0){
+              this.deleteImage(this.alertas[i].foto).then((a)=>{
+                console.log('ELIMINADO A-> ',a)
+                this.alertas.splice(i,1)
+                this.loader.dismiss()
+                if(this.alertas.length <= 0){
+                  this._us.nextmessage('sin pendiente')        
+                }
+              }).catch(err=>{
+                this.presentToast('No se pudo eliminar la alerta');
+              })
+            }else{
+              this.presentToast('No se pudo eliminar la alerta');
+            }
+          })
+        }
+      })
+  }
+
+  enviar(data,id,i,posicion){
+    data.picture = data.foto.data;
+    this._vs.enviarAlerta(data).subscribe((res:any)=>{
+      if(res && res.status == '200'){
+        this.eliminar(id,i)
+        if((posicion + 1) > this.alertas.length){
+          // PONER CUANTAS ALERTAS QUEDAN PENDIETES
+        }else{
+          posicion++;
+          this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion)
+        } 
+      }else{
+        console.log('******************** ERROR ENVIAR ******************** ')
+        if((posicion + 1) > this.alertas.length){
+          // PONER CUANTAS ALERTAS QUEDAN PENDIETES
+        }else{
+          posicion++;
+          this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion)
+        } 
+      }
+    },err=>{
+      console.log('******************** ERROR ENVIAR ******************** ',err)
+    })
+  }
+
+  async deleteImage(file:LocalFile){
+    await Filesystem.deleteFile({
+      directory:Directory.Data,
+      path:file.path
+    });
+    // this.loadFiles()
+  }
+  
   async splash(){
     await SplashScreen.show({
       showDuration: 5000,
@@ -225,7 +354,8 @@ export class AppComponent {
                   this._mc.enable(false)
                   this._us.cargar_storage()
                   this.navCtrl.navigateRoot('/login')
-                  this.pagina = 'home'
+                  this.pagina = 'home';
+                  this.pendientes = false;
                 })
               },3000)
             }).catch(()=>{
@@ -239,7 +369,8 @@ export class AppComponent {
                 this._mc.enable(false)
                 this._us.cargar_storage()
                 this.navCtrl.navigateRoot('/login')
-                this.pagina = 'home'
+                this.pagina = 'home';
+                this.pendientes = false;
               })
             })
            

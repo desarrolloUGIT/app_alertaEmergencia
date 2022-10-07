@@ -82,6 +82,7 @@ export class HomeVialidadPage implements OnInit {
   mostrarMapa = true;
   activosDVJSON = [];
   buscandoActivos = [];
+  hoy;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -109,9 +110,6 @@ export class HomeVialidadPage implements OnInit {
           // this._us.cargar_storage().then(()=>{})
         }
       })
-      var a = new Date()
-      console.log(a)
-      console.log(JSON.stringify(a).replace(/[\\"]/gi,''))
     }
 
   ngOnInit() {
@@ -140,7 +138,7 @@ export class HomeVialidadPage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS restriccion (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS activosVialidad (id unique, name)',[]);
-        db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         this.db = db;
         this.nivelAlerta();
         this.elemento();
@@ -423,6 +421,8 @@ export class HomeVialidadPage implements OnInit {
             this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
             this.km_i = this.caminosEncontrados[0].km_i.replace(',','.');
             this.km_f = this.caminosEncontrados[0].km_f.replace(',','.');
+            this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+            this.hoy = this._us.fecha(new Date())
           }
         }else{
           this.caminosEncontrados = []
@@ -610,6 +610,8 @@ export class HomeVialidadPage implements OnInit {
       this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
       this.km_i = data.km_i;
       this.km_f = data.km_f;
+      this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+      this.hoy = this._us.fecha(new Date())
       this._us.seleccionMapa = 'si';
       this._us.cargar_storage().then(()=>{})
     }
@@ -661,6 +663,8 @@ export class HomeVialidadPage implements OnInit {
       rol:data.ROL
     }
     this.firstFormGroup.controls['activoSeleccionado'].setValue(body)
+    // this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+    // this.hoy = this._us.fecha(new Date())
     this.km_i = data.KM_I;
     this.km_f = data.KM_F;
     this.buscandoActivos = [];
@@ -672,7 +676,6 @@ export class HomeVialidadPage implements OnInit {
   activosDV(){
     let decimalFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
     this._http.get('assets/activosDV.json',{ responseType: 'json' }).subscribe((res:any)=>{
-      console.log(res)
       res = this.eliminarObjetosDuplicados(res,'CODIGO_CAMINO')
       res.forEach(f=>{
         f.REGION = this.reverseRegion(f.REGION)
@@ -694,6 +697,7 @@ export class HomeVialidadPage implements OnInit {
       })
     })
   }
+  
   nivelAlerta(){
     if(this.platform.is('capacitor')){
       this.db.open().then(()=>{
@@ -1376,11 +1380,11 @@ export class HomeVialidadPage implements OnInit {
   async selectImage(tipe:CameraSource){
     const image = await Camera.getPhoto({
       quality:40,
-      allowEditing:true,
+      allowEditing:false,
       resultType:CameraResultType.Uri,
       source:tipe,
-      width:500,
-      height:500
+      width:700,
+      height:700
     });
     if(image){
       this.saveImage(image)
@@ -1506,15 +1510,15 @@ export class HomeVialidadPage implements OnInit {
                     this.loader.dismiss()
                     this.alertasMaximas()
                   }else{
-                    tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                    tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [(dat.rows.item(length).id + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'internet']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
                     this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data,
-                      path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                      path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.item(length).id + 1)+'_foto.jpg',
                       data:this.images[0].data
                       }).then(()=>{
                       this.deleteImage(this.images[0])
@@ -1523,8 +1527,8 @@ export class HomeVialidadPage implements OnInit {
                     })
                   }
                 }else{
-                  tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                  [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                  tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                  [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'internet']);
                   this.loader.dismiss()
                   this.estadoEnvioAlerta = 'pendiente'
                   this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1598,8 +1602,8 @@ export class HomeVialidadPage implements OnInit {
                 this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
                   this.db.transaction(async tx=>{
                     if(dat.rows.length > 0){
-                      tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                      tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1610,8 +1614,8 @@ export class HomeVialidadPage implements OnInit {
                         this._us.nextmessage('pendiente') 
                       })
                     }else{
-                      tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f]);
+                      tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 
                         path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',

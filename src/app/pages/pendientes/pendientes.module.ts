@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { PendientesPageRoutingModule } from './pendientes-routing.module';
 
 import { PendientesPage } from './pendientes.page';
+import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    PendientesPageRoutingModule
+    PendientesPageRoutingModule,
+    ModalEnviarPageModule
   ],
   declarations: [PendientesPage]
 })

@@ -4,6 +4,8 @@ import { AlertController, LoadingController, MenuController, Platform, ModalCont
 import { UsuarioService } from '../../services/usuario/usuario.service';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
+import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
+import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -26,9 +28,13 @@ images = [];
 loader;
 mostrar = false;
 db:SQLiteObject;
-tipo = 'novialidad'
+tipo = 'novialidad';
+estadoEnvioAlerta = null;
+toast;
+
   constructor(private sqlite: SQLite,
-    public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService) { 
+    public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public _modalCtrl:ModalController,
+    public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService,public _vs:VialidadService) { 
       if(this.platform.is('capacitor')){
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
           this.db = db;
@@ -107,7 +113,7 @@ tipo = 'novialidad'
       this.images.push({
         name:f,
         path:filePath,
-        data:'data:image/jpeg;base64,'+readFile.data
+        data:readFile.data
       })
     }
     this.images.forEach(i=>{
@@ -132,14 +138,72 @@ tipo = 'novialidad'
     // this.loadFiles()
   }
 
-  async presentToast(message) {
-    const toast = await this.toastController.create({
+  async presentToast(message,duration?,cerrar?) {
+    this.toast = await this.toastController.create({
       message: message,
-      duration: 4000
+      cssClass: 'toast-custom-class',
+      duration: !cerrar ?(duration ? duration : 4000) : false,
+      buttons: !cerrar ? [
+        {
+          icon: 'close',
+          role: 'cancel',
+        }
+      ] : null
     });
-    toast.present();
+    await this.toast.present();
   }
 
+  eliminar(id,i){
+    this.presentLoader('Eliminando ...').then(()=>{
+      this.mostrar = false;
+      this._us.cargar_storage().then(()=>{
+        if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
+          this.db.executeSql('DELETE FROM alerta WHERE id = '+id, []).then((data)=>{
+            if(data.rowsAffected > 0){
+              this.deleteImage(this.alertas[i].name).then(()=>{
+                this.alertas.splice(i,1)
+                this.loader.dismiss()
+                if(this.alertas.length <= 0){
+                  this.mostrar = false;
+                  this._us.nextmessage('sin pendiente')        
+                }else{
+                  this.mostrar = true;
+                }
+              })
+            }else{
+              this.loader.dismiss()
+              this.presentToast('No se pudo eliminar la alerta');
+            }
+          })
+        }else{
+          this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
+            if(data.rowsAffected > 0){
+              this.deleteImage(this.alertas[i].foto).then((a)=>{
+                console.log('ELIMINADO A-> ',a)
+                this.alertas.splice(i,1)
+                this.loader.dismiss()
+                if(this.alertas.length <= 0){
+                  this.mostrar = false;
+                  this._us.nextmessage('sin pendiente')        
+                }else{
+                  this.mostrar = true;
+                }
+              }).catch(err=>{
+                console.log('ERROR-> ',err)
+                this.mostrar = true;
+                this.loader.dismiss()
+                this.presentToast('No se pudo eliminar la alerta');
+              })
+            }else{
+              this.loader.dismiss()
+              this.presentToast('No se pudo eliminar la alerta');
+            }
+          })
+        }
+      })
+
+    })
+  }
 
   async eliminarAlerta(id,i){
     const alert = await this.alertController.create({
@@ -157,55 +221,7 @@ tipo = 'novialidad'
           text: 'Si, borrar',
           id: 'confirm-button',
           handler: () => {
-            this.presentLoader('Eliminando ...').then(()=>{
-              this.mostrar = false;
-              this._us.cargar_storage().then(()=>{
-                if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
-                  this.db.executeSql('DELETE FROM alerta WHERE id = '+id, []).then((data)=>{
-                    if(data.rowsAffected > 0){
-                      this.deleteImage(this.alertas[i].name).then(()=>{
-                        this.alertas.splice(i,1)
-                        this.loader.dismiss()
-                        if(this.alertas.length <= 0){
-                          this.mostrar = false;
-                          this._us.nextmessage('sin pendiente')        
-                        }else{
-                          this.mostrar = true;
-                        }
-                      })
-                    }else{
-                      this.loader.dismiss()
-                      this.presentToast('No se pudo eliminar la alerta');
-                    }
-                  })
-                }else{
-                  this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
-                    if(data.rowsAffected > 0){
-                      this.deleteImage(this.alertas[i].foto).then((a)=>{
-                        console.log('ELIMINADO A-> ',a)
-                        this.alertas.splice(i,1)
-                        this.loader.dismiss()
-                        if(this.alertas.length <= 0){
-                          this.mostrar = false;
-                          this._us.nextmessage('sin pendiente')        
-                        }else{
-                          this.mostrar = true;
-                        }
-                      }).catch(err=>{
-                        console.log('ERROR-> ',err)
-                        this.mostrar = true;
-                        this.loader.dismiss()
-                        this.presentToast('No se pudo eliminar la alerta');
-                      })
-                    }else{
-                      this.loader.dismiss()
-                      this.presentToast('No se pudo eliminar la alerta');
-                    }
-                  })
-                }
-              })
-
-            })
+           this.eliminar(id,i)
           }
         }
       ]
@@ -213,8 +229,58 @@ tipo = 'novialidad'
     await alert.present();
   }
 
-  enviar(data){
-    
+  enviar(data,id,i){
+    if(this.tipo == 'vialidad'){
+      data.picture = data.foto.data;
+      this.presentLoader('Enviando Emergencia ...').then(()=>{
+        if(this._us.conexion == 'no'){
+          this.loader.dismiss()
+          this.estadoEnvioAlerta = 'pendiente'
+          this.openModalEnvio(this.estadoEnvioAlerta)
+          this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+        }else{
+          this._vs.enviarAlerta(data).subscribe((res:any)=>{
+            console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+            this.loader.dismiss()
+            if(res && res.status == '200'){
+             this.estadoEnvioAlerta = 'exitoso'
+             this.eliminar(id,i)
+             this.openModalEnvio(this.estadoEnvioAlerta)
+             this.presentToast('La emergencia fue enviada exitosamente',null,true);
+            }else{
+              this.estadoEnvioAlerta = 'fallido'
+              this.openModalEnvio(this.estadoEnvioAlerta)
+              this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+              console.log('******************** ERROR ENVIAR ******************** ')
+            }
+          },err=>{
+            this.loader.dismiss()
+            this.estadoEnvioAlerta = 'fallido'
+            this.openModalEnvio(this.estadoEnvioAlerta)
+            this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+            console.log('******************** ERROR ENVIAR ******************** ',err)
+          })
+        }
+      })
+    }
+  }
+
+  async openModalEnvio(estado) {
+    const modal = await this._modalCtrl.create({
+      component: ModalEnviarPage,
+      showBackdrop:true,
+      mode:'ios',
+      swipeToClose:false,
+      cssClass: 'my-custom-class',
+      backdropDismiss:false,
+      componentProps:{
+        estadoEnvioAlerta:estado,
+      }
+    });
+    modal.present();
+    const { data } = await modal.onWillDismiss();
+    this.toast.dismiss()
+
   }
 }
     

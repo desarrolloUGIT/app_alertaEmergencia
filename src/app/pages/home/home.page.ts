@@ -847,11 +847,12 @@ export class HomePage implements OnInit {
 
   async selectImage(tipe:CameraSource){
     const image = await Camera.getPhoto({
-      quality:45,
-      allowEditing:true,
+      quality:40,
+      allowEditing:false,
       resultType:CameraResultType.Uri,
       source:tipe,
-      
+      width:700,
+      height:700
     });
     if(image){
       this.saveImage(image)
@@ -1086,13 +1087,30 @@ export class HomePage implements OnInit {
                     if(dat.rows.length > 0){
                       tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                      const savedFile = await Filesystem.writeFile({
+                        directory:Directory.Data,
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                        data:this.images[0].data
+                        }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      })
                     }else{
                       tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                      const savedFile = await Filesystem.writeFile({
+                        directory:Directory.Data, 
+                        path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                        data:this.images[0].data
+                        }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      })
                     }
                     this.presentToast('La emergencia se almacenó y la podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
                     this.intento = 0;
-                    this._us.nextmessage('pendiente') 
                   })
                 })
               })
@@ -1117,12 +1135,14 @@ export class HomePage implements OnInit {
       }
     });
     modal.present();
+    const { data } = await modal.onWillDismiss();
+    this.toast.dismiss()
   }
 
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
       header: 'Límite de alertas',
-      message: 'Se ha llegado al límite de 7 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
+      message: 'Se ha llegado al límite de 20 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
       buttons: ['OK'],
       mode:'ios'
     });

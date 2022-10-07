@@ -276,7 +276,7 @@
     <ng-template>
       <ion-content>
         <form [formGroup]="firstFormGroup">
-        <ion-datetime first-day-of-week="1" size="cover" locale="es-MX" formControlName="fechaEmergencia" color="dark"
+        <ion-datetime first-day-of-week="1" size="cover" locale="es-CL" [max]="hoy" formControlName="fechaEmergencia" color="dark"
         showDefaultButtons="true" mode="ios"
         done-text="Aceptar"  cancel-text="Cancelar">
           <span slot="title" style="font-weight: bold;">Selecciona la Fecha de la emergencia</span>
