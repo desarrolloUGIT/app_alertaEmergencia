@@ -94,6 +94,7 @@ export class HomeVialidadPage implements OnInit {
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
+        console.log('RES ACA-> ',res)
         if(res == 'conexión establecida sin mapa'){
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
@@ -114,11 +115,13 @@ export class HomeVialidadPage implements OnInit {
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
+      console.log('CONEXION?->',this._us.conexion)
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
         localStorage.setItem('seleccionMapa','si')
         this._us.cargar_storage().then(()=>{})
+        this.loadMapVialidad()
       }else{
         this.mostrarMapa = false;
         this.storage.setItem('seleccionMapa', 'no');
