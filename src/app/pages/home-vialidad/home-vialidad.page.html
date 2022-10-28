@@ -23,6 +23,9 @@
             <div (click)='obtenerGeolocalizacion()' class="icon-button">
               <ion-icon name="locate-outline"></ion-icon>
             </div>
+            <div (click)='centrarInicial()' class="icon-button">
+              <ion-icon name="home-outline"></ion-icon>
+            </div>
           </div>
         </div>
         <ion-card center *ngIf="!mostrarMapa">
@@ -65,7 +68,9 @@
         </ion-card>
         <ion-card center>
           <span *ngIf="mostrarMapa">({{dataPosicion.lat}},{{dataPosicion.lng}})</span><br>
-          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}} ~ Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br></span> Región: {{dataPosicion.region}}</h3>
+          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}}<br>Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br>KM estimado: </span><span *ngIf="firstFormGroup.value.activoSeleccionado" style="color: red;;">{{km}}</span></h3>
+          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;">Región: {{dataPosicion.region}}</h3>
+
           <ion-grid *ngIf="caminosEncontrados.length > 1">
             <ion-row style="margin-top: -12%;" (click)="openModalCaminos()">
               <ion-col size="9">
@@ -130,12 +135,12 @@
                 <ion-select-option *ngFor="let item of nivelAlertaArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
             </ion-item>
-            <ion-item lines="none" [class.select]="secondFormGroup.value.elemento">
+            <!-- <ion-item lines="none" [class.select]="secondFormGroup.value.elemento">
               <ion-label>Elemento</ion-label>
               <ion-select mode="ios" interface="alert" placeholder="Selecciona elemento" class="select-text"  cancelText="Cancelar" okText="OK" title="Elemento" formControlName="elemento">
                 <ion-select-option *ngFor="let item of elementos" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
-            </ion-item>
+            </ion-item> -->
             <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
               <ion-label>Competencia</ion-label>
               <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
@@ -160,9 +165,10 @@
       <form [formGroup]="thirdFormGroup">
         <ion-card center>
           <ion-item>
-            <ion-label position="stacked">Resumen</ion-label>
-            <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100"></ion-textarea>
+            <ion-label position="stacked">Resumen <span style="color:red;font-size: 10px;">*</span></ion-label>
+            <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
           </ion-item>
+          <p *ngIf="thirdFormGroup.controls['titulo'].hasError('required') && thirdFormGroup.controls['titulo'].touched" class="p_error">Debes ingresar un resumen<br></p>
           <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/100</span>
         </ion-card>
         <ion-card center>
@@ -183,7 +189,7 @@
             </ion-item-options>
           </ion-item-sliding>
         </ion-list>
-        <ion-button expand="block" color="medium" (click)="presentActionSheet()">Adjuntar Foto</ion-button>
+        <ion-button expand="block" color="botonazul" (click)="presentActionSheet()">Adjuntar Foto</ion-button>
       </form>
       <div align="center" >
         <ion-button fill="clear" color="dark" (click)="moverStepperr('previus')">
@@ -197,66 +203,67 @@
     <!-- Resumen -->
     <mat-step>
       <ng-template matStepLabel>Resumen</ng-template>
-      <ion-grid style="border: 1px solid black;border-radius: 5px;padding: 0;padding-bottom: 1%;">
-        <ion-row align="center" class="tituloTable" style="background: #008dff45;">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Dato</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">Información</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-label style="color: black;">Estado</ion-label></ion-col>
+      <!-- <ion-grid style="border: 1px solid black;border-radius: 5px;padding: 0;padding-bottom: 0%;"> -->
+      <ion-grid style="padding: 0;padding-bottom: 0%;">
+        <ion-row align="center" class="tituloTable" style="background: #093F75;">
+          <ion-col size="4" class="cierreTabla"><ion-label style="color: white;">Dato</ion-label></ion-col>
+          <ion-col size="5" class="cierreTabla"><ion-label style="color: white;">Información</ion-label></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-label style="color: white;">Estado</ion-label></ion-col>
         </ion-row>
         <ion-row align="center">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Resumen</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{thirdFormGroup.value.titulo}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'green' : 'red'" [name]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'green' : 'red'" [name]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
-        <ion-row align="center" style="background: #008dff45;">
+        <ion-row align="center" style="background: #093f753b">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Camino</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;" *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.nombre_camino}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.activoSeleccionado != '' && firstFormGroup.value.activoSeleccionado) ? 'green' : 'red'" [name]="(firstFormGroup.value.activoSeleccionado != '' && firstFormGroup.value.activoSeleccionado) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.activoSeleccionado != '' && firstFormGroup.value.activoSeleccionado) ? 'green' : 'red'" [name]="(firstFormGroup.value.activoSeleccionado != '' && firstFormGroup.value.activoSeleccionado) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
         <ion-row align="center">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Fecha</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{firstFormGroup.value.fechaEmergencia | date:'dd/MM/yy hh:mm a'}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.fechaEmergencia != '' && firstFormGroup.value.fechaEmergencia) ? 'green' : 'red'" [name]="(firstFormGroup.value.fechaEmergencia != '' && firstFormGroup.value.fechaEmergencia) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.fechaEmergencia != '' && firstFormGroup.value.fechaEmergencia) ? 'green' : 'red'" [name]="(firstFormGroup.value.fechaEmergencia != '' && firstFormGroup.value.fechaEmergencia) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
-        <ion-row align="center" style="background: #008dff45;">
+        <ion-row align="center" style="background: #093f753b;">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">KM Inicio</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;"><span *ngIf="firstFormGroup.value.km_i"> Km</span> {{firstFormGroup.value.km_i}} </ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.km_i != '' && firstFormGroup.value.km_i) ? 'green' : 'red'" [name]="(firstFormGroup.value.km_i != '' && firstFormGroup.value.km_i) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.km_i != '' && firstFormGroup.value.km_i) ? 'green' : 'red'" [name]="(firstFormGroup.value.km_i != '' && firstFormGroup.value.km_i) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
         <ion-row align="center">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">KM Término</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;"><span *ngIf="firstFormGroup.value.km_f"> Km</span> {{firstFormGroup.value.km_f}} </ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.km_f != '' && firstFormGroup.value.km_f) ? 'green' : 'red'" [name]="(firstFormGroup.value.km_f != '' && firstFormGroup.value.km_f) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(firstFormGroup.value.km_f != '' && firstFormGroup.value.km_f) ? 'green' : 'red'" [name]="(firstFormGroup.value.km_f != '' && firstFormGroup.value.km_f) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
-        <ion-row align="center" style="background: #008dff45;">
+        <ion-row align="center" style="background: #093f753b;">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Tránsito</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.transito}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.transito != '' && secondFormGroup.value.transito) ? 'green' : 'red'" [name]="(secondFormGroup.value.transito != '' && secondFormGroup.value.transito) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.transito != '' && secondFormGroup.value.transito) ? 'green' : 'red'" [name]="(secondFormGroup.value.transito != '' && secondFormGroup.value.transito) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
         <ion-row align="center" *ngIf="secondFormGroup.value.transito == 'Con Restricción'">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Restricción</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.restriccion}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.restriccion != '' && secondFormGroup.value.restriccion) ? 'green' : 'red'" [name]="(secondFormGroup.value.restriccion != '' && secondFormGroup.value.restriccion) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.restriccion != '' && secondFormGroup.value.restriccion) ? 'green' : 'red'" [name]="(secondFormGroup.value.restriccion != '' && secondFormGroup.value.restriccion) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
-        <ion-row align="center" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? '#008dff45' : 'white'">
+        <ion-row align="center" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? '#093f753b' : 'white'">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Nivel</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.nivelAlerta}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'green' : 'red'" [name]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'green' : 'red'" [name]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
-        <ion-row align="center" *ngIf="secondFormGroup.value.elemento" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? 'white' : '#008dff45'">
+        <!-- <ion-row align="center" *ngIf="secondFormGroup.value.elemento" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? 'white' : '#093f753b'">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Elemento</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.elemento}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.elemento != '' && secondFormGroup.value.elemento) ? 'green' : 'red'" [name]="(secondFormGroup.value.elemento != '' && secondFormGroup.value.elemento) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
-        </ion-row>
-        <ion-row align="center" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? (secondFormGroup.value.elemento ? '#008dff45' : 'white') : (secondFormGroup.value.elemento ? 'white' : '#008dff45')">
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.elemento != '' && secondFormGroup.value.elemento) ? 'green' : 'red'" [name]="(secondFormGroup.value.elemento != '' && secondFormGroup.value.elemento) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
+        </ion-row> -->
+        <ion-row align="center" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? (secondFormGroup.value.elemento ? '#093f753b' : 'white') : (secondFormGroup.value.elemento ? 'white' : '#093f753b')">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Competencia</ion-label></ion-col>
           <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.competencia}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.competencia != '' && secondFormGroup.value.competencia) ? 'green' : 'red'" [name]="(secondFormGroup.value.competencia != '' && secondFormGroup.value.competencia) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.competencia != '' && secondFormGroup.value.competencia) ? 'green' : 'red'" [name]="(secondFormGroup.value.competencia != '' && secondFormGroup.value.competencia) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
         </ion-row>
-        <ion-row align="center" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? (secondFormGroup.value.elemento ? 'white' : '#008dff45') : (secondFormGroup.value.elemento ? '#008dff45' : 'white')">
+        <ion-row align="center" [style.background]="secondFormGroup.value.transito == 'Con Restricción' ? (secondFormGroup.value.elemento ? 'white' : '#093f753b') : (secondFormGroup.value.elemento ? '#093f753b' : 'white')">
           <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Descripción detallada</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><p style="color: black;text-align: left;">{{thirdFormGroup.value.descripcion}}</p></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.descripcion != '' && thirdFormGroup.value.descripcion) ? 'green' : 'red'" [name]="(thirdFormGroup.value.descripcion) ? 'checkmark-outline': 'alert-circle'"></ion-icon></ion-col>
+          <ion-col size="8" class="cierreTabla"><p style="color: black;text-align: left;">{{thirdFormGroup.value.descripcion}}</p></ion-col>
+          <!-- <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.descripcion != '' && thirdFormGroup.value.descripcion) ? 'green' : 'red'" [name]="(thirdFormGroup.value.descripcion) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col> -->
         </ion-row>
       </ion-grid>
       <div align="center" >
@@ -265,7 +272,7 @@
         </ion-button>
       </div>
       <div align="center" >
-        <ion-button expand="block"  color="medium" (click)="enviar()"  [disabled]="!firstFormGroup.valid  || !secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region || mayorI || mayorF || menorI || menorF || menorFI || mayorIF">
+        <ion-button expand="block"  color="botonazul" (click)="enviar()"  [disabled]="!firstFormGroup.valid  || !secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region || mayorI || mayorF || menorI || menorF || menorFI || mayorIF">
           REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
         </ion-button>
       </div>

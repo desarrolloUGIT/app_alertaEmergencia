@@ -112,7 +112,7 @@ export class HomePage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
         db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
-        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error)',[]);
         this.db = db;
         this.operatividad();
         this.nivelAlerta();
@@ -799,7 +799,8 @@ export class HomePage implements OnInit {
           icon: 'close',
           role: 'cancel',
         }
-      ] : null
+      ] : null,
+      mode:'ios'
     });
     await this.toast.present();
   }
@@ -993,8 +994,8 @@ export class HomePage implements OnInit {
                       this.loader.dismiss()
                       this.alertasMaximas()
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1010,8 +1011,8 @@ export class HomePage implements OnInit {
                       })
                     }
                   }else{
-                    tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                    tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1033,15 +1034,15 @@ export class HomePage implements OnInit {
         }else{
           this._ds.enviar(data).subscribe((res:any)=>{
             console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+            this.loader.dismiss()
             if(res && res.status == '200'){
-              this.loader.dismiss()
               this.estadoEnvioAlerta = 'exitoso'
               this.deleteImage(this.images[0])
               this.volverInicio()
               this.openModalEnvio(this.estadoEnvioAlerta)
               this.presentToast('Emergencia enviada exitosamente',null,true);
             }else{
-              this.loader.dismiss()
+              this.intento++
               this.estadoEnvioAlerta = 'fallido'
               this.openModalEnvio(this.estadoEnvioAlerta)
               if(this.intento > 1){
@@ -1053,9 +1054,14 @@ export class HomePage implements OnInit {
             }
           },err=>{
             this.loader.dismiss()
+            this.intento++
             this.estadoEnvioAlerta = 'fallido'
             this.openModalEnvio(this.estadoEnvioAlerta)
-            this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+            if(this.intento > 1){
+              this.guardarAlerta(data)
+            }else{
+              this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+            }
             console.log('******************** ERROR ENVIAR ******************** ',err)
           })
         }
@@ -1082,11 +1088,11 @@ export class HomePage implements OnInit {
           handler: () => {
             this.db.open().then(()=>{
               this.db.transaction( tx1=>{
-                this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
+                this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
                   this.db.transaction(async tx=>{
                     if(dat.rows.length > 0){
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1097,8 +1103,8 @@ export class HomePage implements OnInit {
                         this._us.nextmessage('pendiente') 
                       })
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations]);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 
                         path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',

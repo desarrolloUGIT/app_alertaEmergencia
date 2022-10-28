@@ -10,13 +10,14 @@ import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { URL_SERVICIOS } from 'src/app/config/url';
 import { UsuarioService } from '../usuario/usuario.service';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VialidadService {
 
-  constructor(public _us:UsuarioService, public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite) { }
+  constructor(public _us:UsuarioService, public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite,public http:HttpClient) { }
 
   dominios(tipo){
     this._us.headers['Authorization'] = "Basic " + btoa((this._us.getUser().user + ':' + this._us.getUser().password));
@@ -89,7 +90,7 @@ export class VialidadService {
                   <max:REPORTDATE>`+data.fechaEmergencia+`</max:REPORTDATE>
                   <max:LOCATION changed="?"></max:LOCATION>
                   <max:TRANSITO changed="?">`+data.transito+`</max:TRANSITO>
-                  <max:ELEMENTO changed="?"></max:ELEMENTO>
+                  <max:RESTRICCION changed="?">`+(data.transito == 'Con Restricción' ?  data.restriccion : ``)+`</max:RESTRICCION>
                   <max:COMPETENCIA changed="?">`+data.competencia+`</max:COMPETENCIA>
                   <max:EVENTO changed="?"> </max:EVENTO>
                   <max:APUNTALAR changed="?">False</max:APUNTALAR>
@@ -108,8 +109,10 @@ export class VialidadService {
                   <max:PROBLEMCODE_LONGDESCRIPTION changed="?">%</max:PROBLEMCODE_LONGDESCRIPTION >
                 <max:MULTIASSETLOCCI action="Replace" relationship="string" deleteForInsert="string">
                     <max:ASSETNUM changed="?">64E685</max:ASSETNUM>
-                    <max:STARTMEASURE changed="?">`+data.km_i+`</max:STARTMEASURE>
-                    <max:ENDMEASURE changed="?">`+data.km_f+`</max:ENDMEASURE>
+                    <!-- <max:STARTMEASURE changed="?">`+data.km_i+`</max:STARTMEASURE>-->
+                    <!-- <max:ENDMEASURE changed="?">`+data.km_f+`</max:ENDMEASURE>-->
+                    <max:STARTMEASURE changed="?">1</max:STARTMEASURE>
+                    <max:ENDMEASURE changed="?">1.2</max:ENDMEASURE>
                     <max:PUNTOREFINI changed="?">Inicio</max:PUNTOREFINI>
                     <max:PUNTOREFFIN changed="?">Fin</max:PUNTOREFFIN>
                     <max:ISPRIMARY changed="?">1</max:ISPRIMARY>
@@ -165,7 +168,7 @@ export class VialidadService {
     </soapenv:Envelope>`
 
 
-//  console.log(sr)
+ console.log(sr)
     let url = URL_SERVICIOS+'MOP_WS_MOP_SR_EMER_DOH';
     const options: HttpOptions = {
       url:url,
@@ -173,6 +176,16 @@ export class VialidadService {
       headers:this._us.headers
     };
     return from(Http.post(options))
+  }
+  obtenerCapas(geometryX,geometryY,extent){
+    let promesa = new Promise((resolve,reject)=>{
+      return this.http.get('https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer/identify?f=json&returnFieldName=true&returnGeometry=true&returnUnformattedValues=false&returnZ=true&returnM=true&tolerance=20&imageDisplay=310,200,96&geometry={"x":'+geometryX+',"y":'+geometryY+'}&geometryType=esriGeometryPoint&sr=5360&mapExtent='+(extent)+'&layers=3').subscribe(res=>{
+        resolve(res)
+      },err=>{
+        reject(err)
+      })
+    })
+    return promesa;
   }
 
 }

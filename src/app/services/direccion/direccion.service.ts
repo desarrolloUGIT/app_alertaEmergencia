@@ -49,7 +49,7 @@ export class DireccionService {
   enviar(data){
     this.headers['Authorization'] = "Basic " + btoa((this._us.getUser().user + ':' + this._us.getUser().password));
     let sr = ''
-    let url = URL_SERVICIOS+'MOP_WS_MOP_ASSET_DOH';
+    let url = URL_SERVICIOS+'MOP_WS_MOP_ASSET_DOHds';
     const options: HttpOptions = {
       url:url,
       data:sr,

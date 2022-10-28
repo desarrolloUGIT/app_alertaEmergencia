@@ -64,8 +64,8 @@ export class AppComponent {
       if(this._us.conexion == 'si'){
         this.storage.setItem('seleccionMapa', 'si');
         localStorage.setItem('seleccionMapa','si')
-        this.buscarAlertasPendientes()
       }
+      this.buscarAlertasPendientes()
     })
     this._us.message.subscribe(res=>{
       if(res == 'pendiente'){
@@ -126,6 +126,7 @@ export class AppComponent {
           this._us.cargar_storage().then(()=>{
             var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
             this.db.executeSql(sql, []).then((data)=>{
+              console.log('PENDIENTES-> ',data.rows.length)
               if(data.rows.length > 0){
                 this.alertas = [];
                 this.porenviar = [];
@@ -337,7 +338,8 @@ export class AppComponent {
           icon: 'close',
           role: 'cancel',
         }
-      ]
+      ],
+      mode:'ios'
     });
     toast.present();
   }
@@ -428,7 +430,8 @@ export class AppComponent {
 
   registerBackButton() {
     this.platform.backButton.subscribe(() => {
-      this._mc.toggle()
+      // this._mc.toggle()
+      // this.navCtrl.pop();
     });
   }
 

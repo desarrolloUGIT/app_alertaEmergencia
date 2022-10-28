@@ -20,6 +20,13 @@ import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
+import IdentifyParameters from "@arcgis/core/rest/support/IdentifyParameters";
+import * as identify from "@arcgis/core/rest/identify";
+import Map from "@arcgis/core/Map";
+import MapView from "@arcgis/core/views/MapView";
+import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
+import Graphic from "@arcgis/core/Graphic";
+import * as olProj from 'ol/proj';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -83,6 +90,8 @@ export class HomeVialidadPage implements OnInit {
   activosDVJSON = [];
   buscandoActivos = [];
   hoy;
+  home;
+  km;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -94,7 +103,7 @@ export class HomeVialidadPage implements OnInit {
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
-        console.log('RES ACA-> ',res)
+        // console.log('RES ACA-> ',res)
         if(res == 'conexión establecida sin mapa'){
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
@@ -111,11 +120,17 @@ export class HomeVialidadPage implements OnInit {
           // this._us.cargar_storage().then(()=>{})
         }
       })
+      // new Intl.NumberFormat("en-US").format(-7932505.687782431/1000),
+      // km_f:new Intl.NumberFormat("en-US").format(-3491986.601014548/1000),
+      // this._vs.pruebaGET()
+      // var marker = (olProj.transform([-7932505.687782431,-3491986.601014548], 'EPSG:102100', 'EPSG:5360'));
+
+      // console.log(marker)
     }
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
-      console.log('CONEXION?->',this._us.conexion)
+      // console.log('CONEXION?->',this._us.conexion)
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
@@ -175,13 +190,13 @@ export class HomeVialidadPage implements OnInit {
     })
     this.thirdFormGroup = this._formBuilder.group({
       titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-      descripcion: [null,Validators.compose([Validators.maxLength(300),Validators.required])],
+      descripcion: [null,Validators.compose([Validators.maxLength(300)])],
     });
   }
 
   myFunction(ev,lugar){
     if(lugar == 'i'){
-      this.firstFormGroup.controls['km_i'].setValue(((ev.target.value).replace(',','.')))
+      this.firstFormGroup.controls['km_i'].setValue(((ev.target.value).replace(/,./gi,'.')))
       if(Number(this.firstFormGroup.value.km_i) > Number(this.km_f)){
         this.mayorI = true;
         this.menorI = false;
@@ -239,7 +254,7 @@ export class HomeVialidadPage implements OnInit {
         }
       }
     }else{
-      this.firstFormGroup.controls['km_f'].setValue(((ev.target.value).replace(',','.')))
+      this.firstFormGroup.controls['km_f'].setValue(((ev.target.value).replace(/,./gi,'.')))
       if(Number(this.firstFormGroup.value.km_f) > Number(this.km_f)){
         this.mayorF = true;
         this.menorF = false;
@@ -300,17 +315,14 @@ export class HomeVialidadPage implements OnInit {
   }
 
   async loadMapVialidad(){
-    const [Map, MapView, FeatureLayer, Locate, Track, Graphic, watchUtils, IdentifyTask, IdentifyParameters, MapImageLayer,Basemap]:any = await loadModules([
-      'esri/Map',
-      'esri/views/MapView',
+    const [ FeatureLayer, Locate, Track, watchUtils, IdentifyTask, IdentifyParameters,Basemap]:any = await loadModules([
+     
       'esri/layers/FeatureLayer',
       'esri/widgets/Locate',
       'esri/widgets/Track',
-      'esri/Graphic',
       'esri/core/watchUtils',
       'esri/tasks/IdentifyTask',
       'esri/rest/support/IdentifyParameters',
-      'esri/layers/MapImageLayer',
       "esri/Basemap"
     ])
       .catch(err => {
@@ -340,18 +352,21 @@ export class HomeVialidadPage implements OnInit {
         center: [-70.65266161399654,-33.44286267068381],
         zoom: 13,
         map: this.map2,
-        minScale: 60000,
-        maxScale: 0, 
+        spatialReference:{wkid:3857},
+        // minScale: 60000,
+        // maxScale: 0, 
         constraints : {
           minZoom :5,
           maxZoom:18
         },
       });
+      // let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
           this.view2.center = [c.lng,c.lat]
           pointInicial = {longitude:c.lng,latitude:c.lat};
+          this.home = pointInicial;
           this.dataPosicion.lng = Number(c.lng.toFixed(6))
           this.dataPosicion.lat = Number(c.lat.toFixed(6))
           this.dataPosicion.region = this.region;
@@ -361,7 +376,7 @@ export class HomeVialidadPage implements OnInit {
       this.view2.on("click", (e:any)=>{
         let point = this.view2.toMap(e);
         this.view2.center = [point.longitude, point.latitude]
-        // this.view2.zoom = 18
+        this.view2.zoom = 15
         this.agregarPuntero(point,Graphic)
         this.obtenerUbicacionRegion(point)
         this.buscarCamino(e,vialidadRedVialURL)
@@ -383,55 +398,171 @@ export class HomeVialidadPage implements OnInit {
       })
   }
 
+ async centrarInicial(){
+    const [Graphic]:any = await loadModules([
+      'esri/Graphic',
+    ])
+      .catch(err => {
+        console.error("ArcGIS: ", err);
+      });
+    this.view2.center = [this.home.longitude,this.home.latitude]
+    this.dataPosicion.lng = Number(this.home.longitude.toFixed(6))
+    this.dataPosicion.lat = Number(this.home.latitude.toFixed(6))
+    this.agregarPuntero(this.home,Graphic)
+    this.firstFormGroup.reset();
+    this.caminosEncontrados = []
+    this.obtenerUbicacionRegion(this.home)
+    this.view2.zoom = 13
+  }
+
   async buscarCamino(e,vialidadRedVialURL){
-    const [ IdentifyTask, IdentifyParameters]:any = await loadModules(['esri/tasks/IdentifyTask','esri/rest/support/IdentifyParameters'])
-      let identifyTask = new IdentifyTask(vialidadRedVialURL);
-      let params = new IdentifyParameters();
-      params.tolerance = 20;
-      // params.layerIds = [0];
-      params.layerOption = "all";
-      params.width = this.view2.width;
-      params.height = this.view2.height;
-      params.geometry = e.mapPoint;
-      params.mapExtent = this.view2.extent;
-      identifyTask.execute(params).then((response) => {
+    const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
+      // // let identifyTask = new identify();
+      // let params = new IdentifyParameters();
+      // params.tolerance = 10;
+      // params.layerIds = [0,1,2,3];
+      // params.layerOption = "all";
+      // params.width = this.view2.width;
+      // params.height = this.view2.height;
+      // params.geometry = e.mapPoint;
+      // params.mapExtent = this.view2.extent;
+      // params.returnZ = true;
+      // params.returnM = true;
+      // params.returnGeometry = true; 
+      this.presentToast('Buscando camino ...',null,true)
+      var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
+      extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
+      this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
+        console.log(response)
         this.caminosEncontrados = []
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         if(response.results.length > 0){
+          let fueraregion = false;
+          let temp = []
           response.results.forEach(r=>{
-            let region = r.feature.attributes['REGIÓN'];
+            let region = r.attributes['REGIÓN'];
             region = this.reverseRegion(region)            
             if(region != this.region){
-              this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',3000)
+              fueraregion = true;
             }else{
-              this.caminosEncontrados.push({
-                codigo:r.feature.attributes['CÓDIGO DEL CAMINO'],
-                nombre_camino:r.feature.attributes['NOMBRE DEL CAMINO'],
-                km_i:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM INICIAL']/1000),
-                km_f:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM FINAL']/1000),
-                objectid:r.feature.attributes.OBJECTID,
-                rol:r.feature.attributes.ROL,
-                clasificacion:r.feature.attributes['CLASIFICACIÓN'],
-                tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.feature.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.feature.attributes['KM FINAL']) - (r.feature.attributes['KM INICIAL'])) ,
+              temp.push({
+                codigo:r.attributes['CÓDIGO DEL CAMINO'],
+                nombre_camino:r.attributes['NOMBRE DEL CAMINO'],
+                km_i:(Number(r.attributes['KM INICIAL'])/1000) != 0 ? (Number(r.attributes['KM INICIAL'])/1000).toFixed(2) : (Number(r.attributes['KM INICIAL'])/1000),
+                km_f:(Number(r.attributes['KM FINAL'])/1000) != 0 ? (Number(r.attributes['KM FINAL'])/1000).toFixed(2) : (Number(r.attributes['KM FINAL'])/1000),
+                objectid:r.attributes.OBJECTID,
+                rol:r.attributes.ROL,
+                clasificacion:r.attributes['CLASIFICACIÓN'],
+                tramo:r.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.attributes['KM FINAL']) - (r.attributes['KM INICIAL'])) ,
                 latitude:e.mapPoint.latitude,
                 longitude:e.mapPoint.longitude,
-                region:region
+                region:region,
+                puntoInicial:r.geometry.paths[0]
               })
             }
           })
+          if(fueraregion){
+            this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true)
+            this.caminosEncontrados = []
+          }else{
+            this.caminosEncontrados = temp;
+          }
+          this.toast.dismiss()
           this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
           if(this.caminosEncontrados.length == 1){
             this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-            this.km_i = this.caminosEncontrados[0].km_i.replace(',','.');
-            this.km_f = this.caminosEncontrados[0].km_f.replace(',','.');
+            this.km_i = this.caminosEncontrados[0].km_i;
+            this.km_f = this.caminosEncontrados[0].km_f;
+            this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i)
+            this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f)
             this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
             this.hoy = this._us.fecha(new Date())
+            var calculos = []
+            this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
+              var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
+              calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+            })
+            calculos = this.sortJSON(calculos,'kilometro','asc')
+            // console.log('calculo-> ',calculos[0])
+            // console.log('kilometro del punto -> ',calculos[0].kilometro + Number(calculos[0].vertice[3]/1000))
+            // console.log('camino y punto -> ',this.caminosEncontrados[0])
+            this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+          }else{
+            this.km = 0;
           }
+          this.agregarPuntero(e.mapPoint,Graphic,true)
         }else{
           this.caminosEncontrados = []
+          this.toast.dismiss()
         }
-      }).catch(err=>{this.caminosEncontrados = []})
+      }).catch(err=>{
+        this.caminosEncontrados = [];this.toast.dismiss()
+      })
+      // identify.identify(vialidadRedVialURL,params)
+      // identify.identify(vialidadRedVialURL,params).then((response) => {
+      //   console.log(response)
+      //   this.caminosEncontrados = []
+      //   this.firstFormGroup.controls['activoSeleccionado'].reset()
+      //   if(response.results.length > 0){
+      //     let fueraregion = false;
+      //     let temp = []
+      //     response.results.forEach(r=>{
+      //       let region = r.feature.attributes['REGIÓN'];
+      //       region = this.reverseRegion(region)            
+      //       if(region != this.region){
+      //         fueraregion = true;
+      //       }else{
+      //         temp.push({
+      //           codigo:r.feature.attributes['CÓDIGO DEL CAMINO'],
+      //           nombre_camino:r.feature.attributes['NOMBRE DEL CAMINO'],
+      //           km_i:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM INICIAL']/1000),
+      //           km_f:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM FINAL']/1000),
+      //           objectid:r.feature.attributes.OBJECTID,
+      //           rol:r.feature.attributes.ROL,
+      //           clasificacion:r.feature.attributes['CLASIFICACIÓN'],
+      //           tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.feature.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.feature.attributes['KM FINAL']) - (r.feature.attributes['KM INICIAL'])) ,
+      //           latitude:e.mapPoint.latitude,
+      //           longitude:e.mapPoint.longitude,
+      //           region:region
+      //         })
+      //       }
+      //     })
+      //     if(fueraregion){
+      //       this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true)
+      //       this.caminosEncontrados = []
+      //     }else{
+      //       this.caminosEncontrados = temp;
+      //     }
+      //     this.toast.dismiss()
+      //     this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
+      //     if(this.caminosEncontrados.length == 1){
+      //       this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
+      //       this.km_i = this.caminosEncontrados[0].km_i.replace(',','.');
+      //       this.km_f = this.caminosEncontrados[0].km_f.replace(',','.');
+      //       this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i.replace(',','.'))
+      //       this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f.replace(',','.'))
+      //       this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+      //       this.hoy = this._us.fecha(new Date())
+      //     } 
+      //     this.agregarPuntero(e.mapPoint,Graphic,true)
+      //   }else{
+      //     this.caminosEncontrados = []
+      //     this.toast.dismiss()
+      //   }
+      // }).catch(err=>{this.caminosEncontrados = [];this.toast.dismiss()})
   }
+
+  getKilometros(lat1,lon1,lat2,lon2){
+    // console.log(lat1,lon1,lat2,lon2)
+    var rad = function(x) {return x*Math.PI/180;}
+    var R = 6378.137; //Radio de la tierra en km
+    var dLat = rad( lat2 - lat1 );
+    var dLong = rad( lon2 - lon1 );
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLong/2) * Math.sin(dLong/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var d = R * c;
+    return d.toFixed(5); //Retorna tres decimales
+ }
 
   reverseRegion(CAMPO){
     if (CAMPO=='Región de Arica y Parinacota'){
@@ -483,7 +614,7 @@ export class HomeVialidadPage implements OnInit {
     return nuevoArray;
   }
 
-  agregarPuntero(point,Graphic){
+  agregarPuntero(point,Graphics?,puntero2?){
     this.view2.goTo({
       center:[point.longitude,point.latitude]
     })
@@ -491,10 +622,12 @@ export class HomeVialidadPage implements OnInit {
       type: "point",
       longitude: point.longitude,
       latitude: point.latitude
+      // longitude: -71.015,
+      // latitude: -30.004
     };
     let markerSymbol = {
       type: "picture-marker",
-      url: "assets/img/pin.png",
+      url: !puntero2 ? "assets/img/pin.png" : "assets/img/pin_2.png",
       width: "50px",
       height: "40px"
     };
@@ -504,6 +637,9 @@ export class HomeVialidadPage implements OnInit {
       symbol: markerSymbol as any,
       popupTemplate:null
     });
+    if(puntero2){
+      this.view2.zoom = 16
+    }
     this.view2.graphics.removeAll();
     this.view2.graphics.add(pointGraphic);
   }
@@ -583,12 +719,13 @@ export class HomeVialidadPage implements OnInit {
       message: message,
       cssClass: 'toast-custom-class',
       duration: !cerrar ?(duration ? duration : 4000) : false,
-      buttons: !cerrar ? [
+      buttons: [
         {
           icon: 'close',
           role: 'cancel',
         }
-      ] : null
+      ],
+      mode:'ios'
     });
     await this.toast.present();
   }
@@ -613,8 +750,17 @@ export class HomeVialidadPage implements OnInit {
       this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
       this.km_i = data.km_i;
       this.km_f = data.km_f;
+      this.firstFormGroup.controls['km_i'].setValue( this.km_i)
+      this.firstFormGroup.controls['km_f'].setValue( this.km_f)
       this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
       this.hoy = this._us.fecha(new Date())
+      var calculos = []
+      data.puntoInicial.forEach((p,i)=>{
+        var kilometro = Number(this.getKilometros(p[1],p[0],data.latitude,data.longitude));
+        calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+      })
+      calculos = this.sortJSON(calculos,'kilometro','asc')
+      this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
       this._us.seleccionMapa = 'si';
       this._us.cargar_storage().then(()=>{})
     }
@@ -672,6 +818,8 @@ export class HomeVialidadPage implements OnInit {
     this.km_f = data.KM_F;
     this.buscandoActivos = [];
     this._us.seleccionMapa = 'no';
+    this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+    this.hoy = this._us.fecha(new Date())
     this._us.cargar_storage().then(()=>{})
   }
   // CARGAS INICIALES
@@ -1573,9 +1721,14 @@ export class HomeVialidadPage implements OnInit {
           }
         },err=>{
           this.loader.dismiss()
+          this.intento++
           this.estadoEnvioAlerta = 'fallido'
           this.openModalEnvio(this.estadoEnvioAlerta)
-          this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+          if(this.intento > 1){
+            this.guardarAlerta(data)
+          }else{
+            this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+          }
           console.log('******************** ERROR ENVIAR ******************** ',err)
         })
       }

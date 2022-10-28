@@ -1,6 +1,6 @@
 {
 	"appId": "com.mop.alertaemergencia",
-	"appName": "Alerta Emergencia",
+	"appName": "Alerta Temprana",
 	"webDir": "www",
 	"bundledWebRuntime": false,
 	"plugins": {

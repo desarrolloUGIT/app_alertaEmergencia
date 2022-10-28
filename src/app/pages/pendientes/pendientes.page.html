@@ -28,7 +28,7 @@
                   <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
                 </ion-row>
                 <ion-row>
-                  <p><span>Operatividad:</span> {{item.operatividad == "NOOPERATIVO" ? "No Operativo" : item.operatividad == "OPERATIVO" ? "Operativo" : item.operatividad == "RESTRICCIÓN" ? "Operativo Con Restricción" : 'N/A'}}</p>
+                  <p><span>Operatividad:</span> {{item.operatividad}}</p>
                 </ion-row>
                 <ion-row>
                   <ion-col size="6"><span>Latitud:</span> {{item.lat}}</ion-col>
@@ -37,7 +37,7 @@
               </ion-col>
               <ion-col size="4">
                 <div align="center">
-                  <ion-img [src]="item.foto ? item.foto.data : item.name.data" style="height: 100px;"></ion-img>
+                  <ion-img [src]="item.foto ? 'data:image/jpeg;base64,'+item.foto.data : 'data:image/jpeg;base64,'+item.name.data" style="height: 100px;"></ion-img>
                 </div>
               </ion-col>
             </ion-row>
