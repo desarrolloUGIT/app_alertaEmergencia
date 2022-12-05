@@ -249,7 +249,6 @@ export class UsuarioService {
     }else{
       this.user = JSON.parse(localStorage.getItem("user"));
     }
-    console.log('USERUSER->  ',this.user)
     return this.user
   }
 

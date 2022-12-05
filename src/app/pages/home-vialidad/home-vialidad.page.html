@@ -15,8 +15,24 @@
     <mat-step >
       <ng-template matStepLabel>Activo</ng-template>
       <form [formGroup]="firstFormGroup">
-        <div  id="container" [style.height]="mostrarMapa ? '200px' : '0'"> 
-          <div id="custom-buttonV" class="custom-buttonV" *ngIf="(stepper.selectedIndex == 0) && mostrarMapa" >
+        <div  id="container" [style.height]="mostrarMapa? '400px' : '0'"> 
+          <ion-fab style="margin-left: -12%;" vertical="top" slot="fixed" >
+            <ion-fab-button size="small" color="botonazul">
+              <ion-icon name="add"></ion-icon>
+            </ion-fab-button>
+            <ion-fab-list side="bottom">
+              <ion-fab-button (click)='customZoom()' color="botonmapa">
+                <ion-icon name="map-outline"></ion-icon>
+              </ion-fab-button>
+              <ion-fab-button (click)='obtenerGeolocalizacion()' color="botonmapa">
+                <ion-icon name="locate-outline"></ion-icon>
+              </ion-fab-button>
+              <ion-fab-button (click)='centrarInicial()' color="botonmapa">
+                <ion-icon name="home-outline"></ion-icon>
+              </ion-fab-button>
+            </ion-fab-list>
+          </ion-fab>
+          <!-- <div id="custom-buttonV" class="custom-buttonV" *ngIf="(stepper.selectedIndex == 0) && mostrarMapa" >
             <div (click)='customZoom()' class="icon-button">
                 <ion-icon name="map-outline"></ion-icon>
             </div>
@@ -26,7 +42,7 @@
             <div (click)='centrarInicial()' class="icon-button">
               <ion-icon name="home-outline"></ion-icon>
             </div>
-          </div>
+          </div> -->
         </div>
         <ion-card center *ngIf="!mostrarMapa">
           <ion-searchbar mode="ios" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"
@@ -66,12 +82,10 @@
             </ion-accordion-group>
           </div>
         </ion-card>
-        <ion-card center>
+        <ion-card center >
           <span *ngIf="mostrarMapa">({{dataPosicion.lat}},{{dataPosicion.lng}})</span><br>
-          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}}<br>Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br>KM estimado: </span><span *ngIf="firstFormGroup.value.activoSeleccionado" style="color: red;;">{{km}}</span></h3>
-          <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;">Región: {{dataPosicion.region}}</h3>
-
-          <ion-grid *ngIf="caminosEncontrados.length > 1">
+          <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;margin: 0;">Región: {{dataPosicion.region}}</h4>  
+          <ion-grid *ngIf="caminosEncontrados.length > 1" style="margin-top: 5%;">
             <ion-row style="margin-top: -12%;" (click)="openModalCaminos()">
               <ion-col size="9">
                 <h4 style="margin: 0;margin-top: 8%;margin-left: 8%;">Seleccione Camino </h4>
@@ -81,37 +95,59 @@
               </ion-col>
             </ion-row>
           </ion-grid>
-          <div *ngIf="firstFormGroup.value.activoSeleccionado">
-            <ion-item lines="none" style="width: 100%;">
-              <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Inicio</ion-label>
-              <ion-input formControlName="km_i" mode="ios" placeholder="{{km_i}}" [class.error]="menorI || mayorI || mayorIF" (ionInput)="myFunction($event,'i')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
-            </ion-item>
-            <p *ngIf="menorI" class="p_error">No puede ser menor al km {{km_i}}</p>
-            <p *ngIf="mayorI" class="p_error">No puede ser mayor al km {{km_f}}</p>
-            <p *ngIf="mayorIF" class="p_error">No puede ser mayor al km final</p>
-            <ion-item lines="none" style="width: 100%;">
-              <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Término</ion-label>
-              <ion-input formControlName="km_f" mode="ios" placeholder="{{km_f}}" [class.error]="mayorF || menorF || menorFI" (ionInput)="myFunction($event,'f')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
-            </ion-item>
-            <p *ngIf="menorF" class="p_error">No puede ser menor al km {{km_i}}</p>
-            <p *ngIf="mayorF" class="p_error">No puede ser mayor al km {{km_f}}</p>
-            <p *ngIf="menorFI" class="p_error">No puede ser menor al km  inicial</p>
-            <ion-item lines="none" style="width: 100%;">
-              <ion-label  style="font-size: 15px;font-weight: bold;">Fecha Emergencia</ion-label>
-              <span  *ngIf="!firstFormGroup.value.fechaEmergencia" (click)="abrirModal()" class="fechaHora">dd/mm/yy hh:mm</span>
-              <span  *ngIf="firstFormGroup.value.fechaEmergencia" class="fechaHora" style="margin:0;text-decoration: underline;" (click)="abrirModal()">{{firstFormGroup.value.fechaEmergencia | date:'dd/MM/yy hh:mm a'}}</span>
-            </ion-item>
+          <div>
+            <ion-accordion-group mode="ios" #accordionGroup [style.display]="!firstFormGroup.value.activoSeleccionado ? 'none' : 'flex'">
+              <ion-accordion value="first"  [toggleIcon]="iconAccordion" [readonly]="buscando">
+                <ion-item slot="header" color="accordion" >
+                  <ion-icon *ngIf="!buscando" name="distance"></ion-icon>
+                  <ion-label *ngIf="firstFormGroup.value.activoSeleccionado && !buscando">&nbsp; KM estimado: <span  style="color: red;font-weight: bold;">{{km}}</span></ion-label>
+                  <ion-label *ngIf="buscando">Buscando camino ...</ion-label>
+                  <ion-spinner *ngIf="buscando"></ion-spinner>
+                </ion-item>
+                <div class="ion-padding contenido" slot="content" style="padding: 0 !important;">
+                  <div *ngIf="firstFormGroup.value.activoSeleccionado">
+                    <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;margin: 0;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}}<br>Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br></span></h3>
+                    <ion-item lines="none" style="width: 100%;">
+                      <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Inicio</ion-label>
+                      <ion-input formControlName="km_i" mode="ios" placeholder="{{km_i}}" [class.error]="menorI || mayorI || mayorIF" (ionInput)="myFunction($event,'i')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
+                    </ion-item>
+                    <p *ngIf="menorI" class="p_error">No puede ser menor al km {{km_i}}</p>
+                    <p *ngIf="mayorI" class="p_error">No puede ser mayor al km {{km_f}}</p>
+                    <p *ngIf="mayorIF" class="p_error">No puede ser mayor al km final</p>
+                    <ion-item lines="none" style="width: 100%;">
+                      <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Término</ion-label>
+                      <ion-input formControlName="km_f" mode="ios" placeholder="{{km_f}}" [class.error]="mayorF || menorF || menorFI" (ionInput)="myFunction($event,'f')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
+                    </ion-item>
+                    <p *ngIf="menorF" class="p_error">No puede ser menor al km {{km_i}}</p>
+                    <p *ngIf="mayorF" class="p_error">No puede ser mayor al km {{km_f}}</p>
+                    <p *ngIf="menorFI" class="p_error">No puede ser menor al km  inicial</p>
+                    <ion-item lines="none" style="width: 100%;">
+                      <ion-label  style="font-size: 15px;font-weight: bold;">Fecha Emergencia</ion-label>
+                      <span  *ngIf="!firstFormGroup.value.fechaEmergencia" (click)="abrirModal()" class="fechaHora">dd/mm/yy hh:mm</span>
+                      <span  *ngIf="firstFormGroup.value.fechaEmergencia" class="fechaHora" style="margin:0;text-decoration: underline;" (click)="abrirModal()">{{firstFormGroup.value.fechaEmergencia | date:'dd/MM/yy hh:mm a'}}</span>
+                    </ion-item>     
+                  </div>
+                </div>
+              </ion-accordion>
+              <!-- <ion-accordion value="second" *ngIf="buscando" readonly="true" toggleIcon="none">
+                <ion-item slot="header" color="accordion" >
+                  <ion-label>Buscando camino ...</ion-label>
+                  <ion-spinner></ion-spinner>
+                </ion-item>
+              </ion-accordion> -->
+            </ion-accordion-group>
+           
           </div>
         </ion-card>        
       </form>
-      <div align="center" >
+      <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
         <ion-button fill="clear" color="dark" (click)="moverStepperr('next')">
           Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
         </ion-button>
       </div>
     </mat-step>
     <!-- Operatividad y Daño -->
-    <mat-step>
+    <mat-step *ngIf="firstFormGroup.value.activoSeleccionado">
       <form [formGroup]="secondFormGroup">
         <ng-template matStepLabel>Operatividad y daño</ng-template>
         <ion-card center>
@@ -141,12 +177,12 @@
                 <ion-select-option *ngFor="let item of elementos" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
             </ion-item> -->
-            <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
+            <!-- <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
               <ion-label>Competencia</ion-label>
               <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
                 <ion-select-option *ngFor="let item of competencia" [value]="item.valor">{{item.valor}} - {{item.descripcion}}</ion-select-option>
               </ion-select>
-            </ion-item>
+            </ion-item> -->
           </ion-list>
         </ion-card>
         <div align="center" >
@@ -160,7 +196,7 @@
       </form>
     </mat-step>
     <!-- Datos adicionales -->
-    <mat-step>
+    <mat-step *ngIf="firstFormGroup.value.activoSeleccionado">
       <ng-template matStepLabel>Datos Adicionales</ng-template>
       <form [formGroup]="thirdFormGroup">
         <ion-card center>
@@ -201,7 +237,7 @@
       </div>
     </mat-step>
     <!-- Resumen -->
-    <mat-step>
+    <mat-step *ngIf="firstFormGroup.value.activoSeleccionado">
       <ng-template matStepLabel>Resumen</ng-template>
       <!-- <ion-grid style="border: 1px solid black;border-radius: 5px;padding: 0;padding-bottom: 0%;"> -->
       <ion-grid style="padding: 0;padding-bottom: 0%;">

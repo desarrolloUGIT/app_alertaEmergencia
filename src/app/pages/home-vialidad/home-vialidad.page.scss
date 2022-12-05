@@ -14,7 +14,7 @@ form{
     left: 18px;
 }
 .custom-buttonV>div {
-    background-color: #003c8880 !important;
+    background-color: #003b88b4 !important;
     color: #ffffff !important;
     width: 33px;
     border: 2px solid #ffffffa3;
@@ -49,7 +49,9 @@ form{
   }
   
   ::ng-deep .mat-vertical-content-container {
-    margin-left: 17px !important;
+    // margin-left: 17px !important;
+    margin-left: -15px !important;
+    margin-right: -5%;
   
   }
   ::ng-deep .mat-vertical-stepper-header {
@@ -69,7 +71,7 @@ form{
   }
   
   ::ng-deep .esri-widget--button {
-    background-color: #003c8880 !important;
+    background-color: #003b88 !important;
     color: #ffffff !important;
     margin-bottom: 3px !important;
     width: 30px !important;

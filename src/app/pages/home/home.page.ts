@@ -76,6 +76,7 @@ export class HomePage implements OnInit {
       })
     })
   });
+  competencia = [{valor:'No',descripcion:'Fuera del Ambito de Competencia MOP'},{valor:'Solo Técnico',descripcion:'Solo Ambito Técnico'},{valor:'Si',descripcion:'Ambito de Competencia MOP'}]
   marker = new Feature(new Point(olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')));
   firstFormGroup:FormGroup;
   secondFormGroup:FormGroup;
@@ -93,6 +94,7 @@ export class HomePage implements OnInit {
   picture = null;
   estadoEnvioAlerta = null;
   region = '13'
+  defsite;
   toast;
   intento = 0;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
@@ -102,6 +104,7 @@ export class HomePage implements OnInit {
   ngOnInit(){
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
+      this.defsite = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
@@ -112,7 +115,7 @@ export class HomePage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
         db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
-        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,region, name, date,location,error)',[]);
         this.db = db;
         this.operatividad();
         this.nivelAlerta();
@@ -125,17 +128,18 @@ export class HomePage implements OnInit {
       this.destinos();
       this.activos();
     }
+    this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
     });
     this.secondFormGroup = this._formBuilder.group({
-      operatividad:[null,Validators.compose([Validators.required])],
+      // operatividad:[null,Validators.compose([Validators.required])],
       nivelAlerta:[null,Validators.compose([Validators.required])],
-      destino:[null,Validators.compose([Validators.required])]
+      competencia:['Si',Validators.compose([Validators.required])]
     })
     this.thirdFormGroup = this._formBuilder.group({
       titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-      descripcion: [null,Validators.compose([Validators.maxLength(300),Validators.required])],
+      descripcion: [null,Validators.compose([Validators.maxLength(300)])],
     });  
   }
 
@@ -154,7 +158,6 @@ export class HomePage implements OnInit {
         //  this.chile
         ],
         view:this.view,
-        // controls: defaultControls().extend([new FullScreen()]),
       });
       setTimeout(() => {
         this.map.setTarget("map");
@@ -187,6 +190,20 @@ export class HomePage implements OnInit {
       //   })
       // })
     })
+  }
+
+  centralInicial(){
+    this._us.coordenadasRegion.forEach(c=>{
+      if(c.region == this.region){
+        this.view.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+        this.dataPosicion.lng = Number(c.lng.toFixed(6))
+        this.dataPosicion.lat = Number(c.lat.toFixed(6))
+        this.dataPosicion.region = this.region;
+      }
+    })
+    this.marker.getGeometry().setCoordinates(this.view.getCenter());
+    this.view.setZoom(13)
+    this.obtenerUbicacionRegion()
   }
 
   obtenerUbicacionRegion(){
@@ -310,7 +327,7 @@ export class HomePage implements OnInit {
 
   actualizarOperatividad(){
     this._ds.dominios('TRANSEMER').subscribe((res:any)=>{
-      console.log('OPERATIVIDAD -> ',res)
+      // console.log('OPERATIVIDAD -> ',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -440,7 +457,7 @@ export class HomePage implements OnInit {
 
   actualizarNivelAlerta(){
     this._ds.dominios('SIECATEGORIA').subscribe((res:any)=>{
-      console.log('ALERTA -> ',res) 
+      // console.log('ALERTA -> ',res) 
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -538,11 +555,11 @@ export class HomePage implements OnInit {
                 }else{
                   this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
                     this._us.xmlToJson(res).then((result:any)=>{
-                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
                       var temp = []
                       path.forEach(p=>{
                         var activo = {
-                          "ASSETNUM": p.ASSETNUM[0],
+                          "ASSETNUM": p.LOCATION[0],
                           "DESCRIPTION": p.DESCRIPTION[0],
                           "SITEID": p.SITEID[0],
                           "SERVICEADDRESS": {
@@ -560,11 +577,11 @@ export class HomePage implements OnInit {
                     })
                   },err=>{
                     this._us.xmlToJson(err.error.text).then((result:any)=>{
-                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
                       var temp = []
                       path.forEach(p=>{
                         var activo = {
-                          "ASSETNUM": p.ASSETNUM[0],
+                          "ASSETNUM": p.LOCATION[0],
                           "DESCRIPTION": p.DESCRIPTION[0],
                           "SITEID": p.SITEID[0],
                           "SERVICEADDRESS": {
@@ -588,11 +605,11 @@ export class HomePage implements OnInit {
           }else{
             this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
-                var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+                var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
                 var temp = []
                 path.forEach(p=>{
                   var activo = {
-                    "ASSETNUM": p.ASSETNUM[0],
+                    "ASSETNUM": p.LOCATION[0],
                     "DESCRIPTION": p.DESCRIPTION[0],
                     "SITEID": p.SITEID[0],
                     "SERVICEADDRESS": {
@@ -607,16 +624,16 @@ export class HomePage implements OnInit {
                 if(this.platform.is('capacitor')){
                   this.actualizarActivos()
                 }else{
-                  this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+                  // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
                 }
               })
             },err=>{
               this._us.xmlToJson(err.error.text).then((result:any)=>{
-                var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+                var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
                 var temp = []
                 path.forEach(p=>{
                   var activo = {
-                    "ASSETNUM": p.ASSETNUM[0],
+                    "ASSETNUM": p.LOCATION[0],
                     "DESCRIPTION": p.DESCRIPTION[0],
                     "SITEID": p.SITEID[0],
                     "SERVICEADDRESS": {
@@ -631,7 +648,7 @@ export class HomePage implements OnInit {
                 if(this.platform.is('capacitor')){
                   this.actualizarActivos()
                 }else{
-                  this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+                  // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
                 }
               })
             })
@@ -644,14 +661,14 @@ export class HomePage implements OnInit {
 
   actualizarActivos(){ 
     this._ds.activos().subscribe((res:any)=>{
-      console.log('ACTIVOS ->',res)
+      // console.log('ACTIVOS ->',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
-          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET;
+          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
           var temp = []
           path.forEach(p=>{
             var activo = {
-              "ASSETNUM": p.ASSETNUM[0],
+              "ASSETNUM": p.LOCATION[0],
               "DESCRIPTION": p.DESCRIPTION[0],
               "SITEID": p.SITEID[0],
               "SERVICEADDRESS": {
@@ -673,7 +690,7 @@ export class HomePage implements OnInit {
                 })
               }).then(()=>{
                 this.activosEncontrados = temp;
-                this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+                // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
             }).catch(()=>{
                 this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
                   if(data.rows.length > 0){
@@ -693,9 +710,9 @@ export class HomePage implements OnInit {
                       arr.push(tmp)
                     })
                     this.activosEncontrados = arr;
-                    this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+                    // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
                   }else{
-                    this.presentToast('No se han podido cargar activos')
+                    // this.presentToast('No se han podido cargar activos')
                   }
                 })     
             })
@@ -721,9 +738,9 @@ export class HomePage implements OnInit {
                 arr.push(tmp)
               })
               this.activosEncontrados = arr;
-              this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+              // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
             }else{
-              this.presentToast('No se han podido cargar activos')
+              // this.presentToast('No se han podido cargar activos')
             }
           })     
         })
@@ -749,9 +766,9 @@ export class HomePage implements OnInit {
               arr.push(tmp)
             })
             this.activosEncontrados = arr;
-            this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+            // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
           }else{
-            this.presentToast('No se han podido cargar activos')
+            // this.presentToast('No se han podido cargar activos')
           }
         })     
       })
@@ -779,14 +796,19 @@ export class HomePage implements OnInit {
         coord:olProj.toLonLat(this.marker.getGeometry().getCoordinates())
       }
     });
-    modal.present();
-    const { data } = await modal.onWillDismiss();
-    if (data) {
-      this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-      this.view.setCenter(olProj.transform([data.activo.SERVICEADDRESS.LONGITUDEX,data.activo.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
-      this.obtenerUbicacionRegion()
-      this.view.setZoom(15)
+    if(this.defsite == '20' || this.defsite == this.dataPosicion.region){
+      modal.present();
+      const { data } = await modal.onWillDismiss();
+      if (data) {
+        this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
+        this.view.setCenter(olProj.transform([data.activo.SERVICEADDRESS.LONGITUDEX,data.activo.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
+        this.obtenerUbicacionRegion()
+        this.view.setZoom(15)
+      }
+    }else{
+      this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región')
     }
+  
   }
 
   async presentToast(message,duration?,cerrar?) {
@@ -811,6 +833,19 @@ export class HomePage implements OnInit {
     }else{
       this.stepper.previous()
     }
+  }
+
+  sortJSON(data, key, orden) {
+    return data.sort(function (a, b) {
+        var x = a[key],
+            y = b[key];
+        if (orden === 'asc') {
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        }
+        if (orden === 'desc') {
+            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        }
+    });
   }
   // FIN OTROS
   // CAMARA Y FOTO
@@ -951,29 +986,28 @@ export class HomePage implements OnInit {
       let data = {
         titulo:this.thirdFormGroup.value.titulo,
         descripcion:this.thirdFormGroup.value.descripcion,
-        destino:'',
         usuario:this._us.user.user,
         lat:this.dataPosicion.lat,
         lng:this.dataPosicion.lng,
         nivelalerta:this.secondFormGroup.value.nivelAlerta,
-        operatividad:this.secondFormGroup.value.operatividad,
+        competencia:this.secondFormGroup.value.competencia,
         region:this.dataPosicion.region,
         locations:'',
-        date:new Date(),
+        date:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
         picture:this.picture,
-        name:new Date()
+        name:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
       }
-      if (this._us.menuType == "DOP") {
-        data.destino = "DOP"; 
-      } else if (this._us.menuType == "DGA") {
-          data.destino = "DGA";
-      } else if (this._us.menuType == "DAP") {
-          data.destino = "DAP";
-      } else if (this._us.menuType == "APR" || this._us.menuType == "DOH-ALL" || this._us.menuType == "DOH-CAUC" || this._us.menuType == "DOH-RIEG") {
-          data.destino = "APR";
-      }else{
-        data.destino = this._us.menuType;
-      }
+      // if (this._us.menuType == "DOP") {
+      //   data.destino = "DOP"; 
+      // } else if (this._us.menuType == "DGA") {
+      //     data.destino = "DGA";
+      // } else if (this._us.menuType == "DAP") {
+      //     data.destino = "DAP";
+      // } else if (this._us.menuType == "APR" || this._us.menuType == "DOH-ALL" || this._us.menuType == "DOH-CAUC" || this._us.menuType == "DOH-RIEG") {
+      //     data.destino = "APR";
+      // }else{
+      //   data.destino = this._us.menuType;
+      // }
       if(this.firstFormGroup.value.activoSeleccionado){
         if(this.firstFormGroup.value.activoSeleccionado){
           data.locations = this.firstFormGroup.value.activoSeleccionado.activo.ASSETNUM
@@ -994,8 +1028,8 @@ export class HomePage implements OnInit {
                       this.loader.dismiss()
                       this.alertasMaximas()
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.region,data.name,data.date,data.locations,'internet']);
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1011,8 +1045,8 @@ export class HomePage implements OnInit {
                       })
                     }
                   }else{
-                    tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
+                    tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.region,data.name,data.date,data.locations,'internet']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1091,8 +1125,8 @@ export class HomePage implements OnInit {
                 this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
                   this.db.transaction(async tx=>{
                     if(dat.rows.length > 0){
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta ,competencia, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.region,data.name,data.date,data.locations,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1103,8 +1137,8 @@ export class HomePage implements OnInit {
                         this._us.nextmessage('pendiente') 
                       })
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, destino, usuario, lat, lng, nivelalerta, operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [1, data.titulo, data.descripcion, data.destino, data.usuario, data.lat, data.lng,data.nivelalerta,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.region,data.name,data.date,data.locations,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 
                         path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',

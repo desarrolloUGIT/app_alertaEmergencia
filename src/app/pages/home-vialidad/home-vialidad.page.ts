@@ -27,6 +27,7 @@ import MapView from "@arcgis/core/views/MapView";
 import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import Graphic from "@arcgis/core/Graphic";
 import * as olProj from 'ol/proj';
+import { IonAccordionGroup } from '@ionic/angular';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -44,6 +45,7 @@ interface LocalFile {
 })
 export class HomeVialidadPage implements OnInit {
   @ViewChild('stepper')  stepper: MatStepper;
+  @ViewChild('accordionGroup') accordionGroup: IonAccordionGroup;
   chile = new VectorLayer({})
   dvRedVIal =  new ImageLayer({
     source: new ImageArcGISRest({
@@ -65,7 +67,7 @@ export class HomeVialidadPage implements OnInit {
   estadoEnvioAlerta = null;
   map2;
   view2:any;
-  basemap = "topo-vector"
+  basemap = "satellite"
   operatividadArray = [];
   nivelAlertaArray = [];
   caminosEncontrados = []
@@ -92,6 +94,8 @@ export class HomeVialidadPage implements OnInit {
   hoy;
   home;
   km;
+  buscando = false;
+  iconAccordion = 'chevron-down-outline';
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -103,7 +107,6 @@ export class HomeVialidadPage implements OnInit {
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
-        // console.log('RES ACA-> ',res)
         if(res == 'conexión establecida sin mapa'){
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
@@ -115,22 +118,12 @@ export class HomeVialidadPage implements OnInit {
         if(res == 'sin conexión'){
           this.mostrarMapa = false;
           this.buscandoActivos = [];
-          // this.storage.setItem('seleccionMapa', 'no');
-          // localStorage.setItem('seleccionMapa','no')
-          // this._us.cargar_storage().then(()=>{})
         }
       })
-      // new Intl.NumberFormat("en-US").format(-7932505.687782431/1000),
-      // km_f:new Intl.NumberFormat("en-US").format(-3491986.601014548/1000),
-      // this._vs.pruebaGET()
-      // var marker = (olProj.transform([-7932505.687782431,-3491986.601014548], 'EPSG:102100', 'EPSG:5360'));
-
-      // console.log(marker)
     }
 
   ngOnInit() {
     this._us.cargar_storage().then(()=>{
-      // console.log('CONEXION?->',this._us.conexion)
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
@@ -316,7 +309,6 @@ export class HomeVialidadPage implements OnInit {
 
   async loadMapVialidad(){
     const [ FeatureLayer, Locate, Track, watchUtils, IdentifyTask, IdentifyParameters,Basemap]:any = await loadModules([
-     
       'esri/layers/FeatureLayer',
       'esri/widgets/Locate',
       'esri/widgets/Track',
@@ -339,7 +331,7 @@ export class HomeVialidadPage implements OnInit {
         id: "basemap"
       });
       this.map2 = new Map({
-        basemap: 'topo-vector'
+        basemap: 'satellite'
         // basemap:basemap
       });
       const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
@@ -353,14 +345,11 @@ export class HomeVialidadPage implements OnInit {
         zoom: 13,
         map: this.map2,
         spatialReference:{wkid:3857},
-        // minScale: 60000,
-        // maxScale: 0, 
         constraints : {
           minZoom :5,
           maxZoom:18
         },
       });
-      // let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
@@ -376,7 +365,7 @@ export class HomeVialidadPage implements OnInit {
       this.view2.on("click", (e:any)=>{
         let point = this.view2.toMap(e);
         this.view2.center = [point.longitude, point.latitude]
-        this.view2.zoom = 15
+        this.view2.zoom = 16
         this.agregarPuntero(point,Graphic)
         this.obtenerUbicacionRegion(point)
         this.buscarCamino(e,vialidadRedVialURL)
@@ -429,7 +418,15 @@ export class HomeVialidadPage implements OnInit {
       // params.returnZ = true;
       // params.returnM = true;
       // params.returnGeometry = true; 
-      this.presentToast('Buscando camino ...',null,true)
+      this.firstFormGroup.reset();
+      this.caminosEncontrados = []
+      this.buscando = true;
+      const nativeEl = this.accordionGroup ? this.accordionGroup : null;
+      nativeEl ? nativeEl.value = undefined : null;
+      this.iconAccordion = 'none'
+      if(!this.firstFormGroup.value.activoSeleccionado){
+        this.presentToast('Buscando camino ...',null,true)
+      }
       var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
       extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
       this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
@@ -473,8 +470,8 @@ export class HomeVialidadPage implements OnInit {
             this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
             this.km_i = this.caminosEncontrados[0].km_i;
             this.km_f = this.caminosEncontrados[0].km_f;
-            this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i)
-            this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f)
+            this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i == 0 ? '0' : this.caminosEncontrados[0].km_i)
+            this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f == 0 ? '0' : this.caminosEncontrados[0].km_f)
             this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
             this.hoy = this._us.fecha(new Date())
             var calculos = []
@@ -483,20 +480,28 @@ export class HomeVialidadPage implements OnInit {
               calculos.push({vertice:p,kilometro:kilometro,posicion:i})
             })
             calculos = this.sortJSON(calculos,'kilometro','asc')
-            // console.log('calculo-> ',calculos[0])
-            // console.log('kilometro del punto -> ',calculos[0].kilometro + Number(calculos[0].vertice[3]/1000))
-            // console.log('camino y punto -> ',this.caminosEncontrados[0])
             this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+            this.buscando = false;
+            const nativeEl = this.accordionGroup ? this.accordionGroup : null;
+            nativeEl.value = 'first';
+            this.iconAccordion = 'chevron-down-outline';
           }else{
             this.km = 0;
           }
           this.agregarPuntero(e.mapPoint,Graphic,true)
         }else{
           this.caminosEncontrados = []
-          this.toast.dismiss()
+          this.toast.dismiss();
+          this.buscando = false;
+          this.iconAccordion = 'chevron-down-outline';
         }
       }).catch(err=>{
-        this.caminosEncontrados = [];this.toast.dismiss()
+        this.caminosEncontrados = [];
+        this.buscando = false; 
+        this.iconAccordion = 'chevron-down-outline';
+        if(!this.firstFormGroup.value.activoSeleccionado){
+          this.toast.dismiss();
+        }
       })
       // identify.identify(vialidadRedVialURL,params)
       // identify.identify(vialidadRedVialURL,params).then((response) => {
@@ -681,6 +686,7 @@ export class HomeVialidadPage implements OnInit {
         this.view2.graphics.add(pointGraphic);
         this.view2.center = [this.dataPosicion.lng, this.dataPosicion.lat]
         this.view2.zoom = 15;  
+        this.obtenerUbicacionRegion(point)
       })
     }).catch((error) => {
       console.log('Error getting location', error);
@@ -750,8 +756,8 @@ export class HomeVialidadPage implements OnInit {
       this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
       this.km_i = data.km_i;
       this.km_f = data.km_f;
-      this.firstFormGroup.controls['km_i'].setValue( this.km_i)
-      this.firstFormGroup.controls['km_f'].setValue( this.km_f)
+      this.firstFormGroup.controls['km_i'].setValue( this.km_i == 0 ? '0' : this.km_i)
+      this.firstFormGroup.controls['km_f'].setValue( this.km_f == 0 ? '0' : this.km_f) 
       this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
       this.hoy = this._us.fecha(new Date())
       var calculos = []
@@ -761,6 +767,10 @@ export class HomeVialidadPage implements OnInit {
       })
       calculos = this.sortJSON(calculos,'kilometro','asc')
       this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+      this.buscando = false;
+      const nativeEl = this.accordionGroup ? this.accordionGroup : null;
+      nativeEl.value = 'first';
+      this.iconAccordion = 'chevron-down-outline';
       this._us.seleccionMapa = 'si';
       this._us.cargar_storage().then(()=>{})
     }

@@ -4,12 +4,12 @@ form{
 
 .map-container {
   width: 100%;
-  height: 200px;
+  height: 300px;
 }
 
 #container {
   text-align: center;
-  height: 200px;
+  height: 300px;
   width: 100%;
 }
 
@@ -60,7 +60,7 @@ form{
 }
 
 .custom-button>div {
-  background-color: #003c8880 !important;
+  background-color: #003b88b4 !important;
   color: #ffffff !important;
   width: 33px;
   border: 2px solid #ffffffa3;
@@ -77,7 +77,7 @@ form{
 }
 
 .custom-buttonV>div {
-  background-color: #003c8880 !important;
+  background-color: #003b88b4 !important;
   color: #ffffff !important;
   width: 33px;
   border: 2px solid #ffffffa3;
@@ -94,7 +94,7 @@ form{
 }
 
 .custom-button2>div {
-  background-color: #6FA5DC !important;
+  background-color: #003b88b4 !important;
   color: #ffffff !important;
   width: 35px;
   height: 35px;
@@ -110,7 +110,7 @@ form{
 }
 
 .custom-button3>div {
-  background-color: #6FA5DC !important;
+  background-color: #003b88b4 !important;
   color: #ffffff !important;
   width: 35px;
   height: 35px;
@@ -126,7 +126,7 @@ form{
 }
 
 .custom-button4>div {
-  background-color: #6FA5DC !important;
+  background-color: #003b88b4 !important;
   color: #ffffff !important;
   width: 35px;
   height: 35px;
@@ -164,7 +164,8 @@ form{
 }
 
 ::ng-deep .mat-vertical-content-container {
-  margin-left: 17px !important;
+  margin-left: -15px !important;
+  margin-right: -5%;
 
 }
 ::ng-deep .mat-vertical-stepper-header {
@@ -172,8 +173,20 @@ form{
   height: 0px !important;
 }
 
+::ng-deep .mat-step-header .mat-step-icon-selected {
+  background-color: #093F75 !important; 
+}
+
+::ng-deep .mat-step-header .mat-step-icon-state-done {
+  background-color: #093F75 !important; 
+}
+
+::ng-deep .mat-step-header .mat-step-icon-state-edit {
+  background-color: #093F75 !important; 
+}
+
 ::ng-deep .esri-widget--button {
-  background-color: #003c8880 !important;
+  background-color: #003b88b4 !important;
   color: #ffffff !important;
   margin-bottom: 3px !important;
   width: 30px !important;
@@ -274,7 +287,7 @@ ion-button[shape=circle] {
 }
 
 .select{
-  --background: #bababaa1;
+  --background: #093f753b;
   color:black !important;
 }
 
@@ -284,7 +297,10 @@ ion-button[shape=circle] {
 }
 
 .cierreTabla{
-  border-right: 1px solid grey;
+  // border-right: 1px solid grey;
   padding-top: 3%;
 }
 
+.p_error{
+  float: right;padding-right: 3%;color: red;font-size: 12px;
+}
