@@ -406,18 +406,6 @@ export class HomeVialidadPage implements OnInit {
 
   async buscarCamino(e,vialidadRedVialURL){
     const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
-      // // let identifyTask = new identify();
-      // let params = new IdentifyParameters();
-      // params.tolerance = 10;
-      // params.layerIds = [0,1,2,3];
-      // params.layerOption = "all";
-      // params.width = this.view2.width;
-      // params.height = this.view2.height;
-      // params.geometry = e.mapPoint;
-      // params.mapExtent = this.view2.extent;
-      // params.returnZ = true;
-      // params.returnM = true;
-      // params.returnGeometry = true; 
       this.firstFormGroup.reset();
       this.caminosEncontrados = []
       this.buscando = true;
@@ -430,7 +418,6 @@ export class HomeVialidadPage implements OnInit {
       var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
       extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
       this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
-        console.log(response)
         this.caminosEncontrados = []
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         if(response.results.length > 0){
@@ -503,58 +490,6 @@ export class HomeVialidadPage implements OnInit {
           this.toast.dismiss();
         }
       })
-      // identify.identify(vialidadRedVialURL,params)
-      // identify.identify(vialidadRedVialURL,params).then((response) => {
-      //   console.log(response)
-      //   this.caminosEncontrados = []
-      //   this.firstFormGroup.controls['activoSeleccionado'].reset()
-      //   if(response.results.length > 0){
-      //     let fueraregion = false;
-      //     let temp = []
-      //     response.results.forEach(r=>{
-      //       let region = r.feature.attributes['REGIÓN'];
-      //       region = this.reverseRegion(region)            
-      //       if(region != this.region){
-      //         fueraregion = true;
-      //       }else{
-      //         temp.push({
-      //           codigo:r.feature.attributes['CÓDIGO DEL CAMINO'],
-      //           nombre_camino:r.feature.attributes['NOMBRE DEL CAMINO'],
-      //           km_i:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM INICIAL']/1000),
-      //           km_f:new Intl.NumberFormat("en-US").format(r.feature.attributes['KM FINAL']/1000),
-      //           objectid:r.feature.attributes.OBJECTID,
-      //           rol:r.feature.attributes.ROL,
-      //           clasificacion:r.feature.attributes['CLASIFICACIÓN'],
-      //           tramo:r.feature.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.feature.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.feature.attributes['KM FINAL']) - (r.feature.attributes['KM INICIAL'])) ,
-      //           latitude:e.mapPoint.latitude,
-      //           longitude:e.mapPoint.longitude,
-      //           region:region
-      //         })
-      //       }
-      //     })
-      //     if(fueraregion){
-      //       this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true)
-      //       this.caminosEncontrados = []
-      //     }else{
-      //       this.caminosEncontrados = temp;
-      //     }
-      //     this.toast.dismiss()
-      //     this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
-      //     if(this.caminosEncontrados.length == 1){
-      //       this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-      //       this.km_i = this.caminosEncontrados[0].km_i.replace(',','.');
-      //       this.km_f = this.caminosEncontrados[0].km_f.replace(',','.');
-      //       this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i.replace(',','.'))
-      //       this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f.replace(',','.'))
-      //       this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-      //       this.hoy = this._us.fecha(new Date())
-      //     } 
-      //     this.agregarPuntero(e.mapPoint,Graphic,true)
-      //   }else{
-      //     this.caminosEncontrados = []
-      //     this.toast.dismiss()
-      //   }
-      // }).catch(err=>{this.caminosEncontrados = [];this.toast.dismiss()})
   }
 
   getKilometros(lat1,lon1,lat2,lon2){
@@ -1268,7 +1203,9 @@ export class HomeVialidadPage implements OnInit {
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.restriccion = [];
                 path.forEach(f=>{
-                  this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  if(f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDV'){
+                    this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  }
                 })
                 if(this.platform.is('capacitor')){
                   this.actualizarRestriccion()
@@ -1279,7 +1216,9 @@ export class HomeVialidadPage implements OnInit {
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.restriccion = [];
                 path.forEach(f=>{
-                  this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  if(f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDV'){
+                    this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  }
                 })
                 if(this.platform.is('capacitor')){
                   this.actualizarRestriccion()
@@ -1295,7 +1234,9 @@ export class HomeVialidadPage implements OnInit {
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.restriccion = [];
           path.forEach(f=>{
-            this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDV'){
+              this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            }
           })
           if(this.platform.is('capacitor')){
             this.actualizarRestriccion()
@@ -1306,7 +1247,9 @@ export class HomeVialidadPage implements OnInit {
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.restriccion = [];
           path.forEach(f=>{
-            this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDV'){
+              this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            }
           })
           if(this.platform.is('capacitor')){
             this.actualizarRestriccion()
@@ -1323,7 +1266,9 @@ export class HomeVialidadPage implements OnInit {
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.restriccion = [];
           path.forEach(f=>{
-            this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDV'){
+              this.restriccion.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            }
           })
           this.restriccion = this.sortJSON(this.restriccion,'VALUE','asc')
           this.db.open().then(()=>{

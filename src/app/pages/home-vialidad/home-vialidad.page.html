@@ -16,7 +16,7 @@
       <ng-template matStepLabel>Activo</ng-template>
       <form [formGroup]="firstFormGroup">
         <div  id="container" [style.height]="mostrarMapa? '400px' : '0'"> 
-          <ion-fab style="margin-left: -12%;" vertical="top" slot="fixed" >
+          <ion-fab style="margin-left: -12%;" vertical="top" slot="fixed" *ngIf="mostrarMapa">
             <ion-fab-button size="small" color="botonazul">
               <ion-icon name="add"></ion-icon>
             </ion-fab-button>
