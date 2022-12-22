@@ -88,6 +88,7 @@ export class AppComponent {
 
    observadorConectado(){
     this.connectSubscription = this.network.onConnect().subscribe(() => {
+      console.log('ACA1')
       this._us.cargar_storage().then(async ()=>{        
         if(this._us.conexion == 'no' || !this._us.conexion){
           if((String(this.router.url).includes('home_vialidad') || String(this.router.url).includes('modal-caminos')) && this._us.seleccionMapa == 'no'){
@@ -115,7 +116,9 @@ export class AppComponent {
         localStorage.setItem('conexion','si')
         this._us.cargar_storage().then(()=>{})
       })
-    });
+    },(err)=>{
+            console.log('ACA2')
+    })
   }
 
   buscarAlertasPendientes(){
@@ -137,12 +140,21 @@ export class AppComponent {
                     this.porenviar.push(data.rows.item(i))
                   }
                 }
-                if(this.alertas.length > 0){
+                if(this.alertas.length > 0 && this._us.conexion == 'si'){
                   this.loadFiles()
                 }else{
-                  if(this.porenviar.length > 0){
-                    this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                  if(this.alertas.length > 0){
+                    this.porenviar = this.porenviar.concat(this.alertas)
+                    console.log('TOTAL POR ENVIAR->',this.porenviar.length,this.porenviar,this.alertas.length)
+                    if(this.porenviar.length > 0){
+                      this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                    }
+                  }else{
+                    if(this.porenviar.length > 0){
+                      this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                    }
                   }
+                  
                 }
                 if(this.porenviar.length > 0){
                   this.pendientes = true;

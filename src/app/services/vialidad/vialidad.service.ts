@@ -168,7 +168,7 @@ export class VialidadService {
     </soapenv:Envelope>`
 
 
- console.log(sr)
+//  console.log(sr)
     let url = URL_SERVICIOS+'MOP_WS_MOP_SR_EMER_DOH';
     const options: HttpOptions = {
       url:url,

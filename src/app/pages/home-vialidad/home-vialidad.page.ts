@@ -138,6 +138,8 @@ export class HomeVialidadPage implements OnInit {
       }
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
+      console.log('REG->',this.region)
+      this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
       this.loadMapVialidad()
@@ -761,6 +763,9 @@ export class HomeVialidadPage implements OnInit {
     // this.hoy = this._us.fecha(new Date())
     this.km_i = data.KM_I;
     this.km_f = data.KM_F;
+    this.firstFormGroup.controls['km_i'].setValue( data.KM_I == 0 ? '0' : data.KM_I)
+    this.firstFormGroup.controls['km_f'].setValue( data.KM_F == 0 ? '0' : data.KM_F)
+    // this.mayorF = false;this.mayorI = false;this.menorF = false;this.menorI = false;this.menorFI = false;this.mayorIF = false;
     this.buscandoActivos = [];
     this._us.seleccionMapa = 'no';
     this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
