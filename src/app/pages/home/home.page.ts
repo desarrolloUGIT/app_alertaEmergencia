@@ -1034,15 +1034,20 @@ export class HomePage implements OnInit {
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
                       this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
-                      const savedFile = await Filesystem.writeFile({
-                        directory:Directory.Data,
-                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
-                        data:this.images[0].data
-                        }).then(()=>{
-                        this.deleteImage(this.images[0])
+                      if(this.picture){
+                        const savedFile = await Filesystem.writeFile({
+                          directory:Directory.Data,
+                          path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                          data:this.images[0].data
+                          }).then(()=>{
+                          this.deleteImage(this.images[0])
+                          this.volverInicio()
+                          this._us.nextmessage('pendiente') 
+                        })
+                      }else{
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
-                      })
+                      }       
                     }
                   }else{
                     tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
@@ -1051,15 +1056,21 @@ export class HomePage implements OnInit {
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
                     this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
-                    const savedFile = await Filesystem.writeFile({
-                      directory:Directory.Data, 
-                      path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
-                      data:this.images[0].data
-                      }).then(()=>{
-                      this.deleteImage(this.images[0])
+                    if(this.picture){
+                      const savedFile = await Filesystem.writeFile({
+                        directory:Directory.Data, 
+                        path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                        data:this.images[0].data
+                        }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      })
+                    }else{
                       this.volverInicio()
                       this._us.nextmessage('pendiente') 
-                    })
+                    }
+                    
                   }
                 })
               })
