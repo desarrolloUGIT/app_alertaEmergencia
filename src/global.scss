@@ -33,6 +33,30 @@ ion-content {
     background-size: cover;
     background-position: center;
   }
+
+  .modalTime{
+   
+         background: transparent !important;
+            // --background:transparent;
+            // --padding-top:25vh;
+            // --padding-start:20px;
+            // --padding-end:20px;
+            --background: transparent;
+             --padding-top: 20vh;
+            --padding-start: 20px;
+            text-align: center;
+            --padding-end: 20px;
+            margin: 0 auto !important;
+            position: absolute;
+            
+            ion-datetime{
+              border-radius: 8px;
+              ::ng-deep .calendar-day{
+                padding: 5% !important;
+              }
+            }
+  }
+
   
 ion-toolbar{
     --background: #062A4E;
