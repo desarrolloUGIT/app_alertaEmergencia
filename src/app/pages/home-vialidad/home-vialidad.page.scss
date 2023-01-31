@@ -48,15 +48,45 @@ form{
   display: none;
 }
 
-::ng-deep .mat-vertical-content-container {
+ion-footer{
+  display: contents;
+}
+
+ion-segment-button {
+  --indicator-color: transparent;
+}
+section{
+  padding: 3%;
+  background: #ffffffd9;
+}
+
+ion-footer:last-of-type {
+  padding-bottom: var(--ion-safe-area-bottom, 0);
+}
+
+ion-footer ion-toolbar:last-of-type {
+  padding-bottom: var(--ion-safe-area-bottom, 0);
+}
+
+.selectTab{
+  --indicator-color: #375579;
+}
+ion-segment{
+  --background:#062A4E;
+  border-radius: 0;
+  padding-bottom: var(--ion-safe-area-bottom);
+  padding-top: 2%;
+}
+
+::ng-deep .mat-horizontal-content-container {
   // margin-left: 17px !important;
   margin-left: -15px !important;
   margin-right: -5%;
 
 }
-::ng-deep .mat-vertical-stepper-header {
+::ng-deep .mat-horizontal-stepper-header {
   padding: 23px 5px;
-  height: 0px !important;
+  // height: 0px !important;
 }
 ::ng-deep .mat-step-header .mat-step-icon-selected {
   background-color: #093F75 !important; 
@@ -71,7 +101,7 @@ form{
 }
 
 ::ng-deep .esri-widget--button {
-  background-color: #003b88 !important;
+  background-color: #062A4E !important;
   color: #ffffff !important;
   margin-bottom: 3px !important;
   width: 30px !important;
@@ -143,9 +173,10 @@ form{
   }
 }
 
-::ng-deep .mat-stepper-vertical {
+::ng-deep .mat-stepper-horizontal {
   background-color: #ffffffc9 !important;
 }
+
 ion-card{
   margin: 0;
   margin-top: 2%;
@@ -219,7 +250,9 @@ ion-modal {
 --background: rgba(44,39,45,0.2);
 &::part(content){
   backdrop-filter: blur(6px);
+  border-radius: 0 !important;
 }
+
 .modalTime{
   ion-content{
     background: transparent !important;

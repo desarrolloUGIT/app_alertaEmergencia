@@ -62,9 +62,24 @@ ion-toolbar{
     --background: #062A4E;
     color:white;
 }
+
+
+.toolbar-title{
+    white-space: normal !important;
+  }
+ ion-label{
+    white-space: normal !important;
+ }  
+
 .toast-custom-class {
     --button-color: white;
   }
+
+  .toast-custom-classErr {
+    --button-color: white;
+    --background:rgb(207, 9, 9);
+  }
+
 .botoninicia{
     --background:#006CB5;  
     --background-activated:#006CB5ce;

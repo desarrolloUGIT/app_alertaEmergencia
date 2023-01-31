@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { loadModules } from 'esri-loader';
 import { UsuarioService } from '../../services/usuario/usuario.service';
@@ -46,6 +46,8 @@ interface LocalFile {
 export class HomeVialidadPage implements OnInit {
   @ViewChild('stepper')  stepper: MatStepper;
   @ViewChild('accordionGroup') accordionGroup: IonAccordionGroup;
+  @ViewChild('modal') modal: ElementRef;
+
   chile = new VectorLayer({})
   dvRedVIal =  new ImageLayer({
     source: new ImageArcGISRest({
@@ -94,8 +96,11 @@ export class HomeVialidadPage implements OnInit {
   hoy;
   home;
   km;
+  alturaInicial = 0.1;
   buscando = false;
   iconAccordion = 'chevron-down-outline';
+  tab = 0;
+  internet = true;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -104,6 +109,7 @@ export class HomeVialidadPage implements OnInit {
           this.mostrarMapa = true;
           this.storage.setItem('seleccionMapa', 'si');
           localStorage.setItem('seleccionMapa','si')
+          this.internet = true;
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
@@ -112,10 +118,12 @@ export class HomeVialidadPage implements OnInit {
           this.firstFormGroup.reset();
           this.storage.setItem('seleccionMapa', 'si');
           localStorage.setItem('seleccionMapa','si')
+          this.internet = true;
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
         if(res == 'sin conexión'){
+          this.internet = false;
           this.mostrarMapa = false;
           this.buscandoActivos = [];
         }
@@ -128,17 +136,18 @@ export class HomeVialidadPage implements OnInit {
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
         localStorage.setItem('seleccionMapa','si')
+        this.internet = true;
         this._us.cargar_storage().then(()=>{})
         this.loadMapVialidad()
       }else{
         this.mostrarMapa = false;
         this.storage.setItem('seleccionMapa', 'no');
         localStorage.setItem('seleccionMapa','no')
+        this.internet = false;
         this._us.cargar_storage().then(()=>{})
       }
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.region = this.region == '20' ? '13' : this.region;
-      console.log('REG->',this.region)
       this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
@@ -410,10 +419,8 @@ export class HomeVialidadPage implements OnInit {
     const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
       this.firstFormGroup.reset();
       this.caminosEncontrados = []
+      this.tab = 0;
       this.buscando = true;
-      const nativeEl = this.accordionGroup ? this.accordionGroup : null;
-      nativeEl ? nativeEl.value = undefined : null;
-      this.iconAccordion = 'none'
       if(!this.firstFormGroup.value.activoSeleccionado){
         this.presentToast('Buscando camino ...',null,true)
       }
@@ -425,6 +432,7 @@ export class HomeVialidadPage implements OnInit {
         if(response.results.length > 0){
           let fueraregion = false;
           let temp = []
+          console.log(response)
           response.results.forEach(r=>{
             let region = r.attributes['REGIÓN'];
             region = this.reverseRegion(region)            
@@ -448,46 +456,52 @@ export class HomeVialidadPage implements OnInit {
             }
           })
           if(fueraregion){
-            this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true)
+            this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true,true)
             this.caminosEncontrados = []
           }else{
             this.caminosEncontrados = temp;
           }
           this.toast.dismiss()
           this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
-          if(this.caminosEncontrados.length == 1){
-            this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-            this.km_i = this.caminosEncontrados[0].km_i;
-            this.km_f = this.caminosEncontrados[0].km_f;
-            this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i == 0 ? '0' : this.caminosEncontrados[0].km_i)
-            this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f == 0 ? '0' : this.caminosEncontrados[0].km_f)
-            this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-            this.hoy = this._us.fecha(new Date())
-            var calculos = []
-            this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
-              var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
-              calculos.push({vertice:p,kilometro:kilometro,posicion:i})
-            })
-            calculos = this.sortJSON(calculos,'kilometro','asc')
-            this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-            this.buscando = false;
-            const nativeEl = this.accordionGroup ? this.accordionGroup : null;
-            nativeEl.value = 'first';
-            this.iconAccordion = 'chevron-down-outline';
-          }else{
-            this.km = 0;
-          }
+          setTimeout(()=>{
+            if(this.caminosEncontrados.length == 1){
+              this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
+              this.km_i = this.caminosEncontrados[0].km_i;
+              this.km_f = this.caminosEncontrados[0].km_f;
+              this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i == 0 ? '0' : this.caminosEncontrados[0].km_i)
+              this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f == 0 ? '0' : this.caminosEncontrados[0].km_f)
+              this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+              this.hoy = this._us.fecha(new Date())
+              var calculos = []
+              this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
+                var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
+                calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+              })
+              calculos = this.sortJSON(calculos,'kilometro','asc')
+              this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+              this.buscando = false;
+              this.tab = 1;
+              this.firstFormGroup.controls['km_i'].setValue(this.km)
+              this.mostrarMapa = false;
+              this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
+            }else{
+              this.km = 0;
+              this.mostrarMapa = false;
+              this.tab = 1;
+              this.presentToast('Se encontraron '+this.caminosEncontrados.length+' caminos, favor seleccionar el correspondiente',null,false)
+            }
+          },500)
           this.agregarPuntero(e.mapPoint,Graphic,true)
         }else{
           this.caminosEncontrados = []
-          this.toast.dismiss();
+          this.toast.dismiss().then(()=>{
+            this.presentToast('No se han encontrado caminos cercanos al punto seleccionado',null,false,true)
+          });
           this.buscando = false;
-          this.iconAccordion = 'chevron-down-outline';
         }
       }).catch(err=>{
         this.caminosEncontrados = [];
         this.buscando = false; 
-        this.iconAccordion = 'chevron-down-outline';
         if(!this.firstFormGroup.value.activoSeleccionado){
           this.toast.dismiss();
         }
@@ -657,10 +671,10 @@ export class HomeVialidadPage implements OnInit {
     await this.loader.present();
   }
 
-  async presentToast(message,duration?,cerrar?) {
+  async presentToast(message,duration?,cerrar?,css?) {
     this.toast = await this.toastController.create({
       message: message,
-      cssClass: 'toast-custom-class',
+      cssClass: !css ? 'toast-custom-class' : 'toast-custom-classErr',
       duration: !cerrar ?(duration ? duration : 4000) : false,
       buttons: [
         {
@@ -704,10 +718,8 @@ export class HomeVialidadPage implements OnInit {
       })
       calculos = this.sortJSON(calculos,'kilometro','asc')
       this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+      this.firstFormGroup.controls['km_i'].setValue(this.km)
       this.buscando = false;
-      const nativeEl = this.accordionGroup ? this.accordionGroup : null;
-      nativeEl.value = 'first';
-      this.iconAccordion = 'chevron-down-outline';
       this._us.seleccionMapa = 'si';
       this._us.cargar_storage().then(()=>{})
     }
@@ -771,6 +783,16 @@ export class HomeVialidadPage implements OnInit {
     this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
     this.hoy = this._us.fecha(new Date())
     this._us.cargar_storage().then(()=>{})
+  }
+
+  selectTab(i){
+    if(Number(i) == this.tab){
+      this.tab = 0;
+      this.mostrarMapa = true;
+    }else{
+      this.mostrarMapa = false;
+      this.tab = Number(i);
+    }
   }
   // CARGAS INICIALES
 
@@ -1780,7 +1802,7 @@ export class HomeVialidadPage implements OnInit {
       this.firstFormGroup.reset();
       this.secondFormGroup.reset();
       this.thirdFormGroup.reset();
-      this.stepper.reset();
+      // this.stepper.reset();
       this.secondFormGroup.controls['competencia'].setValue('Si')
       this.view2.zoom = 13
       this.enviando = false;
@@ -1791,6 +1813,9 @@ export class HomeVialidadPage implements OnInit {
       this.menorFI = false;
       this.mayorIF = false;
       this.intento = 0;
+      this.tab = 0;
+      this.mostrarMapa = true;
+      this.caminosEncontrados = [];
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
