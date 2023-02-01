@@ -57,6 +57,16 @@ ion-content {
             }
   }
 
+  ion-searchbar {
+    /* overall styles here */
+   .searchbar-input-container {
+       /* inner input styles here */
+       input{
+            background: #ffffffeb;
+       }
+   }
+}
+
   
 ion-toolbar{
     --background: #062A4E;

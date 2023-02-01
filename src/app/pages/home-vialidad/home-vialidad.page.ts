@@ -28,6 +28,12 @@ import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import Graphic from "@arcgis/core/Graphic";
 import * as olProj from 'ol/proj';
 import { IonAccordionGroup } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+addIcons({
+  'distance': 'assets/img/distance.svg',
+  'ruta': 'assets/img/ruta.svg',
+  'pin-3': 'assets/img/pin_3.svg',
+});
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -105,22 +111,30 @@ export class HomeVialidadPage implements OnInit {
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
       this._us.message.subscribe(res=>{
+        this.presentToast('RES :-> '+res,null,true);
+
         if(res == 'conexión establecida'){
           this.mostrarMapa = true;
           this.storage.setItem('seleccionMapa', 'si');
           localStorage.setItem('seleccionMapa','si')
           this.internet = true;
+          this.tab = 0;
           this._us.cargar_storage().then(()=>{})
           this.loadMapVialidad()
         }
         if(res == 'conexión establecida sin mapa'){
+          this.presentToast('RES AAAAA:-> '+res,null,true);
+
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
           this.storage.setItem('seleccionMapa', 'si');
           localStorage.setItem('seleccionMapa','si')
           this.internet = true;
+          this.tab = 0;
           this._us.cargar_storage().then(()=>{})
-          this.loadMapVialidad()
+          setTimeout(()=>{
+            this.loadMapVialidad()
+          },1000)
         }
         if(res == 'sin conexión'){
           this.internet = false;
@@ -432,7 +446,6 @@ export class HomeVialidadPage implements OnInit {
         if(response.results.length > 0){
           let fueraregion = false;
           let temp = []
-          console.log(response)
           response.results.forEach(r=>{
             let region = r.attributes['REGIÓN'];
             region = this.reverseRegion(region)            
@@ -755,9 +768,10 @@ export class HomeVialidadPage implements OnInit {
     const val = ev.target.value;
     if (val && val.trim() != '' && val.length >=3 ) {
       this.buscandoActivos = this.activosDVJSON.filter((item) => {
-        return (item.NOMBRE_CAMINO.toLowerCase().indexOf(val.toLowerCase()) > -1);
+        return (item.NOMBRE_CAMINO.toLowerCase().indexOf(val.toLowerCase()) > -1 || item.ROL.toLowerCase().indexOf(val.toLowerCase()) > -1);
       })
     }else{
+      this.buscandoActivos = []
       if(val.length == 0 || val == null){
         this.activosDV()
       }
@@ -779,6 +793,8 @@ export class HomeVialidadPage implements OnInit {
     this.firstFormGroup.controls['km_f'].setValue( data.KM_F == 0 ? '0' : data.KM_F)
     // this.mayorF = false;this.mayorI = false;this.menorF = false;this.menorI = false;this.menorFI = false;this.mayorIF = false;
     this.buscandoActivos = [];
+    this.tab = 1;
+    this.mostrarMapa = false;
     this._us.seleccionMapa = 'no';
     this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
     this.hoy = this._us.fecha(new Date())

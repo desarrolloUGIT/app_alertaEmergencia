@@ -111,6 +111,19 @@ ion-segment{
   background: transparent !important;
   box-shadow: none;
 }
+ion-searchbar{
+  position: absolute;
+  z-index: 4;
+}
+
+::ng-deep .esri-ui-top-left {
+  top: 90%;
+  left: 92%;
+}
+
+.searchbar-input.sc-ion-searchbar-ios{
+  background: #ffffffeb;
+}
 
 .pulse { 
   overflow: visible;

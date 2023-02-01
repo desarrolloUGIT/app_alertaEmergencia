@@ -262,8 +262,42 @@
       </mat-stepper> -->
 
     <!-- MAPA -->
+    <ion-searchbar *ngIf="mostrarMapa || (!internet && tab == 0)" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
+      <ion-accordion-group mode="ios" style="padding-top: 20%;">
+        <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
+          <ion-item slot="header" color="light">
+            <ion-badge slot="start" color="medium">Región<br>{{item.REGION}}</ion-badge>
+            <ion-label>{{item.NOMBRE_CAMINO}}</ion-label>
+          </ion-item>
+          <div class="ion-padding contenido" slot="content">
+            <ion-list>
+              <ion-item>
+                <ion-icon name="distance" slot="start"></ion-icon>
+                <p>{{item.NOMBRE_CAMINO}}</p>
+              </ion-item>
+              <ion-item>
+                <ion-icon name="distance" slot="start"></ion-icon>
+                <ion-label>KM Inicio: {{item.KM_I}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-icon name="distance" slot="start"></ion-icon>
+                <ion-label>KM Termino: {{item.KM_F}}</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-icon name="ruta" slot="start"></ion-icon>
+                <ion-label>Rol: {{item.ROL}}</ion-label>
+              </ion-item>
+              <ion-item lines="none">
+                <ion-button (click)="seleccionarActivo(item)" class="botoninicia" slot="end" size="small">Seleccionar</ion-button>
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-accordion>
+      </ion-accordion-group>
+    </div>
     <div  id="container" [style.height]="mostrarMapa? '100%' : '0'"> 
-      <ion-fab style="margin-left: -15%;" vertical="top" slot="fixed" *ngIf="mostrarMapa">
+      <ion-fab style="margin-left: -15%;margin-top: 15%;z-index: 2 !important;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet">
         <ion-fab-button size="small" color="botonazul">
           <ion-icon name="add"></ion-icon>
         </ion-fab-button>
@@ -288,7 +322,7 @@
         </ion-button>
       </ion-item>
       <form [formGroup]="firstFormGroup">
-        <ion-card center *ngIf="!mostrarMapa && !internet">
+        <!-- <ion-card center *ngIf="!mostrarMapa && !internet">
           <ion-searchbar mode="ios" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"
           showCancelButton="focus" cancelButtonText="Cancelar"  placeholder="Buscar Camino"></ion-searchbar>
           <div *ngIf="buscandoActivos[0]">
@@ -324,7 +358,7 @@
               </ion-accordion>
             </ion-accordion-group>
           </div>
-        </ion-card>
+        </ion-card> -->
         <ion-card center >
           <span *ngIf="mostrarMapa && internet">({{dataPosicion.lat}},{{dataPosicion.lng}})</span><br>
           <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;margin: 0;">Región: {{dataPosicion.region}}</h4>  
@@ -564,19 +598,19 @@
 </ion-content>
 <ion-footer>
   <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0" value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
       <ion-label>Activo</ion-label>
       <ion-icon name="distance"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0" value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
       <ion-label>Operatividad</ion-label>
       <ion-icon name="construct"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0" value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
       <ion-label>Datos</ion-label>
       <ion-icon name="create"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0" value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
       <ion-label>Resumen</ion-label>
       <ion-icon name="document-text"></ion-icon>
     </ion-segment-button>
