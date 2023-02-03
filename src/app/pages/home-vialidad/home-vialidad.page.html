@@ -600,7 +600,7 @@
   </ion-modal>
 
 </ion-content>
-<ion-footer>
+<ion-footer *ngIf="footer">
   <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
       <ion-label>Activo</ion-label>

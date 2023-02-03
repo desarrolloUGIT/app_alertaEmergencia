@@ -23,6 +23,7 @@ import { ActionSheetController } from '@ionic/angular';
 import { AnimationController } from '@ionic/angular';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { DireccionService } from '../../services/direccion/direccion.service';
+import { Keyboard } from '@ionic-native/keyboard/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -98,8 +99,10 @@ export class HomePage implements OnInit {
   toast;
   intento = 0;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,
-    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {}
+    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,
+    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {
+      this.keyboard.hideFormAccessoryBar(false)
+    }
 
   ngOnInit(){
     this._us.cargar_storage().then(()=>{

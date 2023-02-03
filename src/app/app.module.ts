@@ -14,6 +14,7 @@ import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { NativePageTransitions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
+import { Keyboard } from '@ionic-native/keyboard/ngx';
 
 
 @NgModule({
@@ -30,7 +31,7 @@ import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
     HttpClientModule,
   ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },Network,NativeStorage,
-    NativePageTransitions,SplashScreen,StatusBar,Geolocation,SQLite],
+    NativePageTransitions,SplashScreen,StatusBar,Geolocation,SQLite,Keyboard],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -6,6 +6,8 @@ import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova
 import { UsuarioService } from '../../services/usuario/usuario.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Keyboard } from '@ionic-native/keyboard/ngx';
+
 
 @Component({
   selector: 'app-login',
@@ -17,8 +19,10 @@ export class LoginPage implements OnInit {
   eye = ''
   form:FormGroup;
   loader;
-  constructor(public formBuilder: FormBuilder,public router:Router, public _us:UsuarioService,public platform:Platform,public _http:HttpClient,
-    public navctrl:NavController,private nativePageTransitions: NativePageTransitions,public _mc:MenuController,public loadctrl:LoadingController,public alertController:AlertController) { }
+  constructor(public formBuilder: FormBuilder,public router:Router, public _us:UsuarioService,public platform:Platform,public _http:HttpClient,private keyboard: Keyboard,
+    public navctrl:NavController,private nativePageTransitions: NativePageTransitions,public _mc:MenuController,public loadctrl:LoadingController,public alertController:AlertController) {
+      this.keyboard.hideFormAccessoryBar(false)
+     }
 
   ngOnInit() {
     this.passwordType = 'password'

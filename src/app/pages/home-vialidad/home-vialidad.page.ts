@@ -34,6 +34,7 @@ addIcons({
   'ruta': 'assets/img/ruta.svg',
   'pin-3': 'assets/img/pin_3.svg',
 });
+import { Keyboard } from '@ionic-native/keyboard/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -107,8 +108,9 @@ export class HomeVialidadPage implements OnInit {
   iconAccordion = 'chevron-down-outline';
   tab = 0;
   internet = false;
+  footer = true;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
+    private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
       this._us.message.subscribe(res=>{
         if(res == 'conexión establecida'){
@@ -137,6 +139,15 @@ export class HomeVialidadPage implements OnInit {
           this.mostrarMapa = false;
           this.buscandoActivos = [];
         }
+      })
+      this.keyboard.hideFormAccessoryBar(false)
+      this.platform.keyboardDidHide.subscribe(r=>{
+        // oculta teclado
+        this.footer = true;
+      })
+      this.platform.keyboardDidShow.subscribe(r=>{
+        // muestra teclado
+        this.footer = false;
       })
     }
 
