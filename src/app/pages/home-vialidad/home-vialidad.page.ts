@@ -96,7 +96,7 @@ export class HomeVialidadPage implements OnInit {
   toast;
   enviando = false;
   intento = 0;
-  mostrarMapa = true;
+  mostrarMapa = false;
   activosDVJSON = [];
   buscandoActivos = [];
   hoy;
@@ -106,13 +106,11 @@ export class HomeVialidadPage implements OnInit {
   buscando = false;
   iconAccordion = 'chevron-down-outline';
   tab = 0;
-  internet = true;
+  internet = false;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
       this._us.message.subscribe(res=>{
-        this.presentToast('RES :-> '+res,null,true);
-
         if(res == 'conexión establecida'){
           this.mostrarMapa = true;
           this.storage.setItem('seleccionMapa', 'si');
@@ -123,8 +121,8 @@ export class HomeVialidadPage implements OnInit {
           this.loadMapVialidad()
         }
         if(res == 'conexión establecida sin mapa'){
-          this.presentToast('RES AAAAA:-> '+res,null,true);
-
+          this.storage.setItem('conexion', 'si');
+          localStorage.setItem('conexion','si')
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
           this.storage.setItem('seleccionMapa', 'si');
@@ -132,9 +130,7 @@ export class HomeVialidadPage implements OnInit {
           this.internet = true;
           this.tab = 0;
           this._us.cargar_storage().then(()=>{})
-          setTimeout(()=>{
-            this.loadMapVialidad()
-          },1000)
+          this.reiniciarHome()
         }
         if(res == 'sin conexión'){
           this.internet = false;
@@ -145,6 +141,28 @@ export class HomeVialidadPage implements OnInit {
     }
 
   ngOnInit() {
+    this.iniciar()
+  }
+
+  async reiniciarHome(){
+    const alert = await this.alertctrl.create({
+      header: 'Conexión Establecida',
+      message: 'Se reiniciará la página para reactivar el mapa y sus componentes',
+      // buttons: ['OK'],
+      mode:'ios',
+      buttons: [{
+          text: 'OK',
+          id: 'confirm-button',
+          handler: () => {
+            window.location.reload()
+          }
+        }
+      ]
+    });
+    await alert.present()
+  }
+
+  iniciar(){
     this._us.cargar_storage().then(()=>{
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
@@ -1664,13 +1682,17 @@ export class HomeVialidadPage implements OnInit {
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
-                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
+                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
                     if(this.picture){
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.item(length).id + 1)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
+                      }).catch(()=>{
                         this.deleteImage(this.images[0])
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
@@ -1686,13 +1708,17 @@ export class HomeVialidadPage implements OnInit {
                   this.loader.dismiss()
                   this.estadoEnvioAlerta = 'pendiente'
                   this.openModalEnvio(this.estadoEnvioAlerta)
-                  this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
+                  this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
                   if(this.picture){
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data,
-                      path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.item(length).id + 1)+'_foto.jpg',
+                      path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
                       data:this.images[0].data
                       }).then(()=>{
+                      this.deleteImage(this.images[0])
+                      this.volverInicio()
+                      this._us.nextmessage('pendiente') 
+                    }).catch(()=>{
                       this.deleteImage(this.images[0])
                       this.volverInicio()
                       this._us.nextmessage('pendiente') 
@@ -1743,7 +1769,7 @@ export class HomeVialidadPage implements OnInit {
      })
      // this.stepper.reset()
    })
- }
+  }
 
   async guardarAlerta(data){
     const alert = await this.alertctrl.create({
@@ -1776,6 +1802,10 @@ export class HomeVialidadPage implements OnInit {
                         this.deleteImage(this.images[0])
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
+                      }).catch(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
                       })
                     }else{
                       tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
@@ -1788,9 +1818,13 @@ export class HomeVialidadPage implements OnInit {
                         this.deleteImage(this.images[0])
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
+                      }).catch(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
                       })
                     }
-                    this.presentToast('La emergencia se almacenó y la podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
+                    this.presentToast('La emergencia se almacenó y podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
                     this.intento = 0;
                   })
                 })
@@ -1805,8 +1839,8 @@ export class HomeVialidadPage implements OnInit {
 
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
-      header: 'Límite de alertas',
-      message: 'Se ha llegado al límite de 20 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
+      header: 'Límite de emergencias',
+      message: 'Se ha llegado al límite de 20 emergencias almacenadas, por lo cual no se pueden guardar más emergencias para enviar con posterioridad',
       buttons: ['OK'],
       mode:'ios'
     });
@@ -1829,6 +1863,7 @@ export class HomeVialidadPage implements OnInit {
       this.menorFI = false;
       this.mayorIF = false;
       this.intento = 0;
+      this.km = null;
       this.tab = 0;
       this.mostrarMapa = true;
       this.caminosEncontrados = [];
@@ -1845,6 +1880,7 @@ export class HomeVialidadPage implements OnInit {
       this.agregarPuntero(pointInicial,Graphic)
     })
   }
+
   // Animación para modal de envio de alerta
   enterAnimation = (baseEl: HTMLElement) => {
     const root = baseEl.shadowRoot;

@@ -1033,7 +1033,7 @@ export class HomePage implements OnInit {
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
-                      this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
+                      this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
                       if(this.picture){
                         const savedFile = await Filesystem.writeFile({
                           directory:Directory.Data,
@@ -1055,7 +1055,7 @@ export class HomePage implements OnInit {
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
-                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando tenga acceso a una conexión estable de internet, desde el menú de la APP',null,true);
+                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
                     if(this.picture){
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 
@@ -1146,6 +1146,10 @@ export class HomePage implements OnInit {
                         this.deleteImage(this.images[0])
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
+                      }).catch(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
                       })
                     }else{
                       tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', 
@@ -1158,9 +1162,13 @@ export class HomePage implements OnInit {
                         this.deleteImage(this.images[0])
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
+                      }).catch(()=>{
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this._us.nextmessage('pendiente') 
                       })
                     }
-                    this.presentToast('La emergencia se almacenó y la podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
+                    this.presentToast('La emergencia se almacenó y podras volver a intentarlo nuevamente desde el módulo de pendientes en el menú de la APP',null,true);
                     this.intento = 0;
                   })
                 })

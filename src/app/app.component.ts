@@ -69,6 +69,7 @@ export class AppComponent {
     })
     this._us.message.subscribe(res=>{
       if(res == 'pendiente'){
+        this.presentToast('PENDIENTEEEEEEEEEE')
         this.pendientes = true;
       }
       if(res == 'sin pendiente'){
@@ -88,18 +89,11 @@ export class AppComponent {
 
    observadorConectado(){
     this.connectSubscription = this.network.onConnect().subscribe(() => {
-      console.log('ACA1')
       this._us.cargar_storage().then(async ()=>{        
         if(this._us.conexion == 'no' || !this._us.conexion){
           if((String(this.router.url).includes('home_vialidad') || String(this.router.url).includes('modal-caminos')) && this._us.seleccionMapa == 'no'){
             this._us.nextmessage('conexión establecida sin mapa') 
-              const alert = await this.alertController.create({
-                header: 'Conexión Establecida',
-                message: 'Se reactivo el mapa para seleccionar punto de la emergencia, por tanto se limpio el formulario en la sección de datos del Activo ',
-                buttons: ['OK'],
-                mode:'ios'
-              });
-              await alert.present();
+              // this.router.navigateByUrl('/home_vialidad',{skipLocationChange:true}).then(()=>{this.router.navigate(["/home_vialidad"])})
               setTimeout((()=>{
                 this.buscarAlertasPendientes()
               }),4000);

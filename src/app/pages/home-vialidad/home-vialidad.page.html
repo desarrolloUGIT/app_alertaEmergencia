@@ -266,29 +266,29 @@
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
       <ion-accordion-group mode="ios" style="padding-top: 20%;">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
-          <ion-item slot="header" color="light">
+          <ion-item slot="header" color="botonazul">
             <ion-badge slot="start" color="medium">Región<br>{{item.REGION}}</ion-badge>
             <ion-label>{{item.NOMBRE_CAMINO}}</ion-label>
           </ion-item>
           <div class="ion-padding contenido" slot="content">
-            <ion-list>
-              <ion-item>
+            <ion-list style="background: #f4f4f4;">
+              <ion-item style="--background: transparent;">
                 <ion-icon name="distance" slot="start"></ion-icon>
                 <p>{{item.NOMBRE_CAMINO}}</p>
               </ion-item>
-              <ion-item>
+              <ion-item style="--background: transparent;">
                 <ion-icon name="distance" slot="start"></ion-icon>
                 <ion-label>KM Inicio: {{item.KM_I}}</ion-label>
               </ion-item>
-              <ion-item>
+              <ion-item style="--background: transparent;">
                 <ion-icon name="distance" slot="start"></ion-icon>
                 <ion-label>KM Termino: {{item.KM_F}}</ion-label>
               </ion-item>
-              <ion-item>
+              <ion-item style="--background: transparent;">
                 <ion-icon name="ruta" slot="start"></ion-icon>
                 <ion-label>Rol: {{item.ROL}}</ion-label>
               </ion-item>
-              <ion-item lines="none">
+              <ion-item style="--background: transparent;" lines="none">
                 <ion-button (click)="seleccionarActivo(item)" class="botoninicia" slot="end" size="small">Seleccionar</ion-button>
               </ion-item>
             </ion-list>
@@ -313,6 +313,10 @@
           </ion-fab-button>
         </ion-fab-list>
       </ion-fab>
+    </div>
+    <div  class="notSignal" *ngIf="!mostrarMapa && !internet && tab == 0"> 
+      <label>Sin Internet</label><br>
+      <img src="assets/img/not_signal.png" alt="" width="60%">
     </div>
     <section *ngIf="tab == 1">
       <ion-item lines="none" style="--background: transparent;">
