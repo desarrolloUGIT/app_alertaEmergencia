@@ -297,11 +297,11 @@
       </ion-accordion-group>
     </div>
     <div  id="container" [style.height]="mostrarMapa? '100%' : '0'"> 
-      <ion-fab style="margin-left: -15%;margin-top: 15%;z-index: 2 !important;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet">
+      <ion-fab style="margin-left: -15%;margin-top: 15%;z-index: 2 !important;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
         <ion-fab-button size="small" color="botonazul">
           <ion-icon name="add"></ion-icon>
         </ion-fab-button>
-        <ion-fab-list side="bottom">
+        <!-- <ion-fab-list side="bottom">
           <ion-fab-button (click)='customZoom()' color="botonmapa">
             <ion-icon name="map-outline"></ion-icon>
           </ion-fab-button>
@@ -311,7 +311,7 @@
           <ion-fab-button (click)='centrarInicial()' color="botonmapa">
             <ion-icon name="home-outline"></ion-icon>
           </ion-fab-button>
-        </ion-fab-list>
+        </ion-fab-list> -->
       </ion-fab>
     </div>
     <div  class="notSignal" *ngIf="!mostrarMapa && !internet && tab == 0"> 

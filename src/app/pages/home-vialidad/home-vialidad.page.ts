@@ -4,7 +4,7 @@ import { loadModules } from 'esri-loader';
 import { UsuarioService } from '../../services/usuario/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController, PopoverController } from '@ionic/angular';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -35,6 +35,7 @@ addIcons({
   'pin-3': 'assets/img/pin_3.svg',
 });
 import { Keyboard } from '@ionic-native/keyboard/ngx';
+import { PopoverPage } from '../popover/popover.page';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -110,7 +111,7 @@ export class HomeVialidadPage implements OnInit {
   internet = false;
   footer = true;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,
+    private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
       this._us.message.subscribe(res=>{
         if(res == 'conexión establecida'){
@@ -816,6 +817,7 @@ export class HomeVialidadPage implements OnInit {
     this.firstFormGroup.controls['activoSeleccionado'].setValue(body)
     // this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
     // this.hoy = this._us.fecha(new Date())
+    this.km = null;
     this.km_i = data.KM_I;
     this.km_f = data.KM_F;
     this.firstFormGroup.controls['km_i'].setValue( data.KM_I == 0 ? '0' : data.KM_I)
@@ -838,6 +840,34 @@ export class HomeVialidadPage implements OnInit {
       this.mostrarMapa = false;
       this.tab = Number(i);
     }
+  }
+
+  async presentPopover(myEvent) {
+    const popover = await this.popoverCtrl.create({
+      component: PopoverPage,
+      translucent: true,
+      cssClass: 'my-custom-modal-css',
+      showBackdrop:true,
+      mode:'ios',
+      event: myEvent,
+      componentProps:{
+        mapa:this.basemap,
+      }
+    });
+    popover.onDidDismiss().then(data=>{
+      if(data.data){
+       if(data.data.mapa){
+        this.customZoom()
+       }else{
+        if(data.data.posicion){
+          this.obtenerGeolocalizacion()
+        }else{
+          this.centrarInicial()
+        }
+       }
+      } 
+    })
+    return await popover.present();
   }
   // CARGAS INICIALES
 

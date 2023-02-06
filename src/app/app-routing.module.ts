@@ -42,6 +42,10 @@ const routes: Routes = [
   {
     path: 'modal-enviar',
     loadChildren: () => import('./pages/modal-enviar/modal-enviar.module').then( m => m.ModalEnviarPageModule)
+  },
+  {
+    path: 'popover',
+    loadChildren: () => import('./pages/popover/popover.module').then( m => m.PopoverPageModule)
   }
 ];
 

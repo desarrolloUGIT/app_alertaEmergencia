@@ -1,0 +1,10 @@
+ion-content::part(scroll) { 
+    overflow: hidden;
+  }
+ion-item{
+  font-size: 15px;
+}
+ion-icon{
+  font-size: 20px;
+  margin-right: 3%;
+}
