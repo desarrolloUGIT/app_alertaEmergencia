@@ -69,7 +69,6 @@ export class AppComponent {
     })
     this._us.message.subscribe(res=>{
       if(res == 'pendiente'){
-        this.presentToast('PENDIENTEEEEEEEEEE')
         this.pendientes = true;
       }
       if(res == 'sin pendiente'){

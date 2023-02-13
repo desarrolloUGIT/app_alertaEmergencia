@@ -128,6 +128,8 @@ export class HomeVialidadPage implements OnInit {
           localStorage.setItem('conexion','si')
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
+          this.secondFormGroup.reset();
+          this.thirdFormGroup.reset();
           this.storage.setItem('seleccionMapa', 'si');
           localStorage.setItem('seleccionMapa','si')
           this.internet = true;
@@ -454,6 +456,8 @@ export class HomeVialidadPage implements OnInit {
     this.dataPosicion.lat = Number(this.home.latitude.toFixed(6))
     this.agregarPuntero(this.home,Graphic)
     this.firstFormGroup.reset();
+    this.secondFormGroup.reset();
+    this.thirdFormGroup.reset();
     this.caminosEncontrados = []
     this.obtenerUbicacionRegion(this.home)
     this.view2.zoom = 13
@@ -462,6 +466,8 @@ export class HomeVialidadPage implements OnInit {
   async buscarCamino(e,vialidadRedVialURL){
     const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
       this.firstFormGroup.reset();
+      this.secondFormGroup.reset();
+      this.thirdFormGroup.reset();
       this.caminosEncontrados = []
       this.tab = 0;
       this.buscando = true;
@@ -809,6 +815,9 @@ export class HomeVialidadPage implements OnInit {
   }
 
   seleccionarActivo(data){
+    this.firstFormGroup.reset();
+    this.secondFormGroup.reset();
+    this.thirdFormGroup.reset();
     let body = {
       codigo:data.CODIGO_CAMINO,
       nombre_camino:data.NOMBRE_CAMINO,
@@ -835,7 +844,13 @@ export class HomeVialidadPage implements OnInit {
   selectTab(i){
     if(Number(i) == this.tab){
       this.tab = 0;
-      this.mostrarMapa = true;
+      this._us.cargar_storage().then(()=>{
+        if(this._us.conexion == 'si'){
+          this.mostrarMapa = true;
+        }else{
+          this.mostrarMapa = false;
+        }
+      })
     }else{
       this.mostrarMapa = false;
       this.tab = Number(i);
