@@ -129,6 +129,7 @@ export class HomeVialidadPage implements OnInit {
           this.mostrarMapa = true;
           this.firstFormGroup.reset();
           this.secondFormGroup.reset();
+          this.secondFormGroup.controls['competencia'].setValue('Si')
           this.thirdFormGroup.reset();
           this.storage.setItem('seleccionMapa', 'si');
           localStorage.setItem('seleccionMapa','si')
@@ -457,6 +458,7 @@ export class HomeVialidadPage implements OnInit {
     this.agregarPuntero(this.home,Graphic)
     this.firstFormGroup.reset();
     this.secondFormGroup.reset();
+    this.secondFormGroup.controls['competencia'].setValue('Si')
     this.thirdFormGroup.reset();
     this.caminosEncontrados = []
     this.obtenerUbicacionRegion(this.home)
@@ -467,6 +469,7 @@ export class HomeVialidadPage implements OnInit {
     const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
       this.firstFormGroup.reset();
       this.secondFormGroup.reset();
+      this.secondFormGroup.controls['competencia'].setValue('Si')
       this.thirdFormGroup.reset();
       this.caminosEncontrados = []
       this.tab = 0;
@@ -817,6 +820,7 @@ export class HomeVialidadPage implements OnInit {
   seleccionarActivo(data){
     this.firstFormGroup.reset();
     this.secondFormGroup.reset();
+    this.secondFormGroup.controls['competencia'].setValue('Si')
     this.thirdFormGroup.reset();
     let body = {
       codigo:data.CODIGO_CAMINO,
