@@ -36,6 +36,7 @@ addIcons({
 });
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { PopoverPage } from '../popover/popover.page';
+import { PopoverRegionPage } from '../popoverRegion/popoverRegion.page';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -110,6 +111,8 @@ export class HomeVialidadPage implements OnInit {
   tab = 0;
   internet = false;
   footer = true;
+  regionSelec;
+  activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -194,7 +197,7 @@ export class HomeVialidadPage implements OnInit {
         this._us.cargar_storage().then(()=>{})
       }
       this.region = this._us.usuario.PERSON.STATEPROVINCE
-      this.region = this.region == '20' ? '13' : this.region;
+      // this.region = this.region == '20' ? '13' : this.region;
       this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
@@ -206,15 +209,19 @@ export class HomeVialidadPage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS transito (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS restriccion (id unique, name)',[]);
-        db.executeSql('CREATE TABLE IF NOT EXISTS activosVialidad (id unique, name)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS activosVialidad (id, nombre,km_i,km_f,region)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         this.db = db;
         this.nivelAlerta();
         this.elemento();
         this.transitos()
         this.restriccioN();
-        this.activosVialidad();
-        this.activosDV();
+        if(this.region == '20'){
+          this.activosVialidad('20');
+        }else{
+          this.activosVialidad(this.region);
+        }
+        // this.activosDV();
         this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
       })
     }else{
@@ -222,7 +229,12 @@ export class HomeVialidadPage implements OnInit {
       this.elemento();
       this.transitos()
       this.restriccioN();
-      this.activosDV();
+      // this.activosDV();
+      if(this.region == '20'){
+        this.activosVialidad('20');
+      }else{
+        this.activosVialidad(this.region);
+      }
       this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
     }
   })
@@ -473,6 +485,7 @@ export class HomeVialidadPage implements OnInit {
       this.thirdFormGroup.reset();
       this.caminosEncontrados = []
       this.tab = 0;
+      this.caminosEncontrados = []
       this.buscando = true;
       if(!this.firstFormGroup.value.activoSeleccionado){
         this.presentToast('Buscando camino ...',null,true)
@@ -480,7 +493,6 @@ export class HomeVialidadPage implements OnInit {
       var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
       extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
       this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
-        this.caminosEncontrados = []
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         if(response.results.length > 0){
           let fueraregion = false;
@@ -488,7 +500,7 @@ export class HomeVialidadPage implements OnInit {
           response.results.forEach(r=>{
             let region = r.attributes['REGIÓN'];
             region = this.reverseRegion(region)            
-            if(region != this.region){
+            if(region != this.region && this.region != '20'){
               fueraregion = true;
             }else{
               temp.push({
@@ -511,48 +523,71 @@ export class HomeVialidadPage implements OnInit {
             this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true,true)
             this.caminosEncontrados = []
           }else{
-            this.caminosEncontrados = temp;
+            // this.caminosEncontrados = temp;
           }
           this.toast.dismiss()
-          this.caminosEncontrados = this.eliminarObjetosDuplicados(this.caminosEncontrados,'codigo')
+          temp = this.eliminarObjetosDuplicados(temp,'codigo')
           setTimeout(()=>{
-            if(this.caminosEncontrados.length == 1){
-              this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-              this.km_i = this.caminosEncontrados[0].km_i;
-              this.km_f = this.caminosEncontrados[0].km_f;
-              this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i == 0 ? '0' : this.caminosEncontrados[0].km_i)
-              this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f == 0 ? '0' : this.caminosEncontrados[0].km_f)
-              this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-              this.hoy = this._us.fecha(new Date())
-              var calculos = []
-              this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
-                var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
-                calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+            if(temp.length == 1){
+              var itemNew = temp[0].codigo
+              var existeMAXIMO = this.activosVial.filter((item) => {
+                return (item.codigo.indexOf(itemNew) > -1);
               })
-              calculos = this.sortJSON(calculos,'kilometro','asc')
-              this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-              this.buscando = false;
-              this.tab = 1;
-              this.firstFormGroup.controls['km_i'].setValue(this.km)
-              this.mostrarMapa = false;
-              this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
+              console.log(existeMAXIMO,this.caminosEncontrados[0])
+              if(existeMAXIMO.length > 0){
+                this.caminosEncontrados = temp;
+                this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
+                this.km_i = existeMAXIMO[0].km_i;
+                this.km_f = existeMAXIMO[0].km_f;
+                this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+                this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
+                this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+                this.hoy = this._us.fecha(new Date())
+                var calculos = []
+                this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
+                  var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
+                  calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+                })
+                calculos = this.sortJSON(calculos,'kilometro','asc')
+                this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+                this.buscando = false;
+                this.tab = 1;
+                this.firstFormGroup.controls['km_i'].setValue(this.km)
+                this.mostrarMapa = false;
+                this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
+                this.agregarPuntero(e.mapPoint,Graphic,true)
+              }else{
+                this.firstFormGroup.reset();
+                this.secondFormGroup.reset();
+                this.secondFormGroup.controls['competencia'].setValue('Si')
+                this.thirdFormGroup.reset();
+                this.caminosEncontrados = []
+                this.tab = 0;
+                this.km = 0;
+                this.mostrarMapa = true;
+                this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+                this.agregarPuntero(e.mapPoint,Graphic,false)
+              }
             }else{
+              this.caminosEncontrados = temp;
               this.km = 0;
               this.mostrarMapa = false;
               this.tab = 1;
               this.presentToast('Se encontraron '+this.caminosEncontrados.length+' caminos, favor seleccionar el correspondiente',null,false)
+              this.agregarPuntero(e.mapPoint,Graphic,false)
             }
           },500)
-          this.agregarPuntero(e.mapPoint,Graphic,true)
         }else{
           this.caminosEncontrados = []
           this.toast.dismiss().then(()=>{
             this.presentToast('No se han encontrado caminos cercanos al punto seleccionado',null,false,true)
           });
+          this.agregarPuntero(e.mapPoint,Graphic,false)
           this.buscando = false;
         }
       }).catch(err=>{
         this.caminosEncontrados = [];
+        this.agregarPuntero(e.mapPoint,Graphic,false)
         this.buscando = false; 
         if(!this.firstFormGroup.value.activoSeleccionado){
           this.toast.dismiss();
@@ -756,24 +791,37 @@ export class HomeVialidadPage implements OnInit {
     modal.present();
     const { data } = await modal.onWillDismiss();
     if (data) {
-      this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-      this.km_i = data.km_i;
-      this.km_f = data.km_f;
-      this.firstFormGroup.controls['km_i'].setValue( this.km_i == 0 ? '0' : this.km_i)
-      this.firstFormGroup.controls['km_f'].setValue( this.km_f == 0 ? '0' : this.km_f) 
-      this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-      this.hoy = this._us.fecha(new Date())
-      var calculos = []
-      data.puntoInicial.forEach((p,i)=>{
-        var kilometro = Number(this.getKilometros(p[1],p[0],data.latitude,data.longitude));
-        calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+      var itemNew = data.codigo
+      var existeMAXIMO = this.activosVial.filter((item) => {
+        return (item.codigo.indexOf(itemNew) > -1);
       })
-      calculos = this.sortJSON(calculos,'kilometro','asc')
-      this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-      this.firstFormGroup.controls['km_i'].setValue(this.km)
-      this.buscando = false;
-      this._us.seleccionMapa = 'si';
-      this._us.cargar_storage().then(()=>{})
+      if(existeMAXIMO.length > 0){
+        this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
+        this.km_i = existeMAXIMO[0].km_i;
+        this.km_f = existeMAXIMO[0].km_f;
+        this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+        this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f) 
+        this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+        this.hoy = this._us.fecha(new Date())
+        var calculos = []
+        data.puntoInicial.forEach((p,i)=>{
+          var kilometro = Number(this.getKilometros(p[1],p[0],data.latitude,data.longitude));
+          calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+        })
+        calculos = this.sortJSON(calculos,'kilometro','asc')
+        this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+        this.firstFormGroup.controls['km_i'].setValue(this.km)
+        this.buscando = false;
+        this._us.seleccionMapa = 'si';
+        this._us.cargar_storage().then(()=>{})
+      }else{
+        this.firstFormGroup.reset();
+        this.secondFormGroup.reset();
+        this.secondFormGroup.controls['competencia'].setValue('Si')
+        this.thirdFormGroup.reset();
+        this.km = 0;
+        this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+      }      
     }
   }
 
@@ -803,11 +851,37 @@ export class HomeVialidadPage implements OnInit {
     modal.present().then(()=>{})
   }
 
+  async presentPopoverRegion(myEvent) {
+    const popover = await this.popoverCtrl.create({
+      component: PopoverRegionPage,
+      translucent: true,
+      cssClass: 'my-custom-modal-css',
+      showBackdrop:true,
+      mode:'ios',
+      event: myEvent,
+      componentProps:{
+        region:this.regionSelec,
+      }
+    });
+    popover.onDidDismiss().then(data=>{
+      if(data.data){
+       if(data.data.region){
+        this.regionSelec = data.data.region
+       }else{
+        this.regionSelec = null;
+       }
+      }else{
+        this.regionSelec = null;
+      } 
+    })
+    return await popover.present();
+  }
+
   buscarActivos(ev: any) {
     const val = ev.target.value;
     if (val && val.trim() != '' && val.length >=3 ) {
-      this.buscandoActivos = this.activosDVJSON.filter((item) => {
-        return (item.NOMBRE_CAMINO.toLowerCase().indexOf(val.toLowerCase()) > -1 || item.ROL.toLowerCase().indexOf(val.toLowerCase()) > -1);
+      this.buscandoActivos = this.activosPorRegion[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)].filter((item) => {
+        return (item.nombre.toLowerCase().indexOf(val.toLowerCase()) > -1);
       })
     }else{
       this.buscandoActivos = []
@@ -823,18 +897,20 @@ export class HomeVialidadPage implements OnInit {
     this.secondFormGroup.controls['competencia'].setValue('Si')
     this.thirdFormGroup.reset();
     let body = {
-      codigo:data.CODIGO_CAMINO,
-      nombre_camino:data.NOMBRE_CAMINO,
-      rol:data.ROL
+      codigo:data.codigo,
+      nombre_camino:data.nombre,
+      region:data.region
     }
+    this.caminosEncontrados = [];
+    this.caminosEncontrados.push(body)
     this.firstFormGroup.controls['activoSeleccionado'].setValue(body)
     // this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
     // this.hoy = this._us.fecha(new Date())
     this.km = null;
-    this.km_i = data.KM_I;
-    this.km_f = data.KM_F;
-    this.firstFormGroup.controls['km_i'].setValue( data.KM_I == 0 ? '0' : data.KM_I)
-    this.firstFormGroup.controls['km_f'].setValue( data.KM_F == 0 ? '0' : data.KM_F)
+    this.km_i = data.km_i;
+    this.km_f = data.km_f;
+    this.firstFormGroup.controls['km_i'].setValue( data.km_i == 0 ? '0' : data.km_i)
+    this.firstFormGroup.controls['km_f'].setValue( data.km_f == 0 ? '0' : data.km_f)
     // this.mayorF = false;this.mayorI = false;this.menorF = false;this.menorI = false;this.menorFI = false;this.mayorIF = false;
     this.buscandoActivos = [];
     this.tab = 1;
@@ -896,7 +972,7 @@ export class HomeVialidadPage implements OnInit {
       res = this.eliminarObjetosDuplicados(res,'CODIGO_CAMINO')
       res.forEach(f=>{
         f.REGION = this.reverseRegion(f.REGION)
-        if(f.REGION == this.region){
+        if(f.REGION == this.region || this.region == '20'){
           f.KM_I = Number(decimalFormat.format(f.KM_I / 1000));
           f.KM_F = Number(decimalFormat.format(f.KM_F / 1000));
           this.activosDVJSON.push(f)
@@ -906,7 +982,7 @@ export class HomeVialidadPage implements OnInit {
       err = this.eliminarObjetosDuplicados(err,'CODIGO_CAMINO')
       err.forEach(f=>{
         f.REGION = this.reverseRegion(f.REGION)
-        if(f.REGION == this.region){
+        if(f.REGION == this.region || this.region == '20'){
           f.KM_I = Number(decimalFormat.format(f.KM_I / 1000));
           f.KM_F = Number(decimalFormat.format(f.KM_F / 1000));
           this.activosDVJSON.push(f)
@@ -1442,7 +1518,7 @@ export class HomeVialidadPage implements OnInit {
     })
   }
 
-  activosVialidad(){
+  activosVialidad(region){
     if(this.platform.is('capacitor')){
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
@@ -1451,125 +1527,281 @@ export class HomeVialidadPage implements OnInit {
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
               var tmp = {
-                VALUE:data.rows.item(i).id,
-                DESCRIPTION:data.rows.item(i).name,
+                codigo:data.rows.item(i).id,
+                nombre:data.rows.item(i).name,
+                km_i:data.rows.item(i).km_i,
+                km_f:data.rows.item(i).km_f,
+                region:data.rows.item(i).region,
               }
-              arr.push(tmp)
+              // arr.push(tmp)
+              this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
             })
-            this.activosVial = arr;
-            this.activosVialidad()
+            // this.activosVial = arr;
           }else{
-            this._http.get('assets/activosVialidad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-              this._us.xmlToJson(res).then((result:any)=>{
-                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-                this.activosVial = [];
-                path.forEach(f=>{
-                  this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(region == '20'){
+              this.activosNacional(1)
+            }else{
+              this._http.get('assets/vialidad/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+                this._us.xmlToJson(res).then((result:any)=>{
+                  this.activosVial = []
+                  var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+                  path.forEach(f=>{
+                    this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+                    // this.activosVial.push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+                  })
+                  if(this.platform.is('capacitor')){
+                    this.actualizarActivosVialidad(this.region)
+                  }
                 })
-                if(this.platform.is('capacitor')){
-                  this.activosVialidad()
-                }
-              })
-            },err=>{
-              this._us.xmlToJson(err.error.text).then((result:any)=>{
-                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-                this.activosVial = [];
-                path.forEach(f=>{
-                  this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+              },err=>{
+                this._us.xmlToJson(err.error.text).then((result:any)=>{
+                  this.activosVial = []
+                  var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+                  path.forEach(f=>{
+                    this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+                  })
+                  if(this.platform.is('capacitor')){
+                    this.actualizarActivosVialidad(this.region)
+                  }
                 })
-                if(this.platform.is('capacitor')){
-                  this.activosVialidad()
-                }
               })
-            })
+            }
           }
         })
       })
     }else{
-      this._http.get('assets/activosVialidad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-          this.activosVial = [];
-          path.forEach(f=>{
-            this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+      if(region == '20'){
+        this.activosNacional(1)
+      }else{
+        this._http.get('assets/vialidad/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+          this._us.xmlToJson(res).then((result:any)=>{
+            this.activosVial = []
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+            path.forEach(f=>{
+              this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+            })
+            if(this.platform.is('capacitor')){
+              this.actualizarActivosVialidad(this.region)
+            }
           })
-          if(this.platform.is('capacitor')){
-            this.activosVialidad()
-          }
-        })
-      },err=>{
-        this._us.xmlToJson(err.error.text).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-          this.activosVial = [];
-          path.forEach(f=>{
-            this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        },err=>{
+          this._us.xmlToJson(err.error.text).then((result:any)=>{
+            this.activosVial = []
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+            path.forEach(f=>{
+              this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+            })
+            if(this.platform.is('capacitor')){
+              this.actualizarActivosVialidad(this.region)
+            }
           })
-          if(this.platform.is('capacitor')){
-            this.activosVialidad()
-          }
         })
-      })
+      }
     }
   }
 
-  actualizarActivosVialidad(){
-    this._vs.dominios('RESTEMER').subscribe((res:any)=>{
-      if(res && res.status == '200'){
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
-          this.activosVial = [];
-          path.forEach(f=>{
-            this.activosVial.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
-          })
-          this.activosVial = this.sortJSON(this.activosVial,'VALUE','asc')
-          this.db.open().then(()=>{
-            this.db.transaction(rx=>{
-              rx.executeSql('delete from activosVialidad', [], ()=>{
-                this.restriccion.forEach((activo,i)=>{
-                  this.db.transaction(tx=>{
-                    tx.executeSql('insert into activosVialidad (id,name) values (?,?)', [activo.VALUE, activo.DESCRIPTION]);
+  activosNacional(vuelta){
+    this._http.get('assets/vialidad/'+(String(vuelta).length == 1 ? '0'+vuelta : vuelta)+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+      this._us.xmlToJson(res).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+        path.forEach(f=>{
+          this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+        })
+        const newVuelta = vuelta + 1;
+        if(newVuelta > 16){
+          if(this.platform.is('capacitor')){
+            this.actualizarActivosVialidad(this.region,1)
+          }
+        }else{
+          this.activosNacional(newVuelta)
+        }
+        
+      })
+    },err=>{
+      this._us.xmlToJson(err.error.text).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+        path.forEach(f=>{
+          this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+        })
+        const newVuelta = vuelta + 1;
+        if(newVuelta > 16){
+          if(this.platform.is('capacitor')){
+            this.actualizarActivosVialidad(this.region,1)
+          }
+        }else{
+          this.activosNacional(newVuelta)
+        }
+      })
+    })
+  }
+
+  actualizarActivosVialidad(region,vuelta?){
+    if(region == '20'){
+      if(vuelta && vuelta < 16){
+        this._vs.activosVialidad((String(vuelta).length == 1 ? '0'+vuelta : vuelta)).subscribe((res:any)=>{
+          if(res && res.status == '200'){
+            this._us.xmlToJson(res).then((result:any)=>{
+              var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+              path.forEach(f=>{
+                this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+              })
+              const newVuelta = vuelta + 1;
+              if(newVuelta > 16){
+                this.db.open().then(()=>{
+                  this.db.transaction(rx=>{
+                    rx.executeSql('delete from activosVialidad', [], ()=>{
+                      this.activosVial.forEach((activo,i)=>{
+                        this.db.transaction(tx=>{
+                          tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                        })
+                      })
+                    })
+                  }).then(()=>{
+                    // Termina de ingresar nivelAlerta
+                  }).catch(()=>{
+                    this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+                      if(data.rows.length > 0){
+                        var arr = []
+                        var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                        AR.forEach(i=>{
+                          var tmp = {
+                            codigo:data.rows.item(i).id,
+                            nombre:data.rows.item(i).nombre,
+                            km_i:data.rows.item(i).km_i,
+                            km_f:data.rows.item(i).km_f,
+                            region:data.rows.item(i).region,
+                          }
+                          this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+                        })
+                        // this.activosVial = arr;
+                      }
+                    })     
                   })
                 })
-              })
-            }).then(()=>{
-              // Termina de ingresar nivelAlerta
-            }).catch(()=>{
-              this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
-                if(data.rows.length > 0){
-                  var arr = []
-                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
-                  AR.forEach(i=>{
-                    var tmp = {
-                      VALUE:data.rows.item(i).id,
-                      DESCRIPTION:data.rows.item(i).name,
-                    }
-                    arr.push(tmp)
-                  })
-                  this.activosVial = arr;
-                  this.activosVial = this.sortJSON(this.activosVial,'VALUE','asc')
-                }
-              })     
+              }else{
+                this.actualizarActivosVialidad(region,vuelta+1)
+              }
             })
-          })
+          }else{
+            const newVuelta = vuelta + 1;
+            if(newVuelta > 16){
+              this.db.open().then(()=>{
+                this.db.transaction(rx=>{
+                  rx.executeSql('delete from activosVialidad', [], ()=>{
+                    this.activosVial.forEach((activo,i)=>{
+                      this.db.transaction(tx=>{
+                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                      })
+                    })
+                  })
+                }).then(()=>{
+                  // Termina de ingresar nivelAlerta
+                }).catch(()=>{
+                  this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+                    if(data.rows.length > 0){
+                      var arr = []
+                      var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                      AR.forEach(i=>{
+                        var tmp = {
+                          codigo:data.rows.item(i).id,
+                          nombre:data.rows.item(i).nombre,
+                          km_i:data.rows.item(i).km_i,
+                          km_f:data.rows.item(i).km_f,
+                          region:data.rows.item(i).region,
+                        }
+                        // arr.push(tmp)
+                        this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+
+                      })
+                      // this.activosVial = arr;
+                    }
+                  })     
+                })
+              })
+            }else{
+              this.actualizarActivosVialidad(region,vuelta+1)
+            }
+          }
         })
       }else{
-        this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
-          if(data.rows.length > 0){
-            var arr = []
-            var AR = Array.from({length: data.rows.length}, (x, i) => i);
-            AR.forEach(i=>{
-              var tmp = {
-                VALUE:data.rows.item(i).id,
-                DESCRIPTION:data.rows.item(i).name,
-              }
-              arr.push(tmp)
+        this.db.open().then(()=>{
+          this.db.transaction(rx=>{
+            rx.executeSql('delete from activosVialidad', [], ()=>{
+              this.activosVial.forEach((activo,i)=>{
+                this.db.transaction(tx=>{
+                  tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                })
+              })
             })
-            this.activosVial = arr;
-            this.activosVial = this.sortJSON(this.activosVial,'VALUE','asc')
-          }
-        })  
+          }).then(()=>{
+            // Termina de ingresar nivelAlerta
+          }).catch(()=>{
+            this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+              if(data.rows.length > 0){
+                var arr = []
+                var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                AR.forEach(i=>{
+                  var tmp = {
+                    codigo:data.rows.item(i).id,
+                    nombre:data.rows.item(i).nombre,
+                    km_i:data.rows.item(i).km_i,
+                    km_f:data.rows.item(i).km_f,
+                    region:data.rows.item(i).region,
+                  }
+                  // arr.push(tmp)
+                  this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+                })
+                // this.activosVial = arr;
+              }
+            })     
+          })
+        })
       }
-    })
+    }else{
+      this._vs.activosVialidad().subscribe((res:any)=>{
+        if(res && res.status == '200'){
+          this._us.xmlToJson(res).then((result:any)=>{
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+            path.forEach(f=>{
+              this.activosPorRegion[Number(f.REGION[0] - 1)].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+            })
+            this.db.open().then(()=>{
+              this.db.transaction(rx=>{
+                rx.executeSql('delete from activosVialidad', [], ()=>{
+                  this.activosVial.forEach((activo,i)=>{
+                    this.db.transaction(tx=>{
+                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                    })
+                  })
+                })
+              }).then(()=>{
+                // Termina de ingresar nivelAlerta
+              }).catch(()=>{
+                this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
+                  if(data.rows.length > 0){
+                    var arr = []
+                    var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                    AR.forEach(i=>{
+                      var tmp = {
+                        codigo:data.rows.item(i).id,
+                        nombre:data.rows.item(i).nombre,
+                        km_i:data.rows.item(i).km_i,
+                        km_f:data.rows.item(i).km_f,
+                        region:data.rows.item(i).region,
+                      }
+                      // arr.push(tmp)
+                      this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+                    })
+                    // this.activosVial = arr;
+                  }
+                })     
+              })
+            })
+          })
+        }
+      })
+    }
+
   }
 
   async presentActionSheet() {
@@ -1715,12 +1947,13 @@ export class HomeVialidadPage implements OnInit {
        usuario:this._us.user.user,
        lat:this.dataPosicion.lat,
        lng:this.dataPosicion.lng,
+      //  region:
        nivelalerta:this.secondFormGroup.value.nivelAlerta,
        transito:this.secondFormGroup.value.transito,
        elemento:this.secondFormGroup.value.elemento,
        restriccion:this.secondFormGroup.value.restriccion,
        competencia:this.secondFormGroup.value.competencia,
-       region:this.dataPosicion.region,
+       region:this.firstFormGroup.value.activoSeleccionado.region,
        codigo:this.firstFormGroup.value.activoSeleccionado.codigo,
        date:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
        picture:this.picture,

@@ -7,35 +7,42 @@
       Crear Emergencia
     </ion-title>
   </ion-toolbar>
+  <ion-toolbar mode="ios" *ngIf="(mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')" >
+    <ion-searchbar [disabled]="!regionSelec" mode="ios" color="light"  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <ion-buttons  slot="end">
+      <ion-button size="small" color="light" (click)="presentPopoverRegion($event)">
+        <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+   
+  </ion-toolbar>
 </ion-header>
 
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <ion-searchbar *ngIf="mostrarMapa || (!internet && tab == 0)" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <!-- <ion-item lines="none">
+    </ion-item> -->
+    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
-      <ion-accordion-group mode="ios" style="padding-top: 20%;">
+      <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
           <ion-item slot="header" color="botonazul">
-            <ion-badge slot="start" color="medium">Región<br>{{item.REGION}}</ion-badge>
-            <ion-label>{{item.NOMBRE_CAMINO}}</ion-label>
+            <ion-badge slot="start" color="medium">Región<br>{{item.region}}</ion-badge>
+            <ion-label>{{item.nombre}}</ion-label>
           </ion-item>
           <div class="ion-padding contenido" slot="content">
             <ion-list style="background: #f4f4f4;">
               <ion-item style="--background: transparent;">
                 <ion-icon name="distance" slot="start"></ion-icon>
-                <p>{{item.NOMBRE_CAMINO}}</p>
+                <p>{{item.nombre}}</p>
               </ion-item>
               <ion-item style="--background: transparent;">
                 <ion-icon name="distance" slot="start"></ion-icon>
-                <ion-label>KM Inicio: {{item.KM_I}}</ion-label>
+                <ion-label>KM Inicio: {{item.km_i}}</ion-label>
               </ion-item>
               <ion-item style="--background: transparent;">
                 <ion-icon name="distance" slot="start"></ion-icon>
-                <ion-label>KM Termino: {{item.KM_F}}</ion-label>
-              </ion-item>
-              <ion-item style="--background: transparent;">
-                <ion-icon name="ruta" slot="start"></ion-icon>
-                <ion-label>Rol: {{item.ROL}}</ion-label>
+                <ion-label>KM Termino: {{item.km_f}}</ion-label>
               </ion-item>
               <ion-item style="--background: transparent;" lines="none">
                 <ion-button (click)="seleccionarActivo(item)" class="botoninicia" slot="end" size="small">Seleccionar</ion-button>
@@ -86,7 +93,7 @@
                 </ion-item>
                 <div class="ion-padding contenido" slot="content" style="padding: 0 !important;">
                   <div *ngIf="firstFormGroup.value.activoSeleccionado">
-                    <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;margin: 0;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}}<br>Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br></span></h3>
+                    <h3 *ngIf="dataPosicion.region != ''" style="font-weight: bold;margin: 0;"><span *ngIf="firstFormGroup.value.activoSeleccionado" style="font-size: 13px;">{{firstFormGroup.value.activoSeleccionado.nombre_camino}}<br>Rol: {{firstFormGroup.value.activoSeleccionado.rol}}<br>Código: {{firstFormGroup.value.activoSeleccionado.codigo}}<br></span></h3>
                     <ion-item lines="none" style="width: 100%;">
                       <ion-label slot="start" style="font-size: 15px;font-weight: bold;width: 30%;">KM Inicio</ion-label>
                       <ion-input formControlName="km_i" mode="ios" placeholder="{{km_i}}" [class.error]="menorI || mayorI || mayorIF" (ionInput)="myFunction($event,'i')" clearInput="true" inputmode="decimal" style="border: 1px solid darkgray;border-radius: 5px;padding-left: 5px !important;"></ion-input>
@@ -307,15 +314,15 @@
       <ion-label>Activo</ion-label>
       <ion-icon name="distance"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
       <ion-label>Operatividad</ion-label>
       <ion-icon name="construct"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
       <ion-label>Datos</ion-label>
       <ion-icon name="create"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
+    <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
       <ion-label>Resumen</ion-label>
       <ion-icon name="document-text"></ion-icon>
     </ion-segment-button>

@@ -1,0 +1,48 @@
+ion-content::part(scroll) { 
+    overflow: hidden;
+  }
+ion-item{
+  font-size: 15px;
+  --min-height: 33px !important;
+
+}
+ion-icon{
+  font-size: 20px;
+  margin-right: 3%;
+}
+
+ion-label{
+  margin: 0;
+}
+
+ion-radio {
+  width: 20px;
+  height: 20px;
+}
+
+ion-radio::part(container) {
+  border-radius: 25px;
+  border: 2px solid #ddd;
+}
+
+ion-radio::part(mark) {
+  background: none;
+  transition: none;
+  transform: none;
+  border-radius: 0;
+}
+
+ion-radio.radio-checked::part(container) {
+  background: #003b88b4;
+  border-color: transparent;
+}
+
+ion-radio.radio-checked::part(mark) {
+  width: 6px;
+  height: 10px;
+  border-width: 0px 2px 2px 0px;
+  border-style: solid;
+  border-color: #fff;
+
+  transform: rotate(45deg);
+}

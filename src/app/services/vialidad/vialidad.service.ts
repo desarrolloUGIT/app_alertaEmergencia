@@ -32,7 +32,7 @@ export class VialidadService {
     return from(Http.post(options))
   }
 
-  activosVialidad(){
+  activosVialidad(vuelta?){
     this._us.headers['Authorization'] = "Basic " + btoa((this._us.getUser().user + ':' + this._us.getUser().password));
     let sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
               <soapenv:Header/>
@@ -48,9 +48,9 @@ export class VialidadService {
                           <!--Zero or more repetitions:-->
                           <max:ISLINEAR >1</max:ISLINEAR>
                           <!--Zero or more repetitions:-->
-                          <max:REGION >`+this._us.usuario.PERSON.STATEPROVINCE+`</max:REGION>
+                          <max:REGION >`+'01'+`</max:REGION>
                           <!--Zero or more repetitions:-->
-                          <max:SITEID operator="=" >`+this._us.usuario.DEFSITE+`</max:SITEID>
+                          <max:SITEID operator="=" >`+vuelta ? vuelta : this._us.usuario.DEFSITE+`</max:SITEID>
                           <!--Zero or more repetitions:-->
                           <max:STATUS operator="=" >ACTIVA</max:STATUS>
                       </max:ASSET>
@@ -81,7 +81,7 @@ export class VialidadService {
                   <max:STATUS maxvalue="?">NUEVO</max:STATUS>
                   <max:SRTIPO maxvalue="?">E</max:SRTIPO>
                   <max:LOCATION maxvalue="?"></max:LOCATION>
-                  <max:ASSETNUM maxvalue="?">64E685</max:ASSETNUM>
+                  <max:ASSETNUM maxvalue="?">`+data.codigo+`</max:ASSETNUM>
                   <max:CLASS maxvalue="?">SR</max:CLASS>
                   <max:DESCRIPTION changed="?">`+data.titulo+`</max:DESCRIPTION>
                   <max:DESCRIPTION_LONGDESCRIPTION changed="?">`+data.descripcion+`</max:DESCRIPTION_LONGDESCRIPTION>
@@ -108,11 +108,11 @@ export class VialidadService {
                   <max:COORY changed="?">2</max:COORY>
                   <max:PROBLEMCODE_LONGDESCRIPTION changed="?">%</max:PROBLEMCODE_LONGDESCRIPTION >
                 <max:MULTIASSETLOCCI action="Replace" relationship="string" deleteForInsert="string">
-                    <max:ASSETNUM changed="?">64E685</max:ASSETNUM>
-                    <!-- <max:STARTMEASURE changed="?">`+data.km_i+`</max:STARTMEASURE>-->
-                    <!-- <max:ENDMEASURE changed="?">`+data.km_f+`</max:ENDMEASURE>-->
-                    <max:STARTMEASURE changed="?">1</max:STARTMEASURE>
-                    <max:ENDMEASURE changed="?">1.2</max:ENDMEASURE>
+                    <max:ASSETNUM changed="?">`+data.codigo+`</max:ASSETNUM>
+                    <max:STARTMEASURE changed="?">`+data.km_i+`</max:STARTMEASURE>
+                    <max:ENDMEASURE changed="?">`+data.km_f+`</max:ENDMEASURE>
+                    <!-- <max:STARTMEASURE changed="?">1</max:STARTMEASURE> -->
+                    <!-- <max:ENDMEASURE changed="?">1.2</max:ENDMEASURE> -->
                     <max:PUNTOREFINI changed="?">Inicio</max:PUNTOREFINI>
                     <max:PUNTOREFFIN changed="?">Fin</max:PUNTOREFFIN>
                     <max:ISPRIMARY changed="?">1</max:ISPRIMARY>
@@ -131,7 +131,7 @@ export class VialidadService {
                       <max:LATITUDEY changed="?">`+data.lat+`</max:LATITUDEY>
                     <max:LONGITUDEX changed="?">`+data.lng+`</max:LONGITUDEX>
                       <max:REFERENCEPOINT changed="?"></max:REFERENCEPOINT>
-                      <max:REGIONDISTRICT changed="?">`+this._us.usuario.PERSON.STATEPROVINCE+`</max:REGIONDISTRICT>
+                      <max:REGIONDISTRICT changed="?">`+data.region+`</max:REGIONDISTRICT>
                       <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
                       <max:STREETADDRESS changed="?"></max:STREETADDRESS>
                       <max:ADDRESSLINE2 changed="?"></max:ADDRESSLINE2>
@@ -177,6 +177,7 @@ export class VialidadService {
     };
     return from(Http.post(options))
   }
+
   obtenerCapas(geometryX,geometryY,extent){
     let promesa = new Promise((resolve,reject)=>{
       return this.http.get('https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer/identify?f=json&returnFieldName=true&returnGeometry=true&returnUnformattedValues=false&returnZ=true&returnM=true&tolerance=20&imageDisplay=310,200,96&geometry={"x":'+geometryX+',"y":'+geometryY+'}&geometryType=esriGeometryPoint&sr=5360&mapExtent='+(extent)+'&layers=3').subscribe(res=>{
