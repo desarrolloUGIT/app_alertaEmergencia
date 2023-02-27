@@ -530,10 +530,10 @@ export class HomeVialidadPage implements OnInit {
           setTimeout(()=>{
             if(temp.length == 1){
               var itemNew = temp[0].codigo
-              var existeMAXIMO = this.activosVial.filter((item) => {
+              const reg = Number(temp[0].region);
+              var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
                 return (item.codigo.indexOf(itemNew) > -1);
               })
-              console.log(existeMAXIMO,this.caminosEncontrados[0])
               if(existeMAXIMO.length > 0){
                 this.caminosEncontrados = temp;
                 this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
@@ -792,7 +792,8 @@ export class HomeVialidadPage implements OnInit {
     const { data } = await modal.onWillDismiss();
     if (data) {
       var itemNew = data.codigo
-      var existeMAXIMO = this.activosVial.filter((item) => {
+      const reg = Number(data.region);
+      var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
         return (item.codigo.indexOf(itemNew) > -1);
       })
       if(existeMAXIMO.length > 0){
@@ -901,6 +902,7 @@ export class HomeVialidadPage implements OnInit {
       nombre_camino:data.nombre,
       region:data.region
     }
+    this.dataPosicion.region = data.region;
     this.caminosEncontrados = [];
     this.caminosEncontrados.push(body)
     this.firstFormGroup.controls['activoSeleccionado'].setValue(body)
