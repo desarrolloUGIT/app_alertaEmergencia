@@ -1,19 +1,32 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule,ReactiveFormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
 import { HomeVialidad2PageRoutingModule } from './home-vialidad2-routing.module';
 
 import { HomeVialidad2Page } from './home-vialidad2.page';
+import { MatStepperModule } from '@angular/material/stepper';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { HttpClientModule } from '@angular/common/http';
+import { ModalCaminosPageModule } from '../modal-caminos/modal-caminos.module';
+import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    HomeVialidad2PageRoutingModule
+    HomeVialidad2PageRoutingModule,
+    ReactiveFormsModule,
+    MatStepperModule,
+    MatFormFieldModule,
+    MatInputModule,
+    HttpClientModule,
+    ModalCaminosPageModule,
+    ModalEnviarPageModule
   ],
   declarations: [HomeVialidad2Page]
 })

@@ -62,7 +62,7 @@ export class HomeVialidadPage implements OnInit {
   stgo = olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')
   view2 =  new View({
     center: this.stgo, 
-    zoom: 13
+    zoom: 13,
   })
   map: Map;
   chile = new VectorLayer({})
@@ -159,7 +159,7 @@ export class HomeVialidadPage implements OnInit {
           this.internet = true;
           this.tab = 0;
           this._us.cargar_storage().then(()=>{})
-          this.loadMapVialidad()
+          // this.loadMapVialidad()
         }
         if(res == 'conexión establecida sin mapa'){
           this.storage.setItem('conexion', 'si');
@@ -236,7 +236,7 @@ export class HomeVialidadPage implements OnInit {
       this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
-      this.loadMapVialidad()
+      // this.loadMapVialidad()
     
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
@@ -497,6 +497,7 @@ export class HomeVialidadPage implements OnInit {
         })
       })
       this.map = new Map({
+        
         layers: [
          this.osm,
          this.baseLayer,
@@ -515,18 +516,19 @@ export class HomeVialidadPage implements OnInit {
           this.dataPosicion.region = this.region;
         }
       })
-      this.marker.getGeometry().setCoordinates(this.view2.getCenter());
+      // this.marker.getGeometry().setCoordinates(this.view2.getCenter());
       this.chile.setVisible(true)
       this.osm.setVisible(true)
       this.baseLayer.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
-      this.markers.getSource().addFeature(this.marker);
-      this.map.addLayer(this.markers);
+      // this.markers.getSource().addFeature(this.marker);
+      // this.map.addLayer(this.markers);
       var lonlat = olProj.toLonLat(this.view2.getCenter());
       this.dataPosicion.lng = Number(lonlat[0].toFixed(6))
       this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
- 
-      this.map.getView().on('change:center', ()=>{
+      // this.view2.setProperties({})
+      this.map.getView().on('change:center', (w)=>{
+        this.marker.getGeometry().setCoordinates(this.view2.getCenter());
         this.obtenerUbicacionRegion()
       });
       // this.map.on('click',(e)=>{
@@ -540,7 +542,7 @@ export class HomeVialidadPage implements OnInit {
 
 
   obtenerUbicacionRegion(){
-    this.marker.getGeometry().setCoordinates(this.view2.getCenter());
+    // this.marker.getGeometry().setCoordinates(this.view2.getCenter());
     var curr = olProj.toLonLat(this.view2.getCenter());
     this.dataPosicion.lat = Number(curr[1].toFixed(6));
     this.dataPosicion.lng = Number(curr[0].toFixed(6));
@@ -554,8 +556,6 @@ export class HomeVialidadPage implements OnInit {
                 region = this.regiones[i].get("region") + "";
                 if (region.length == 1) region = "0" + region;
                 this.dataPosicion.region = region;
-                      // this.view2.getCenter()
-console.log(this.view2.getCenter())
             }
         }else{
           console.log('fuera de regiones')
@@ -593,7 +593,7 @@ console.log(this.view2.getCenter())
     this.obtenerUbicacionRegion()
   }
 
-  async buscarCamino(e,vialidadRedVialURL){
+  async buscarCamino(e?,vialidadRedVialURL?){
     const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
       this.firstFormGroup.reset();
       this.secondFormGroup.reset();
@@ -606,11 +606,14 @@ console.log(this.view2.getCenter())
       if(!this.firstFormGroup.value.activoSeleccionado){
         this.presentToast('Buscando camino ...',null,true)
       }
+      var latlong = olProj.toLonLat(this.view2.getCenter());
       // this.view2.getCenter()
       // var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
-      var extent ;
+      var extent:any = olProj.transformExtent(this.view2.calculateExtent(),  'EPSG:3857','EPSG:4326');
       extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
-      this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
+      this._vs.obtenerCapas(latlong[0].toFixed(6),latlong[1].toFixed(6),extent).then((response:any)=>{
+        console.log(response)
+      // this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         if(response.results.length > 0){
           let fueraregion = false;
@@ -630,8 +633,8 @@ console.log(this.view2.getCenter())
                 rol:r.attributes.ROL,
                 clasificacion:r.attributes['CLASIFICACIÓN'],
                 tramo:r.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.attributes['KM FINAL']) - (r.attributes['KM INICIAL'])) ,
-                latitude:e.mapPoint.latitude,
-                longitude:e.mapPoint.longitude,
+                latitude:latlong[1].toFixed(6),
+                longitude:latlong[0].toFixed(6),
                 region:region,
                 puntoInicial:r.geometry.paths[0]
               })
@@ -673,7 +676,7 @@ console.log(this.view2.getCenter())
                 this.firstFormGroup.controls['km_i'].setValue(this.km)
                 this.mostrarMapa = false;
                 this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
-                this.agregarPuntero(e.mapPoint,Graphic,true)
+                // this.agregarPuntero(e.mapPoint,Graphic,true)
               }else{
                 this.firstFormGroup.reset();
                 this.secondFormGroup.reset();
@@ -684,7 +687,7 @@ console.log(this.view2.getCenter())
                 this.km = 0;
                 this.mostrarMapa = true;
                 this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
-                this.agregarPuntero(e.mapPoint,Graphic,false)
+                // this.agregarPuntero(e.mapPoint,Graphic,false)
               }
             }else{
               this.caminosEncontrados = temp;
@@ -692,7 +695,7 @@ console.log(this.view2.getCenter())
               this.mostrarMapa = false;
               this.tab = 1;
               this.presentToast('Se encontraron '+this.caminosEncontrados.length+' caminos, favor seleccionar el correspondiente',null,false)
-              this.agregarPuntero(e.mapPoint,Graphic,false)
+              // this.agregarPuntero(e.mapPoint,Graphic,false)
             }
           },500)
         }else{
@@ -700,12 +703,12 @@ console.log(this.view2.getCenter())
           this.toast.dismiss().then(()=>{
             this.presentToast('No se han encontrado caminos cercanos al punto seleccionado',null,false,true)
           });
-          this.agregarPuntero(e.mapPoint,Graphic,false)
+          // this.agregarPuntero(e.mapPoint,Graphic,false)
           this.buscando = false;
         }
       }).catch(err=>{
         this.caminosEncontrados = [];
-        this.agregarPuntero(e.mapPoint,Graphic,false)
+        // this.agregarPuntero(e.mapPoint,Graphic,false)
         this.buscando = false; 
         if(!this.firstFormGroup.value.activoSeleccionado){
           this.toast.dismiss();

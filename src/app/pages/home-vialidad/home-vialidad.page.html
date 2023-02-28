@@ -53,12 +53,24 @@
       </ion-accordion-group>
     </div>
     <div  class="map-container" id="map" [style.height]="mostrarMapa? '100%' : '0'"> 
-      <ion-fab style="margin-left: -15%;margin-top: 15%;z-index: 2 !important;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
-        <ion-fab-button size="small" color="botonazul">
-          <ion-icon name="add"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
+      <img class="pinCenter" src="assets/img/pin.png" alt="" *ngIf="mostrarMapa && internet">
+      <ion-button expand="block"  color="botonazul" (click)="buscarCamino()" >
+        Buscar Camino <ion-icon slot="start" name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+   
     </div>
+    <ion-fab  vertical="bottom" edge="true" slot="fixed" horizontal="center" *ngIf="mostrarMapa && internet" (click)="buscarCamino()">
+      <ion-fab-button size="small" color="botonazul">
+        <ion-icon name="distance"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+
+
+    <ion-fab horizontal="end" style="margin-top: 10%;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
+      <ion-fab-button size="small" color="botonazul">
+        <ion-icon name="add"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
     <div  class="notSignal" *ngIf="!mostrarMapa && !internet && tab == 0"> 
       <label>Sin Internet</label><br>
       <img src="assets/img/not_signal.png" alt="" width="60%">
