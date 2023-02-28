@@ -185,6 +185,7 @@ export class HomePage implements OnInit {
       this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
  
       this.map.getView().on('change:center', ()=>{
+        console.log(this.view.getProjection())
         this.obtenerUbicacionRegion()
       });
       // this.map.on('click',(e)=>{

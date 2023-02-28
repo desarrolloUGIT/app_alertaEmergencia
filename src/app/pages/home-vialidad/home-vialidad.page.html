@@ -52,7 +52,7 @@
         </ion-accordion>
       </ion-accordion-group>
     </div>
-    <div  id="container" [style.height]="mostrarMapa? '100%' : '0'"> 
+    <div  class="map-container" id="map" [style.height]="mostrarMapa? '100%' : '0'"> 
       <ion-fab style="margin-left: -15%;margin-top: 15%;z-index: 2 !important;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
         <ion-fab-button size="small" color="botonazul">
           <ion-icon name="add"></ion-icon>
