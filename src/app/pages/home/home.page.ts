@@ -24,6 +24,7 @@ import { AnimationController } from '@ionic/angular';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { DireccionService } from '../../services/direccion/direccion.service';
 import { Keyboard } from '@ionic-native/keyboard/ngx';
+import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -98,20 +99,98 @@ export class HomePage implements OnInit {
   defsite;
   toast;
   intento = 0;
+  tab = 0;
+  internet = false;
+  footer = true;
+  mostrarMapa = false;
+
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,
-    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) {
+    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,
+    public storage: NativeStorage) {
+      this._us.message.subscribe(res=>{
+        if(res == 'conexión establecida'){
+          this.mostrarMapa = true;
+          this.storage.setItem('seleccionMapa', 'si');
+          localStorage.setItem('seleccionMapa','si')
+          this.internet = true;
+          this.tab = 0;
+          this._us.cargar_storage().then(()=>{})
+          // this.loadMapVialidad()
+        }
+        if(res == 'conexión establecida sin mapa'){
+          this.storage.setItem('conexion', 'si');
+          localStorage.setItem('conexion','si')
+          this.mostrarMapa = true;
+          this.firstFormGroup.reset();
+          this.secondFormGroup.reset();
+          this.secondFormGroup.controls['competencia'].setValue('Si')
+          this.thirdFormGroup.reset();
+          this.storage.setItem('seleccionMapa', 'si');
+          localStorage.setItem('seleccionMapa','si')
+          this.internet = true;
+          this.tab = 0;
+          this._us.cargar_storage().then(()=>{})
+          this.reiniciarHome()
+        }
+        if(res == 'sin conexión'){
+          this.internet = false;
+          this.mostrarMapa = false;
+        }
+      })
       this.keyboard.hideFormAccessoryBar(false)
+      this.platform.keyboardDidHide.subscribe(r=>{
+        // oculta teclado
+        this.footer = true;
+      })
+      this.platform.keyboardDidShow.subscribe(r=>{
+        // muestra teclado
+        this.footer = false;
+      })
+    }
+
+    async reiniciarHome(){
+      const alert = await this.alertctrl.create({
+        header: 'Conexión Establecida',
+        message: 'Se reiniciará la página para reactivar el mapa y sus componentes',
+        // buttons: ['OK'],
+        mode:'ios',
+        buttons: [{
+            text: 'OK',
+            id: 'confirm-button',
+            handler: () => {
+              window.location.reload()
+            }
+          }
+        ]
+      });
+      await alert.present()
     }
 
   ngOnInit(){
+   this.iniciar()
+  }
+
+  iniciar(){
     this._us.cargar_storage().then(()=>{
+      if(this._us.conexion == 'si'){
+        this.mostrarMapa = true;
+        this.storage.setItem('seleccionMapa', 'si');
+        localStorage.setItem('seleccionMapa','si')
+        this.internet = true;
+        this._us.cargar_storage().then(()=>{})
+        this.loadMapNotVialidad()
+      }else{
+        this.mostrarMapa = false;
+        this.storage.setItem('seleccionMapa', 'no');
+        localStorage.setItem('seleccionMapa','no')
+        this.internet = false;
+        this._us.cargar_storage().then(()=>{})
+      }
       this.region = this._us.usuario.PERSON.STATEPROVINCE
-      this.defsite = this._us.usuario.PERSON.STATEPROVINCE
-      this.region = this.region == '20' ? '13' : this.region;
+      this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
-      this.loadMapNotVialidad()
     })
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
@@ -136,7 +215,7 @@ export class HomePage implements OnInit {
       activoSeleccionado: [null],
     });
     this.secondFormGroup = this._formBuilder.group({
-      // operatividad:[null,Validators.compose([Validators.required])],
+      operatividad:[null,Validators.compose([Validators.required])],
       nivelAlerta:[null,Validators.compose([Validators.required])],
       competencia:['Si',Validators.compose([Validators.required])]
     })
@@ -186,7 +265,6 @@ export class HomePage implements OnInit {
       this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
  
       this.map.getView().on('change:center', ()=>{
-        console.log(this.view.getProjection())
         this.obtenerUbicacionRegion()
       });
       // this.map.on('click',(e)=>{
@@ -257,6 +335,21 @@ export class HomePage implements OnInit {
        console.log('Error getting location', error);
      });
     })
+  }
+  selectTab(i){
+    if(Number(i) == this.tab){
+      this.tab = 0;
+      this._us.cargar_storage().then(()=>{
+        if(this._us.conexion == 'si'){
+          this.mostrarMapa = true;
+        }else{
+          this.mostrarMapa = false;
+        }
+      })
+    }else{
+      this.mostrarMapa = false;
+      this.tab = Number(i);
+    }
   }
   // FIN MAPA
   // CARGAS INICIALES
@@ -801,7 +894,7 @@ export class HomePage implements OnInit {
         coord:olProj.toLonLat(this.marker.getGeometry().getCoordinates())
       }
     });
-    if(this.defsite == '20' || this.defsite == this.dataPosicion.region){
+    if(this.region == '20' || this.region == this.dataPosicion.region){
       modal.present();
       const { data } = await modal.onWillDismiss();
       if (data) {

@@ -10,210 +10,253 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
-  
-  <!-- <ion-button id="open-modal" expand="block">Open Modal</ion-button> -->
-
-  <mat-stepper orientation="vertical"  #stepper>
-    <!-- Selección de Activo -->
-    <mat-step >
-      <ng-template matStepLabel>Activo</ng-template>
-      <form [formGroup]="firstFormGroup">
-        <div class="map-container" id="map" >
-          <div *ngIf="(stepper.selectedIndex == 0) " id="custom-button" class="custom-button">            
-            <!-- <div (click)='changeMap()' class="icon-button">
-                <ion-icon name="map-outline"></ion-icon>
-            </div>
-            <div (click)='geolocate()' class="icon-button">
-              <ion-icon name="locate-outline"></ion-icon>
-            </div>
-            <div (click)='centralInicial()' class="icon-button">
-              <ion-icon name="home"></ion-icon>
-            </div> -->
-          </div>
-        </div>
-        <ion-fab vertical="top" slot="fixed" horizontal="end" style="right: 5%;">
-          <ion-fab-button size="small" color="botonazul">
-            <ion-icon name="add"></ion-icon>
-          </ion-fab-button>
-          <ion-fab-list side="bottom">
-            <ion-fab-button (click)='changeMap()' color="botonmapa">
-              <ion-icon name="map-outline"></ion-icon>
-            </ion-fab-button>
-            <ion-fab-button (click)='geolocate()' color="botonmapa">
-              <ion-icon name="locate-outline"></ion-icon>
-            </ion-fab-button>
-            <ion-fab-button (click)='centralInicial()' color="botonmapa">
-              <ion-icon name="home-outline"></ion-icon>
-            </ion-fab-button>
-          </ion-fab-list>
-        </ion-fab>
-        <ion-card center>
-          ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
-          <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.activo.DESCRIPTION}}<br></span> Región: {{dataPosicion.region}}</h4>
-          <ion-grid *ngIf="existenActivos">
-            <ion-row *ngIf="activosEncontrados" style="margin-top: -12%;" (click)="openModalActivos()">
-              <ion-col size="9">
-                <h4 style="margin: 0;margin-top: 8%;margin-left: 8%;">Seleccione Activo  </h4>
-              </ion-col>
-              <ion-col size="3" align="left">
-                <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
-              </ion-col>
-            </ion-row>
-            <ion-row *ngIf="!activosEncontrados" style="margin-bottom: -3%;margin-top: -5%;">
-              <ion-col size="9">
-                <h4>Cargando activos  </h4>
-              </ion-col>
-              <ion-col size="3" align="left">
-                <ion-spinner name="bubbles"></ion-spinner>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-        </ion-card>        
-      </form>
-      <div align="center" >
-        <ion-button fill="clear" color="dark" (click)="moverStepperr('next')">
-          Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
-        </ion-button>
-      </div>
-    </mat-step>
-    <!-- Fin selección de activo -->
-    <!-- Operatividad y Daño -->
-    <mat-step>
-      <form [formGroup]="secondFormGroup">
-        <ng-template matStepLabel>Operatividad y Daño</ng-template>
-        <!-- <ion-card center>
-          <ion-label style="font-size: 17px;">Operatividad</ion-label>
-          <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
-            <ion-radio-group formControlName="operatividad">
-              <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of operatividadArray" [class.select]="secondFormGroup.value.operatividad == item.VALUE">
-                <ion-label>{{item.DESCRIPTION}}</ion-label>
-                <ion-radio mode="md" [value]="item.VALUE" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
-              </ion-item>
-            </ion-radio-group>
-          </ion-list>
-        </ion-card> -->
-        <ion-card center>
-          <ion-label style="font-size: 17px;">Nivel de alerta</ion-label>
-          <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
-            <ion-radio-group formControlName="nivelAlerta">
-              <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of nivelAlertaArray" [class.select]="secondFormGroup.value.nivelAlerta == item.VALUE">
-                <ion-label>{{item.DESCRIPTION}}</ion-label>
-                <ion-radio mode="md" [value]="item.VALUE" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
-              </ion-item>
-            </ion-radio-group>
-          </ion-list>
-        </ion-card>
-        <ion-card center>
-          <ion-label style="font-size: 17px;">Competencia</ion-label>
-          <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
-            <ion-radio-group formControlName="competencia">
-              <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of competencia" [class.select]="secondFormGroup.value.competencia == item.valor">
-                <ion-label>{{item.valor}} - {{item.descripcion}}</ion-label>
-                <ion-radio mode="md" [value]="item.valor" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
-              </ion-item>
-            </ion-radio-group>
-          </ion-list>
-        </ion-card>
-        <div align="center" >
-          <ion-button fill="clear" color="dark" (click)="moverStepperr('previus')">
-            Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
-          </ion-button>
-          <ion-button fill="clear" color="dark" (click)="moverStepperr('next')">
-            Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
-          </ion-button>
-        </div>
-      </form>
-    </mat-step>
-    <!-- Fin operatividad y daño -->
-    <!-- Datos adicionales -->
-    <mat-step>
-      <ng-template matStepLabel>Datos Adicionales</ng-template>
-      <form [formGroup]="thirdFormGroup">
-        <ion-card center>
-          <ion-item>
-            <ion-label position="stacked">Resumen <span style="color:red;font-size: 10px;">*</span></ion-label>
-            <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required=""></ion-textarea>
-          </ion-item>
-          <p *ngIf="thirdFormGroup.controls['titulo'].hasError('required') && thirdFormGroup.controls['titulo'].touched" class="p_error">Debes ingresar un resumen<br></p>
-          <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/100</span>
-        </ion-card>
-        <ion-card center>
-          <ion-item>
-            <ion-label position="stacked">Descripción de la emergencia</ion-label>
-            <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="5" maxlength="300"></ion-textarea>
-          </ion-item>
-          <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/300</span>
-        </ion-card>
-
-        <ion-list style="margin-top: 5%;background: transparent;" lines="none">
-          <ion-item-sliding *ngFor="let file of images;let i = index" >
-            <ion-item style="--background: transparent;">
-              <ion-img [src]="file.data" style="height: 80%;width: 100%;"></ion-img>
-            </ion-item>
-            <ion-item-options  side="end">
-              <ion-item-option expandable color="danger"  (click)="deleteImage(file)"><ion-icon slot="icon-only" name="trash"></ion-icon>Eliminar</ion-item-option>
-            </ion-item-options>
-          </ion-item-sliding>
-        </ion-list>
-        <ion-button expand="block" color="botonazul" (click)="presentActionSheet()">Adjuntar Foto</ion-button>
-      </form>
-      <div align="center" >
-        <ion-button fill="clear" color="dark" (click)="moverStepperr('previus')">
-          Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
-        </ion-button>
-        <ion-button fill="clear" color="dark" (click)="moverStepperr('next')">
-          Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
-        </ion-button>
-      </div>
-    </mat-step>
-    <!-- Fin datos adicionales -->
-    <!-- Resumen -->
-    <mat-step>
-      <ng-template matStepLabel>Resumen</ng-template>
-      <ion-grid style="padding: 0;">
-        <ion-row align="center" class="tituloTable" style="background: #093F75;">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: white;">Dato</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><ion-label style="color: white;">Información</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-label style="color: white;">Estado</ion-label></ion-col>
+  <div class="map-container" id="map" [style.height]="mostrarMapa? '70%' : '0'">
+  </div>
+  <ion-fab vertical="top" slot="fixed" horizontal="start" style="margin-top: 18%;"  *ngIf="mostrarMapa && internet">
+    <ion-fab-button size="small" color="botonazul">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-list side="bottom">
+      <ion-fab-button (click)='changeMap()' color="botonmapa">
+        <ion-icon name="map-outline"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button (click)='geolocate()' color="botonmapa">
+        <ion-icon name="locate-outline"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button (click)='centralInicial()' color="botonmapa">
+        <ion-icon name="home-outline"></ion-icon>
+      </ion-fab-button>
+    </ion-fab-list>
+  </ion-fab>
+  <form [formGroup]="firstFormGroup"  *ngIf="mostrarMapa && internet">
+    <ion-card center>
+      ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
+      <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.activo.DESCRIPTION}}<br></span><span *ngIf="firstFormGroup.value.activoSeleccionado">Código: {{firstFormGroup.value.activoSeleccionado.activo.ASSETNUM}}<br></span> Región: {{dataPosicion.region}}</h4>
+      <ion-grid *ngIf="existenActivos">
+        <ion-row *ngIf="activosEncontrados" style="margin-top: -12%;" (click)="openModalActivos()">
+          <ion-col size="9">
+            <h4 style="margin: 0;margin-top: 8%;margin-left: 8%;">Seleccione Activo  </h4>
+          </ion-col>
+          <ion-col size="3" align="left">
+            <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
+          </ion-col>
         </ion-row>
-        <ion-row align="center">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Título</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{thirdFormGroup.value.titulo}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'green' : 'red'" [name]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-        </ion-row>
-        <!-- <ion-row align="center" style="background: #093f753b;">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Destino</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.destino}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.destino != '' && secondFormGroup.value.destino) ? 'green' : 'red'" [name]="(secondFormGroup.value.destino != '' && secondFormGroup.value.destino) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-        </ion-row> -->
-        <!-- <ion-row align="center">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Operatividad</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.operatividad == "NOOPERATIVO" ? "No Operativo" : secondFormGroup.value.operatividad == "OPERATIVO" ? "Operativo" : secondFormGroup.value.operatividad == "RESTRICCIÓN" ? "Operativo Con Restricción" : 'N/A'}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.operatividad != '' && secondFormGroup.value.operatividad) ? 'green' : 'red'" [name]="(secondFormGroup.value.operatividad != '' && secondFormGroup.value.operatividad) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-        </ion-row> -->
-        <ion-row align="center" style="background: #093f753b;">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Nivel</ion-label></ion-col>
-          <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.nivelAlerta}}</ion-label></ion-col>
-          <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'green' : 'red'" [name]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-        </ion-row>
-        <ion-row align="center">
-          <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Mensaje</ion-label></ion-col>
-          <ion-col size="8" class="cierreTabla"><p style="color: black;text-align: left;">{{thirdFormGroup.value.descripcion}}</p></ion-col>
-          <!-- <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.descripcion != '' && thirdFormGroup.value.descripcion) ? 'green' : 'red'" [name]="(thirdFormGroup.value.descripcion) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col> -->
+        <ion-row *ngIf="!activosEncontrados" style="margin-bottom: -3%;margin-top: -5%;">
+          <ion-col size="9">
+            <h4>Cargando activos  </h4>
+          </ion-col>
+          <ion-col size="3" align="left">
+            <ion-spinner name="bubbles"></ion-spinner>
+          </ion-col>
         </ion-row>
       </ion-grid>
-      <div align="center" >
-        <ion-button fill="clear" color="dark" (click)="moverStepperr('previus')">
-          Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+      <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
+        <ion-button fill="clear" color="dark" (click)="selectTab(2)">
+          Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      </div>      
+    </ion-card>  
+    
+  </form>
+  <section *ngIf="tab == 1">
+      <ion-item lines="none" style="--background: transparent;">
+        <ion-title style="margin-left: -3%;">Activo</ion-title>
+        <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+          <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-item>
+      <form [formGroup]="firstFormGroup">
+      <ion-card center>
+        ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
+        <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.activo.DESCRIPTION}}<br></span> Región: {{dataPosicion.region}}</h4>
+        <ion-grid *ngIf="existenActivos">
+          <ion-row *ngIf="activosEncontrados" style="margin-top: -12%;" (click)="openModalActivos()">
+            <ion-col size="9">
+              <h4 style="margin: 0;margin-top: 8%;margin-left: 8%;">Seleccione Activo  </h4>
+            </ion-col>
+            <ion-col size="3" align="left">
+              <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
+            </ion-col>
+          </ion-row>
+          <ion-row *ngIf="!activosEncontrados" style="margin-bottom: -3%;margin-top: -5%;">
+            <ion-col size="9">
+              <h4>Cargando activos  </h4>
+            </ion-col>
+            <ion-col size="3" align="left">
+              <ion-spinner name="bubbles"></ion-spinner>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card>        
+    </form>
+    <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
+      <ion-button fill="clear" color="dark" (click)="selectTab(2)">
+        Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+    </div>
+  </section>
+  <section *ngIf="tab == 2">
+    <ion-item lines="none" style="--background: transparent;">
+      <ion-title style="margin-left: -3%;"><div class="ion-text-wrap">Operatividad y Daño</div></ion-title>
+      <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-item>
+    <form [formGroup]="secondFormGroup">
+      <ng-template matStepLabel>Operatividad y Daño</ng-template>
+      <ion-card center>
+        <ion-label style="font-size: 17px;">Operatividad</ion-label>
+        <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
+          <ion-radio-group formControlName="operatividad">
+            <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of operatividadArray" [class.select]="secondFormGroup.value.operatividad == item.VALUE">
+              <ion-label>{{item.DESCRIPTION}}</ion-label>
+              <ion-radio mode="md" [value]="item.VALUE" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
+            </ion-item>
+          </ion-radio-group>
+        </ion-list>
+      </ion-card>
+      <ion-card center>
+        <ion-label style="font-size: 17px;">Nivel de alerta</ion-label>
+        <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
+          <ion-radio-group formControlName="nivelAlerta">
+            <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of nivelAlertaArray" [class.select]="secondFormGroup.value.nivelAlerta == item.VALUE">
+              <ion-label>{{item.DESCRIPTION}}</ion-label>
+              <ion-radio mode="md" [value]="item.VALUE" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
+            </ion-item>
+          </ion-radio-group>
+        </ion-list>
+      </ion-card>
+      <ion-card center>
+        <ion-label style="font-size: 17px;">Competencia</ion-label>
+        <ion-list lines="none" style="margin-bottom: 3%;margin-top: 3%;">
+          <ion-radio-group formControlName="competencia">
+            <ion-item style="color: #b4b4b4;font-size: 14px;" *ngFor="let item of competencia" [class.select]="secondFormGroup.value.competencia == item.valor">
+              <ion-label>{{item.valor}} - {{item.descripcion}}</ion-label>
+              <ion-radio mode="md" [value]="item.valor" slot="start" style="--color-checked:#062A4E;" ></ion-radio>
+            </ion-item>
+          </ion-radio-group>
+        </ion-list>
+      </ion-card>
+      <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
+        <ion-button fill="clear" color="dark" (click)="selectTab(3)">
+          Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
         </ion-button>
       </div>
-      <div align="center" >
-        <ion-button expand="block"  color="botonazul" (click)="enviar()" [disabled]="!secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region">
-          REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
-        </ion-button>
-      </div>
-    </mat-step>
-    <!-- FIn resumen -->
-  </mat-stepper>
+    </form>
+  </section>
+  <section *ngIf="tab == 3">
+    <ion-item lines="none" style="--background: transparent;">
+      <ion-title style="margin-left: -3%;">Datos adicionales</ion-title>
+      <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-item>
+    <form [formGroup]="thirdFormGroup">
+      <ion-card center>
+        <ion-item>
+          <ion-label position="stacked">Resumen <span style="color:red;font-size: 10px;">*</span></ion-label>
+          <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
+        </ion-item>
+        <p *ngIf="thirdFormGroup.controls['titulo'].hasError('required') && thirdFormGroup.controls['titulo'].touched" class="p_error">Debes ingresar un resumen<br></p>
+        <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/100</span>
+      </ion-card>
+      <ion-card center>
+        <ion-item>
+          <ion-label position="stacked">Descripción detallada</ion-label>
+          <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="4" maxlength="300"></ion-textarea>
+        </ion-item>
+        <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/300</span>
+      </ion-card>
+
+      <ion-list style="margin-top: 5%;background: transparent;" lines="none">
+        <ion-item-sliding *ngFor="let file of images;let i = index" >
+          <ion-item style="--background: transparent;">
+            <ion-img [src]="file.data" style="height: 80%;width: 100%;"></ion-img>
+          </ion-item>
+          <ion-item-options  side="end">
+            <ion-item-option expandable color="danger"  (click)="deleteImage(file)"><ion-icon slot="icon-only" name="trash"></ion-icon>Eliminar</ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+      <ion-button expand="block" color="botonazul" (click)="presentActionSheet()">Adjuntar Foto</ion-button>
+    </form>
+    <div align="center" >
+      <ion-button fill="clear" color="dark" (click)="selectTab(2)">
+        Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" color="dark" (click)="selectTab(4)">
+        Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+    </div>
+  </section>
+  <section *ngIf="tab == 4">
+    <ion-item lines="none" style="--background: transparent;">
+      <ion-title style="margin-left: -3%;">Resumen</ion-title>
+      <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-item>
+    <ion-grid style="padding: 0;">
+      <ion-row align="center" class="tituloTable" style="background: #093F75;">
+        <ion-col size="4" class="cierreTabla"><ion-label style="color: white;">Dato</ion-label></ion-col>
+        <ion-col size="5" class="cierreTabla"><ion-label style="color: white;">Información</ion-label></ion-col>
+        <ion-col size="3" class="cierreTabla"><ion-label style="color: white;">Estado</ion-label></ion-col>
+      </ion-row>
+      <ion-row align="center">
+        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Título</ion-label></ion-col>
+        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{thirdFormGroup.value.titulo}}</ion-label></ion-col>
+        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'green' : 'red'" [name]="(thirdFormGroup.value.titulo != '' && thirdFormGroup.value.titulo) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
+      </ion-row>
+      <!-- <ion-row align="center" style="background: #093f753b;">
+        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Destino</ion-label></ion-col>
+        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.destino}}</ion-label></ion-col>
+        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.destino != '' && secondFormGroup.value.destino) ? 'green' : 'red'" [name]="(secondFormGroup.value.destino != '' && secondFormGroup.value.destino) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
+      </ion-row> -->
+      <ion-row align="center">
+        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Operatividad</ion-label></ion-col>
+        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.operatividad == "NOOPERATIVO" ? "No Operativo" : secondFormGroup.value.operatividad == "OPERATIVO" ? "Operativo" : secondFormGroup.value.operatividad == "RESTRICCIÓN" ? "Operativo Con Restricción" : 'N/A'}}</ion-label></ion-col>
+        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.operatividad != '' && secondFormGroup.value.operatividad) ? 'green' : 'red'" [name]="(secondFormGroup.value.operatividad != '' && secondFormGroup.value.operatividad) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
+      </ion-row>
+      <ion-row align="center" style="background: #093f753b;">
+        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Nivel</ion-label></ion-col>
+        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.nivelAlerta}}</ion-label></ion-col>
+        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'green' : 'red'" [name]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
+      </ion-row>
+      <ion-row align="center">
+        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Mensaje</ion-label></ion-col>
+        <ion-col size="8" class="cierreTabla"><p style="color: black;text-align: left;">{{thirdFormGroup.value.descripcion}}</p></ion-col>
+      </ion-row>
+    </ion-grid>
+    <div align="center" >
+      <ion-button fill="clear" color="dark" (click)="selectTab(3)">
+        Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+    </div>
+    <div align="center" >
+      <ion-button expand="block"  color="botonazul" (click)="enviar()" [disabled]="!secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region">
+        REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+      </ion-button>
+    </div>
+  </section>
 </ion-content>
 
+<ion-footer *ngIf="footer">
+  <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
+    <!-- <ion-segment-button  value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
+      <ion-label>Activo</ion-label>
+      <ion-icon name="distance"></ion-icon>
+    </ion-segment-button> -->
+    <ion-segment-button  value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
+      <ion-label>Operatividad</ion-label>
+      <ion-icon name="construct"></ion-icon>
+    </ion-segment-button>
+    <ion-segment-button  value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
+      <ion-label>Datos</ion-label>
+      <ion-icon name="create"></ion-icon>
+    </ion-segment-button>
+    <ion-segment-button  value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
+      <ion-label>Resumen</ion-label>
+      <ion-icon name="document-text"></ion-icon>
+    </ion-segment-button>
+  </ion-segment>
+</ion-footer>

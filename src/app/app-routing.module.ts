@@ -46,10 +46,6 @@ const routes: Routes = [
   {
     path: 'popover',
     loadChildren: () => import('./pages/popover/popover.module').then( m => m.PopoverPageModule)
-  },
-  {
-    path: 'home_vialidad2',
-    loadChildren: () => import('./pages/home-vialidad2/home-vialidad2.module').then( m => m.HomeVialidad2PageModule)
   }
 ];
 

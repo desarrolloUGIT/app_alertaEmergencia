@@ -206,8 +206,38 @@ form{
   display: none !important;
 }
 
+ion-footer{
+  display: contents;
+}
+
+ion-footer:last-of-type {
+  padding-bottom: var(--ion-safe-area-bottom, 0);
+}
+
+ion-footer ion-toolbar:last-of-type {
+  padding-bottom: var(--ion-safe-area-bottom, 0);
+}
+ion-segment-button {
+  --indicator-color: transparent;
+}
+.selectTab{
+  --indicator-color: #375579;
+}
+ion-segment{
+  --background:#062A4E;
+  border-radius: 0;
+  padding-bottom: var(--ion-safe-area-bottom);
+  padding-top: 2%;
+}
+
+:host{
+  ::ng-deep .ol-zoom{
+    left: 5% !important;
+  }
+}
+
 ion-card{
-  margin: 0;
+  margin: 1%;
   margin-top: 2%;
   padding: 0%;
   text-align: center;
