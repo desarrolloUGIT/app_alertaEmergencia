@@ -41,6 +41,7 @@ import {View, Feature, Map } from 'ol';
 import Point from 'ol/geom/Point';
 import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
+import {FullScreen, defaults as defaultControls} from 'ol/control.js';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -505,6 +506,7 @@ export class HomeVialidadPage implements OnInit {
         ],
         view:this.view2,
       });
+      // this.map.addControl(new FullScreen)
       setTimeout(() => {
         this.map.setTarget("map");
       }, 500);
@@ -518,31 +520,24 @@ export class HomeVialidadPage implements OnInit {
       })
       // this.marker.getGeometry().setCoordinates(this.view2.getCenter());
       this.chile.setVisible(true)
-      this.osm.setVisible(true)
-      this.baseLayer.setVisible(false)
+      this.osm.setVisible(false)
+      this.baseLayer.setVisible(true)
       this.regiones = this.chile.getSource().getFeatures();
       // this.markers.getSource().addFeature(this.marker);
       // this.map.addLayer(this.markers);
       var lonlat = olProj.toLonLat(this.view2.getCenter());
       this.dataPosicion.lng = Number(lonlat[0].toFixed(6))
       this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
-      // this.view2.setProperties({})
       this.map.getView().on('change:center', (w)=>{
         this.marker.getGeometry().setCoordinates(this.view2.getCenter());
         this.obtenerUbicacionRegion()
       });
-      // this.map.on('click',(e)=>{
-      //   this.map.forEachLayerAtPixel(e.pixel,(feature,layer)=>{
-      //     console.log(feature);
-      //   })
-      // })
     })
     
   }
 
 
   obtenerUbicacionRegion(){
-    // this.marker.getGeometry().setCoordinates(this.view2.getCenter());
     var curr = olProj.toLonLat(this.view2.getCenter());
     this.dataPosicion.lat = Number(curr[1].toFixed(6));
     this.dataPosicion.lng = Number(curr[0].toFixed(6));
@@ -570,16 +565,11 @@ export class HomeVialidadPage implements OnInit {
       .catch(err => {
         console.error("ArcGIS: ", err);
       });
-    // this.view2.center = [this.home.longitude,this.home.latitude]
-    // this.dataPosicion.lng = Number(this.home.longitude.toFixed(6))
-    // this.dataPosicion.lat = Number(this.home.latitude.toFixed(6))
-    // this.agregarPuntero(this.home,Graphic)
     this.firstFormGroup.reset();
     this.secondFormGroup.reset();
     this.secondFormGroup.controls['competencia'].setValue('Si')
     this.thirdFormGroup.reset();
     this.caminosEncontrados = []
-    // this.obtenerUbicacionRegion(this.home)
     this._us.coordenadasRegion.forEach(c=>{
       if(c.region == this.region){
         this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
@@ -604,7 +594,7 @@ export class HomeVialidadPage implements OnInit {
       this.caminosEncontrados = []
       this.buscando = true;
       if(!this.firstFormGroup.value.activoSeleccionado){
-        this.presentToast('Buscando camino ...',null,true)
+        this.presentToast('Buscando camino ...',null,true,null)
       }
       var latlong = olProj.toLonLat(this.view2.getCenter());
       // this.view2.getCenter()
@@ -858,7 +848,7 @@ export class HomeVialidadPage implements OnInit {
     await this.loader.present();
   }
 
-  async presentToast(message,duration?,cerrar?,css?) {
+  async presentToast(message,duration?,cerrar?,css?,position?) {
     this.toast = await this.toastController.create({
       message: message,
       cssClass: !css ? 'toast-custom-class' : 'toast-custom-classErr',
@@ -869,7 +859,8 @@ export class HomeVialidadPage implements OnInit {
           role: 'cancel',
         }
       ],
-      mode:'ios'
+      mode:'ios',
+      position:position ? position : 'bottom'
     });
     await this.toast.present();
   }
