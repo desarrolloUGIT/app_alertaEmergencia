@@ -54,11 +54,11 @@
     </div>
     <div  class="map-container" id="map" [style.height]="mostrarMapa? '100%' : '0'"> 
       <img class="pinCenter" src="assets/img/pin.png" alt="" *ngIf="mostrarMapa && internet">
-      <ion-button expand="block" class="buscarCamino"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet">
-        Buscar Camino <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+      <ion-button expand="block" class="buscarCamino" [disabled]="buscando"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet">
+        Buscar Camino <ion-icon *ngIf="!buscando" slot="end" name="chevron-forward-outline"></ion-icon><ion-spinner slot="end" *ngIf="buscando" name="circles"></ion-spinner>
       </ion-button>   
     </div>
-    <ion-fab horizontal="end" style="margin-top: 10%;" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
+    <ion-fab horizontal="end" style="margin-top: 10%;" [style.margin-top]="((mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')) ? '5%' : '10%'" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
       <ion-fab-button size="small" color="botonazul">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>

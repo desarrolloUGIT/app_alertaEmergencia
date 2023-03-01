@@ -95,9 +95,11 @@ ion-segment{
   padding-top: 2%;
 }
 
-::ng-deep .ol-zoom{
-  top: 90% !important;
-  left: 90% !important;
+:host{
+  ::ng-deep .ol-zoom{
+    top: 85% !important;
+    left: 90% !important;
+  }
 }
 
 :ng-deep .ol-zoom .ol-unselectable .ol-control button{

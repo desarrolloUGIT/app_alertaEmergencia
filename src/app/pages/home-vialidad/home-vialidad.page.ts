@@ -42,6 +42,7 @@ import Point from 'ol/geom/Point';
 import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
 import {FullScreen, defaults as defaultControls} from 'ol/control.js';
+import {TileArcGISRest} from 'ol/source.js';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -78,11 +79,18 @@ export class HomeVialidadPage implements OnInit {
       url:'https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
     })
   });
-  modo = 'osm'
+  modo = 'satelite'
   iconFeature = new Feature({
     geometry: new Point(this.stgo),
     name: 'Mi ubicación'
   });
+  vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
+  flVialidad =  new TileLayer({
+    source: new TileArcGISRest({
+
+    url:this.vialidadRedVialURL
+    })
+  })
   markers = new VectorLayer({
     source: new VectorSource(),
     style: new Style({
@@ -148,6 +156,7 @@ export class HomeVialidadPage implements OnInit {
   internet = false;
   footer = true;
   regionSelec;
+  redactiva = false
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
@@ -414,83 +423,6 @@ export class HomeVialidadPage implements OnInit {
   }
 
   async loadMapVialidad(){
-    // const [ FeatureLayer, Locate, Track, watchUtils, IdentifyTask, IdentifyParameters,Basemap]:any = await loadModules([
-    //   'esri/layers/FeatureLayer',
-    //   'esri/widgets/Locate',
-    //   'esri/widgets/Track',
-    //   'esri/core/watchUtils',
-    //   'esri/tasks/IdentifyTask',
-    //   'esri/rest/support/IdentifyParameters',
-    //   "esri/Basemap"
-    // ])
-    //   .catch(err => {
-    //     console.error("ArcGIS: ", err);
-    //   });
-    //   let basemap = new Basemap({
-    //     baseLayers: [
-    //       new FeatureLayer({
-    //         url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    //         title: "Basemap"
-    //       })
-    //     ],
-    //     title: "basemap",
-    //     id: "basemap"
-    //   });
-    //   this.map2 = new Map({
-    //     basemap: 'satellite'
-    //     // basemap:basemap
-    //   });
-    //   const vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
-    //   let flVialidad = new MapImageLayer({
-    //     url: vialidadRedVialURL
-    //   })
-    //   this.map2.add(flVialidad);
-    //   this.view2 = new MapView({
-    //     container: "container", 
-    //     center: [-70.65266161399654,-33.44286267068381],
-    //     zoom: 13,
-    //     map: this.map2,
-    //     spatialReference:{wkid:3857},
-    //     constraints : {
-    //       minZoom :5,
-    //       maxZoom:18
-    //     },
-    //   });
-    //   let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
-    //   this._us.coordenadasRegion.forEach(c=>{
-    //     if(c.region == this.region){
-    //       this.view2.center = [c.lng,c.lat]
-    //       pointInicial = {longitude:c.lng,latitude:c.lat};
-    //       this.home = pointInicial;
-    //       this.dataPosicion.lng = Number(c.lng.toFixed(6))
-    //       this.dataPosicion.lat = Number(c.lat.toFixed(6))
-    //       this.dataPosicion.region = this.region;
-    //     }
-    //   })
-    //   this.agregarPuntero(pointInicial,Graphic)
-    //   this.view2.on("click", (e:any)=>{
-    //     let point = this.view2.toMap(e);
-    //     this.view2.center = [point.longitude, point.latitude]
-    //     this.view2.zoom = 16
-    //     this.agregarPuntero(point,Graphic)
-    //     this.obtenerUbicacionRegion(point)
-    //     this.buscarCamino(e,vialidadRedVialURL)
-    //   });
-    //   this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
-    //     this.chile = new VectorLayer({
-    //       source:new VectorSource({
-    //         features: new GeoJSON().readFeatures(chileJSON),
-    //       })
-    //     })
-    //     this.view2.on("drag",{action:'end'}, (e)=>{
-    //         let point2 = {
-    //           type: "point",
-    //           longitude: this.view2.center.longitude,
-    //           latitude: this.view2.center.latitude
-    //         };
-    //         this.obtenerUbicacionRegion(point2)
-    //       })
-    //   })
     this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
       this.chile = new VectorLayer({
         source:new VectorSource({
@@ -503,6 +435,7 @@ export class HomeVialidadPage implements OnInit {
          this.osm,
          this.baseLayer,
         //  this.chile
+        this.flVialidad
         ],
         view:this.view2,
       });
@@ -522,6 +455,7 @@ export class HomeVialidadPage implements OnInit {
       this.chile.setVisible(true)
       this.osm.setVisible(false)
       this.baseLayer.setVisible(true)
+      this.flVialidad.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
       // this.markers.getSource().addFeature(this.marker);
       // this.map.addLayer(this.markers);
@@ -602,9 +536,9 @@ export class HomeVialidadPage implements OnInit {
       var extent:any = olProj.transformExtent(this.view2.calculateExtent(),  'EPSG:3857','EPSG:4326');
       extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
       this._vs.obtenerCapas(latlong[0].toFixed(6),latlong[1].toFixed(6),extent).then((response:any)=>{
-        console.log(response)
       // this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
         this.firstFormGroup.controls['activoSeleccionado'].reset()
+        this.buscando = false;
         if(response.results.length > 0){
           let fueraregion = false;
           let temp = []
@@ -631,70 +565,71 @@ export class HomeVialidadPage implements OnInit {
             }
           })
           if(fueraregion){
+            this.buscando = false;
+            this.caminosEncontrados = [];
             this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true,true)
-            this.caminosEncontrados = []
           }else{
-            // this.caminosEncontrados = temp;
-          }
-          this.toast.dismiss()
-          temp = this.eliminarObjetosDuplicados(temp,'codigo')
-          setTimeout(()=>{
-            if(temp.length == 1){
-              var itemNew = temp[0].codigo
-              const reg = Number(temp[0].region);
-              var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
-                return (item.codigo.indexOf(itemNew) > -1);
-              })
-              if(existeMAXIMO.length > 0){
-                this.caminosEncontrados = temp;
-                this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-                this.km_i = existeMAXIMO[0].km_i;
-                this.km_f = existeMAXIMO[0].km_f;
-                this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
-                this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
-                this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-                this.hoy = this._us.fecha(new Date())
-                var calculos = []
-                this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
-                  var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
-                  calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+            this.toast.dismiss()
+            temp = this.eliminarObjetosDuplicados(temp,'codigo')
+            setTimeout(()=>{
+              if(temp.length == 1){
+                var itemNew = temp[0].codigo
+                const reg = Number(temp[0].region);
+                var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
+                  return (item.codigo.indexOf(itemNew) > -1);
                 })
-                calculos = this.sortJSON(calculos,'kilometro','asc')
-                this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-                this.buscando = false;
-                this.tab = 1;
-                this.firstFormGroup.controls['km_i'].setValue(this.km)
-                this.mostrarMapa = false;
-                this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
-                // this.agregarPuntero(e.mapPoint,Graphic,true)
+                if(existeMAXIMO.length > 0){
+                  this.caminosEncontrados = temp;
+                  this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
+                  this.km_i = existeMAXIMO[0].km_i;
+                  this.km_f = existeMAXIMO[0].km_f;
+                  this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+                  this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
+                  this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+                  this.hoy = this._us.fecha(new Date())
+                  var calculos = []
+                  this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
+                    var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
+                    calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+                  })
+                  calculos = this.sortJSON(calculos,'kilometro','asc')
+                  this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+                  this.buscando = false;
+                  this.tab = 1;
+                  this.firstFormGroup.controls['km_i'].setValue(this.km)
+                  this.mostrarMapa = false;
+                  this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
+                  // this.agregarPuntero(e.mapPoint,Graphic,true)
+                }else{
+                  this.firstFormGroup.reset();
+                  this.secondFormGroup.reset();
+                  this.secondFormGroup.controls['competencia'].setValue('Si')
+                  this.thirdFormGroup.reset();
+                  this.caminosEncontrados = []
+                  this.tab = 0;
+                  this.km = 0;
+                  this.mostrarMapa = true;
+                  this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+                  // this.agregarPuntero(e.mapPoint,Graphic,false)
+                }
               }else{
-                this.firstFormGroup.reset();
-                this.secondFormGroup.reset();
-                this.secondFormGroup.controls['competencia'].setValue('Si')
-                this.thirdFormGroup.reset();
-                this.caminosEncontrados = []
-                this.tab = 0;
+                this.caminosEncontrados = temp;
                 this.km = 0;
-                this.mostrarMapa = true;
-                this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+                this.mostrarMapa = false;
+                this.tab = 1;
+                this.buscando = false;
+                this.presentToast('Se encontraron '+this.caminosEncontrados.length+' caminos, favor seleccionar el correspondiente',null,false)
                 // this.agregarPuntero(e.mapPoint,Graphic,false)
               }
-            }else{
-              this.caminosEncontrados = temp;
-              this.km = 0;
-              this.mostrarMapa = false;
-              this.tab = 1;
-              this.presentToast('Se encontraron '+this.caminosEncontrados.length+' caminos, favor seleccionar el correspondiente',null,false)
-              // this.agregarPuntero(e.mapPoint,Graphic,false)
-            }
-          },500)
+            },500)
+          }
         }else{
+          this.buscando = false;
           this.caminosEncontrados = []
           this.toast.dismiss().then(()=>{
             this.presentToast('No se han encontrado caminos cercanos al punto seleccionado',null,false,true)
           });
           // this.agregarPuntero(e.mapPoint,Graphic,false)
-          this.buscando = false;
         }
       }).catch(err=>{
         this.caminosEncontrados = [];
@@ -799,12 +734,14 @@ export class HomeVialidadPage implements OnInit {
   }
 
   customZoom(){
-    if(this.basemap == "topo-vector"){
-      this.map2.basemap = 'satellite' 
-      this.basemap = 'satellite' 
+    if(this.modo == 'osm'){
+      this.osm.setVisible(false)
+      this.baseLayer.setVisible(true)
+      this.modo = 'satelite'
     }else{
-      this.map2.basemap = 'topo-vector' 
-      this.basemap = 'topo-vector' 
+      this.osm.setVisible(true)
+      this.baseLayer.setVisible(false)
+      this.modo = 'osm'
     }
   }
 
@@ -1039,7 +976,8 @@ export class HomeVialidadPage implements OnInit {
       mode:'ios',
       event: myEvent,
       componentProps:{
-        mapa:this.basemap,
+        mapa:this.modo,
+        red:this.redactiva
       }
     });
     popover.onDidDismiss().then(data=>{
@@ -1050,7 +988,17 @@ export class HomeVialidadPage implements OnInit {
         if(data.data.posicion){
           this.obtenerGeolocalizacion()
         }else{
-          this.centrarInicial()
+          if(data.data.red){
+            if(this.redactiva){
+              this.redactiva = false;
+              this.flVialidad.setVisible(false)
+            }else{
+              this.redactiva = true;
+              this.flVialidad.setVisible(true)
+            }
+          }else{
+            this.centrarInicial()
+          }
         }
        }
       } 

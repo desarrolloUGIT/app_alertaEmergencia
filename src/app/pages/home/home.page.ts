@@ -24,7 +24,6 @@ import { AnimationController } from '@ionic/angular';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { DireccionService } from '../../services/direccion/direccion.service';
 import { Keyboard } from '@ionic-native/keyboard/ngx';
-import {TileArcGISRest} from 'ol/source.js';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -62,13 +61,6 @@ export class HomePage implements OnInit {
       url:'https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
     })
   });
-  vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
-  flVialidad =  new TileLayer({
-    source: new TileArcGISRest({
-
-    url:this.vialidadRedVialURL
-    })
-  })
   modo = 'osm'
   regiones = null;
   iconFeature = new Feature({
@@ -168,7 +160,6 @@ export class HomePage implements OnInit {
          this.osm,
          this.baseLayer,
         //  this.chile
-        this.flVialidad
         ],
         view:this.view,
       });
@@ -186,7 +177,6 @@ export class HomePage implements OnInit {
       this.marker.getGeometry().setCoordinates(this.view.getCenter());
       this.chile.setVisible(true)
       this.osm.setVisible(true)
-      this.flVialidad.setVisible(true)
       this.baseLayer.setVisible(false)
       this.regiones = this.chile.getSource().getFeatures();
       this.markers.getSource().addFeature(this.marker);

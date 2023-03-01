@@ -14,9 +14,11 @@ export class PopoverPage implements OnInit {
   posicionT:string;
   centrarT:string;
   traductorT:string;
+  redvial:boolean;
   constructor(public popctrl: PopoverController,public navParams: NavParams) { 
     this.mapa = navParams.get('mapa');
-    if(this.mapa == 'satellite'){
+    this.redvial = navParams.get('red');
+    if(this.mapa != 'osm'){
       this.tipo = 'Mapa topo-vector';
     }else{
       this.tipo = 'Mapa Satelital';
@@ -29,10 +31,10 @@ export class PopoverPage implements OnInit {
   }
 
   tipoMapa() {
-    if(this.mapa == 'topo-vector'){
-      this.mapa = 'satellite';
+    if(this.mapa == 'osm'){
+      this.mapa = 'satelite';
     }else{
-      this.mapa = 'topo-vector';
+      this.mapa = 'osm';
     }
     let data = { mapa:this.mapa };
     this.popctrl.dismiss(data);
@@ -43,6 +45,10 @@ export class PopoverPage implements OnInit {
   }
   centrar() {
     let data = { centrar:true };
+    this.popctrl.dismiss(data);
+  }
+  redVial() {
+    let data = { red:true };
     this.popctrl.dismiss(data);
   }
 
