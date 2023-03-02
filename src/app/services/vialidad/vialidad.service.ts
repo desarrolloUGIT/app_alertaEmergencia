@@ -48,9 +48,9 @@ export class VialidadService {
                           <!--Zero or more repetitions:-->
                           <max:ISLINEAR >1</max:ISLINEAR>
                           <!--Zero or more repetitions:-->
-                          <max:REGION >`+'01'+`</max:REGION>
+                          <max:REGION >`+(vuelta ? vuelta : this._us.usuario.PERSON.STATEPROVINCE)+`</max:REGION>
                           <!--Zero or more repetitions:-->
-                          <max:SITEID operator="=" >`+vuelta ? vuelta : this._us.usuario.DEFSITE+`</max:SITEID>
+                          <max:SITEID operator="=" >`+this._us.usuario.DEFSITE+`</max:SITEID>
                           <!--Zero or more repetitions:-->
                           <max:STATUS operator="=" >ACTIVA</max:STATUS>
                       </max:ASSET>

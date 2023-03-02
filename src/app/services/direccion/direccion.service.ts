@@ -55,11 +55,11 @@ export class DireccionService {
                   <max:MOP_OPERLOC_DOHQuery operandMode="AND">
                     <max:LOCATIONS>
                         <max:LOCATION >%</max:LOCATION>
-                        <max:SITEID operator="=">`+vuelta ? vuelta : this._us.usuario.DEFSITE+`</max:SITEID>
+                        <max:SITEID operator="=">`+this._us.usuario.DEFSITE+`</max:SITEID>
                         <max:TYPE operator="=">OPERATIVO</max:TYPE>
                         <max:ESOBRA operator="=">1</max:ESOBRA>
                         <max:SERVICEADDRESS >
-                            <max:REGIONDISTRICT >`+this._us.usuario.PERSON.STATEPROVINCE+`</max:REGIONDISTRICT>
+                            <max:REGIONDISTRICT >`+(vuelta ? vuelta : this._us.usuario.PERSON.STATEPROVINCE)+`</max:REGIONDISTRICT>
                             <max:STATEPROVINCE >%</max:STATEPROVINCE>
                             <max:COUNTY >%</max:COUNTY>
                         </max:SERVICEADDRESS>              
@@ -157,7 +157,6 @@ export class DireccionService {
        </max:SyncMOP_SR_EMER_DOH>
     </soapenv:Body>
  </soapenv:Envelope>`
-    console.log(sr)
     let url = URL_SERVICIOS+'MOP_WS_MOP_SR_EMER_DOH';
     const options: HttpOptions = {
       url:url,

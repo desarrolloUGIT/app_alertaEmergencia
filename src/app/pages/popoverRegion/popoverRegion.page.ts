@@ -18,7 +18,7 @@ export class PopoverRegionPage implements OnInit {
   }
 
   Selectregion(i) {
-    let data = { region:i.detail.value };
+    let data = { region:(i && i.detail) ? i.detail.value : null };
     this.popctrl.dismiss(data);
   }
 

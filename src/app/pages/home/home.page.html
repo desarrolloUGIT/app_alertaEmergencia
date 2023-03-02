@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
-  <div class="map-container" id="map" [style.height]="mostrarMapa? '70%' : '0'">
+  <div class="map-container" id="map" [style.height]="mostrarMapa ? (!firstFormGroup.value.activoSeleccionado ? '75%' : '60%') : '0'">
   </div>
   <ion-fab vertical="top" slot="fixed" horizontal="start" style="margin-top: 18%;"  *ngIf="mostrarMapa && internet">
     <ion-fab-button size="small" color="botonazul" (click)="presentPopover($event)">
@@ -30,12 +30,17 @@
             <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
           </ion-col>
         </ion-row>
-        <ion-row *ngIf="!activosEncontrados" style="margin-bottom: -3%;margin-top: -5%;">
+        <ion-row *ngIf="!activosEncontrados && !nohayActivos" style="margin-bottom: -3%;margin-top: -5%;">
           <ion-col size="9">
             <h4>Cargando activos  </h4>
           </ion-col>
           <ion-col size="3" align="left">
             <ion-spinner name="bubbles"></ion-spinner>
+          </ion-col>
+        </ion-row>
+        <ion-row *ngIf="nohayActivos" style="margin-bottom: -3%;margin-top: -5%;">
+          <ion-col size="12">
+            <h4>No se han encontrado activos para esta región </h4>
           </ion-col>
         </ion-row>
       </ion-grid>
