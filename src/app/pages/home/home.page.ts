@@ -201,6 +201,7 @@ export class HomePage implements OnInit {
           db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
+          db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
           this.db = db;
           this.operatividad();
           this.nivelAlerta();
@@ -1331,7 +1332,7 @@ export class HomePage implements OnInit {
                       this.alertasMaximas()
                     }else{
                       tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh']);
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1353,7 +1354,7 @@ export class HomePage implements OnInit {
                     }
                   }else{
                     tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet']);
+                    [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'doh']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1383,6 +1384,21 @@ export class HomePage implements OnInit {
             console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
             this.loader.dismiss()
             if(res && res.status == '200'){
+              this.db.open().then(()=>{
+                this.db.transaction( tx1=>{
+                  this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+                    this.db.transaction(async tx=>{
+                      if(dat.rows.length > 0){
+                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                        [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
+                      }else{
+                        tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                        [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet']);
+                      }
+                    })
+                  })
+                })
+              })
               this.estadoEnvioAlerta = 'exitoso'
               this.deleteImage(this.images[0])
               this.volverInicio()

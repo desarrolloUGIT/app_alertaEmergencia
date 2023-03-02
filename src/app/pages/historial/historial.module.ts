@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { PendientesPageRoutingModule } from './pendientes-routing.module';
+import { HistorialPageRoutingModule } from './historial-routing.module';
 
-import { PendientesPage } from './pendientes.page';
+import { HistorialPage } from './historial.page';
 import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
 
 @NgModule({
@@ -14,9 +14,9 @@ import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
     CommonModule,
     FormsModule,
     IonicModule,
-    PendientesPageRoutingModule,
+    HistorialPageRoutingModule,
     ModalEnviarPageModule
   ],
-  declarations: [PendientesPage]
+  declarations: [HistorialPage]
 })
-export class PendientesPageModule {}
+export class HistorialPageModule {}
