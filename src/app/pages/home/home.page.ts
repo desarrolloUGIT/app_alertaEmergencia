@@ -3,7 +3,7 @@ import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { UsuarioService } from '../../services/usuario/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController, PopoverController } from '@ionic/angular';
 import TileLayer from 'ol/layer/Tile';
 import {View, Feature, Map } from 'ol';
 import OSM, {ATTRIBUTION} from 'ol/source/OSM';
@@ -25,6 +25,8 @@ import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { DireccionService } from '../../services/direccion/direccion.service';
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
+import { PopoverPage } from '../popover/popover.page';
+import {FullScreen, defaults as defaultControls} from 'ol/control.js';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -43,7 +45,7 @@ interface LocalFile {
 })
 export class HomePage implements OnInit {
   @ViewChild('stepper')  stepper: MatStepper;
-  activosEncontrados;
+  activosEncontrados = false;
   stgo = olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')
   view =  new View({
     center: this.stgo, 
@@ -95,7 +97,7 @@ export class HomePage implements OnInit {
   existenActivos = true;
   picture = null;
   estadoEnvioAlerta = null;
-  region = '13'
+  region = ''
   defsite;
   toast;
   intento = 0;
@@ -103,10 +105,11 @@ export class HomePage implements OnInit {
   internet = false;
   footer = true;
   mostrarMapa = false;
+  activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
 
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,
-    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,
+    public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
     public storage: NativeStorage) {
       this._us.message.subscribe(res=>{
         if(res == 'conexión establecida'){
@@ -191,25 +194,35 @@ export class HomePage implements OnInit {
       this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
       this.loadFiles()
-    })
-    if(this.platform.is('capacitor')){
-      this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
-        db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
-        db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
-        db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,region, name, date,location,error)',[]);
-        this.db = db;
+      if(this.platform.is('capacitor')){
+        this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+          db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
+          db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
+          db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
+          db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,region, name, date,location,error)',[]);
+          this.db = db;
+          this.operatividad();
+          this.nivelAlerta();
+          this.destinos();
+          if(this.region == '20'){
+            this.activosDOH('20');
+          }else{
+            this.activosDOH(this.region);
+          }
+        })
+      }else{
         this.operatividad();
         this.nivelAlerta();
         this.destinos();
-        this.activos();
-      })
-    }else{
-      this.operatividad();
-      this.nivelAlerta();
-      this.destinos();
-      this.activos();
-    }
+        console.log(this._us.usuario.PERSON.STATEPROVINCE,this.region)
+        if(this.region == '20'){
+          this.activosDOH('20');
+        }else{
+          this.activosDOH(this.region);
+        }
+      }
+    })
+   
     this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
@@ -242,6 +255,7 @@ export class HomePage implements OnInit {
         ],
         view:this.view,
       });
+      this.map.addControl(new FullScreen)
       setTimeout(() => {
         this.map.setTarget("map");
       }, 500);
@@ -336,6 +350,7 @@ export class HomePage implements OnInit {
      });
     })
   }
+
   selectTab(i){
     if(Number(i) == this.tab){
       this.tab = 0;
@@ -350,6 +365,35 @@ export class HomePage implements OnInit {
       this.mostrarMapa = false;
       this.tab = Number(i);
     }
+  }
+
+  async presentPopover(myEvent) {
+    const popover = await this.popoverCtrl.create({
+      component: PopoverPage,
+      translucent: true,
+      cssClass: 'my-custom-modal-css',
+      showBackdrop:true,
+      mode:'ios',
+      event: myEvent,
+      componentProps:{
+        mapa:this.modo,
+        novialidad:true
+      }
+    });
+    popover.onDidDismiss().then(data=>{
+      if(data.data){
+       if(data.data.mapa){
+        this.changeMap()
+       }else{
+        if(data.data.posicion){
+          this.geolocate()
+        }else{
+          this.centralInicial()
+        }
+       }
+      } 
+    })
+    return await popover.present();
   }
   // FIN MAPA
   // CARGAS INICIALES
@@ -620,231 +664,8 @@ export class HomePage implements OnInit {
     ]
   }
 
-  activos(){
-    this._us.cargar_storage().then(()=>{
-      if(this._us.menuType == 'DV' || this._us.menuType == 'DGA' || this._us.menuType == 'DGOP' || this._us.menuType == 'VIALIDAD'){
-        this.existenActivos = false;
-      }else{
-        if(!this._us.menuType || this._us.menuType == ''){
-          this.existenActivos = false;
-        }else{
-          if(this.platform.is('capacitor')){
-            this.db.open().then(()=>{
-              this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
-                if(data.rows.length > 0){
-                  var arr = []
-                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
-                  AR.forEach(i=>{
-                    var tmp = {
-                      ASSETNUM:data.rows.item(i).id,
-                      DESCRIPTION:data.rows.item(i).name,
-                      SITEID:data.rows.item(i).cod,
-                      SERVICEADDRESS:{
-                        REGIONDISTRICT:data.rows.item(i).lugar,
-                        LATITUDEY:data.rows.item(i).lat,
-                        LONGITUDEX:data.rows.item(i).lng
-                      }
-                    }
-                    i++;
-                    arr.push(tmp)
-                  })
-                  this.activosEncontrados = arr;
-                  this.actualizarActivos()
-                }else{
-                  this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-                    this._us.xmlToJson(res).then((result:any)=>{
-                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
-                      var temp = []
-                      path.forEach(p=>{
-                        var activo = {
-                          "ASSETNUM": p.LOCATION[0],
-                          "DESCRIPTION": p.DESCRIPTION[0],
-                          "SITEID": p.SITEID[0],
-                          "SERVICEADDRESS": {
-                            "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                            "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                            "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                          }
-                        }
-                        temp.push(activo)
-                      })
-                      this.activosEncontrados = temp;
-                      if(this.platform.is('capacitor')){
-                        this.actualizarActivos()
-                      }
-                    })
-                  },err=>{
-                    this._us.xmlToJson(err.error.text).then((result:any)=>{
-                      var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
-                      var temp = []
-                      path.forEach(p=>{
-                        var activo = {
-                          "ASSETNUM": p.LOCATION[0],
-                          "DESCRIPTION": p.DESCRIPTION[0],
-                          "SITEID": p.SITEID[0],
-                          "SERVICEADDRESS": {
-                            "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                            "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                            "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                          }
-                        }
-                        temp.push(activo)
-                      })
-                      this.activosEncontrados = temp;
-                      if(this.platform.is('capacitor')){
-                        this.actualizarActivos()
-                      }
-                    })
-                  })
-                }
-              }).catch(err=>{
-              })
-            })
-          }else{
-            this._http.get('assets/activos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-              this._us.xmlToJson(res).then((result:any)=>{
-                var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
-                var temp = []
-                path.forEach(p=>{
-                  var activo = {
-                    "ASSETNUM": p.LOCATION[0],
-                    "DESCRIPTION": p.DESCRIPTION[0],
-                    "SITEID": p.SITEID[0],
-                    "SERVICEADDRESS": {
-                      "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                      "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                      "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                    }
-                  }
-                  temp.push(activo)
-                })
-                this.activosEncontrados = temp;
-                if(this.platform.is('capacitor')){
-                  this.actualizarActivos()
-                }else{
-                  // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-                }
-              })
-            },err=>{
-              this._us.xmlToJson(err.error.text).then((result:any)=>{
-                var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
-                var temp = []
-                path.forEach(p=>{
-                  var activo = {
-                    "ASSETNUM": p.LOCATION[0],
-                    "DESCRIPTION": p.DESCRIPTION[0],
-                    "SITEID": p.SITEID[0],
-                    "SERVICEADDRESS": {
-                      "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                      "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                      "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                    }
-                  }
-                  temp.push(activo)
-                })
-                this.activosEncontrados = temp;
-                if(this.platform.is('capacitor')){
-                  this.actualizarActivos()
-                }else{
-                  // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-                }
-              })
-            })
-          }
-        }
-      }
-    })
-
-  }
-
-  actualizarActivos(){ 
-    this._ds.activos().subscribe((res:any)=>{
-      // console.log('ACTIVOS ->',res)
-      if(res && res.status == '200'){
-        this._us.xmlToJson(res).then((result:any)=>{
-          var path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS;
-          var temp = []
-          path.forEach(p=>{
-            var activo = {
-              "ASSETNUM": p.LOCATION[0],
-              "DESCRIPTION": p.DESCRIPTION[0],
-              "SITEID": p.SITEID[0],
-              "SERVICEADDRESS": {
-                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-              }
-            }
-            temp.push(activo)
-          })
-          this.db.open().then(()=>{
-              this.db.transaction(rx=>{
-                rx.executeSql('delete from activos', [], ()=>{
-                  temp.forEach((activo,i)=>{
-                  this.db.transaction(tx=>{
-                    tx.executeSql('insert into activos (id,name,lat,lng,cod,lugar) values (?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
-                  })
-                  })
-                })
-              }).then(()=>{
-                this.activosEncontrados = temp;
-                // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-            }).catch(()=>{
-                this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
-                  if(data.rows.length > 0){
-                    var arr = []
-                    var AR = Array.from({length: data.rows.length}, (x, i) => i);
-                    AR.forEach(i=>{
-                      var tmp = {
-                        ASSETNUM:data.rows.item(i).id,
-                        DESCRIPTION:data.rows.item(i).name,
-                        SITEID:data.rows.item(i).cod,
-                        SERVICEADDRESS:{
-                          REGIONDISTRICT:data.rows.item(i).lugar,
-                          LATITUDEY:data.rows.item(i).lat,
-                          LONGITUDEX:data.rows.item(i).lng
-                        }
-                      }
-                      arr.push(tmp)
-                    })
-                    this.activosEncontrados = arr;
-                    // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-                  }else{
-                    // this.presentToast('No se han podido cargar activos')
-                  }
-                })     
-            })
-          })
-        })
-      }else{
-        this.db.open().then(()=>{
-          this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
-            if(data.rows.length > 0){
-              var arr = []
-              var AR = Array.from({length: data.rows.length}, (x, i) => i);
-              AR.forEach(i=>{
-                var tmp = {
-                  ASSETNUM:data.rows.item(i).id,
-                  DESCRIPTION:data.rows.item(i).name,
-                  SITEID:data.rows.item(i).cod,
-                  SERVICEADDRESS:{
-                    REGIONDISTRICT:data.rows.item(i).lugar,
-                    LATITUDEY:data.rows.item(i).lat,
-                    LONGITUDEX:data.rows.item(i).lng
-                  }
-                }
-                arr.push(tmp)
-              })
-              this.activosEncontrados = arr;
-              // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
-            }else{
-              // this.presentToast('No se han podido cargar activos')
-            }
-          })     
-        })
-      }
-    },err=>{
-      console.log('ERRROR ->',err)
+  activosDOH(region){
+    if(this.platform.is('capacitor')){
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
           if(data.rows.length > 0){
@@ -861,17 +682,370 @@ export class HomePage implements OnInit {
                   LONGITUDEX:data.rows.item(i).lng
                 }
               }
-              arr.push(tmp)
+              this.activosPorRegion[Number(data.rows.item(i).lugar) - 1].push(tmp)
             })
-            this.activosEncontrados = arr;
-            // this.presentToast('Se actualizaron '+this.activosEncontrados.length+' activos.')
+            this.activosEncontrados = true;
+            // this.activosVial = arr;
           }else{
-            // this.presentToast('No se han podido cargar activos')
+            if(region == '20'){
+              this.activosNacional(1)
+            }else{
+              this._http.get('assets/doh/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+                this._us.xmlToJson(res).then((result:any)=>{
+                  var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+                  path.forEach(p=>{
+                    this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                      "ASSETNUM": p.LOCATION[0],
+                      "DESCRIPTION": p.DESCRIPTION[0],
+                      "SITEID": p.SITEID[0],
+                      "SERVICEADDRESS": {
+                        "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                        "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                        "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                      }
+                    })
+                  })
+                  this.activosEncontrados = true;
+                  if(this.platform.is('capacitor')){
+                    this.actualizarActivosDOH(this.region)
+                  }
+                })
+              },err=>{
+                this._us.xmlToJson(err.error.text).then((result:any)=>{
+                  var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+                  path.forEach(p=>{
+                    this.activosPorRegion[Number(p.REGION[0] - 1)].push({
+                      "ASSETNUM": p.LOCATION[0],
+                      "DESCRIPTION": p.DESCRIPTION[0],
+                      "SITEID": p.SITEID[0],
+                      "SERVICEADDRESS": {
+                        "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                        "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                        "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                      }
+                    })
+                  })
+                  this.activosEncontrados = true;
+                  if(this.platform.is('capacitor')){
+                    this.actualizarActivosDOH(this.region)
+                  }
+                })
+              })
+            }
           }
-        })     
+        })
+      })
+    }else{
+      if(region == '20'){
+        this.activosNacional(1)
+      }else{
+        this._http.get('assets/doh/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+          this._us.xmlToJson(res).then((result:any)=>{
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+            path.forEach(p=>{
+              this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                "ASSETNUM": p.LOCATION[0],
+                "DESCRIPTION": p.DESCRIPTION[0],
+                "SITEID": p.SITEID[0],
+                "SERVICEADDRESS": {
+                  "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                  "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                  "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                }
+              })
+            })
+            this.activosEncontrados = true;
+            if(this.platform.is('capacitor')){
+              this.actualizarActivosDOH(this.region)
+            }
+          })
+        },err=>{
+          this._us.xmlToJson(err.error.text).then((result:any)=>{
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+            path.forEach(p=>{
+              this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                "ASSETNUM": p.LOCATION[0],
+                "DESCRIPTION": p.DESCRIPTION[0],
+                "SITEID": p.SITEID[0],
+                "SERVICEADDRESS": {
+                  "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                  "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                  "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                }
+              })
+            })
+            this.activosEncontrados = true;
+            if(this.platform.is('capacitor')){
+              this.actualizarActivosDOH(this.region)
+            }
+          })
+        })
+      }
+    }
+  }
+
+  activosNacional(vuelta){
+    this._http.get('assets/doh/'+(String(vuelta).length == 1 ? '0'+vuelta : vuelta)+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+      this._us.xmlToJson(res).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+        path.forEach(p=>{
+          this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+            "ASSETNUM": p.LOCATION[0],
+            "DESCRIPTION": p.DESCRIPTION[0],
+            "SITEID": p.SITEID[0],
+            "SERVICEADDRESS": {
+              "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+              "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+              "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+            }
+          })
+        })
+        const newVuelta = vuelta + 1;
+        if(newVuelta > 16){
+          if(this.platform.is('capacitor')){
+            this.actualizarActivosDOH(this.region,1)
+          }
+        }else{
+          this.activosNacional(newVuelta)
+        }
+        
+      })
+    },err=>{
+      this._us.xmlToJson(err.error.text).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+        path.forEach(p=>{
+          this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+            "ASSETNUM": p.LOCATION[0],
+            "DESCRIPTION": p.DESCRIPTION[0],
+            "SITEID": p.SITEID[0],
+            "SERVICEADDRESS": {
+              "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+              "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+              "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+            }
+          })
+        })
+        const newVuelta = vuelta + 1;
+        if(newVuelta > 16){
+          if(this.platform.is('capacitor')){
+            this.actualizarActivosDOH(this.region,1)
+          }
+        }else{
+          this.activosNacional(newVuelta)
+        }
       })
     })
   }
+
+  actualizarActivosDOH(region,vuelta?){
+    if(region == '20'){
+      if(vuelta && vuelta < 16){
+        this._ds.activos((String(vuelta).length == 1 ? '0'+vuelta : vuelta)).subscribe((res:any)=>{
+          if(res && res.status == '200'){
+            this._us.xmlToJson(res).then((result:any)=>{
+              var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+              path.forEach(p=>{
+                this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                  "ASSETNUM": p.LOCATION[0],
+                  "DESCRIPTION": p.DESCRIPTION[0],
+                  "SITEID": p.SITEID[0],
+                  "SERVICEADDRESS": {
+                    "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                    "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                    "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                  }
+                })
+              })
+              const newVuelta = vuelta + 1;
+              if(newVuelta > 16){
+                this.db.open().then(()=>{
+                  this.db.transaction(rx=>{
+                    rx.executeSql('delete from activos', [], ()=>{
+                      this.activosPorRegion.forEach((a,i)=>{
+                        this.activosPorRegion[i].forEach(activo=>{
+                          this.db.transaction(tx=>{
+                            tx.executeSql('insert into activos (id,name,lat,lng,cod,lugar) values (?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
+                          })
+                        })
+                      })
+                    })
+                  }).then(()=>{
+                    // Termina de ingresar nivelAlerta
+                  }).catch(()=>{
+                    this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+                      if(data.rows.length > 0){
+                        var arr = []
+                        var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                        AR.forEach(i=>{
+                          var tmp = {
+                            ASSETNUM:data.rows.item(i).id,
+                            DESCRIPTION:data.rows.item(i).name,
+                            SITEID:data.rows.item(i).cod,
+                            SERVICEADDRESS:{
+                              REGIONDISTRICT:data.rows.item(i).lugar,
+                              LATITUDEY:data.rows.item(i).lat,
+                              LONGITUDEX:data.rows.item(i).lng
+                            }
+                          }
+                          this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+                        })
+                        // this.activosVial = arr;
+                      }
+                    })     
+                  })
+                })
+              }else{
+                this.actualizarActivosDOH(region,vuelta+1)
+              }
+            })
+          }else{
+            const newVuelta = vuelta + 1;
+            if(newVuelta > 16){
+              this.db.open().then(()=>{
+                this.db.transaction(rx=>{
+                  rx.executeSql('delete from activos', [], ()=>{
+                    this.activosPorRegion.forEach((a,i)=>{
+                      this.activosPorRegion[i].forEach(activo=>{
+                        this.db.transaction(tx=>{
+                          tx.executeSql('insert into activos (id,name,lat,lng,cod,lugar) values (?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
+                        })
+                      })
+                    })
+                  })
+                }).then(()=>{
+                  // Termina de ingresar nivelAlerta
+                }).catch(()=>{
+                  this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+                    if(data.rows.length > 0){
+                      var arr = []
+                      var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                      AR.forEach(i=>{
+                        var tmp = {
+                          ASSETNUM:data.rows.item(i).id,
+                          DESCRIPTION:data.rows.item(i).name,
+                          SITEID:data.rows.item(i).cod,
+                          SERVICEADDRESS:{
+                            REGIONDISTRICT:data.rows.item(i).lugar,
+                            LATITUDEY:data.rows.item(i).lat,
+                            LONGITUDEX:data.rows.item(i).lng
+                          }
+                        }
+                        // arr.push(tmp)
+                        this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+
+                      })
+                      // this.activosVial = arr;
+                    }
+                  })     
+                })
+              })
+            }else{
+              this.actualizarActivosDOH(region,vuelta+1)
+            }
+          }
+        })
+      }else{
+        this.db.open().then(()=>{
+          this.db.transaction(rx=>{
+            rx.executeSql('delete from activos', [], ()=>{
+              this.activosPorRegion.forEach((a,i)=>{
+                this.activosPorRegion[i].forEach(activo=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into activos (id,name,lat,lng,cod,lugar) values (?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
+                  })
+                })
+              })
+            })
+          }).then(()=>{
+            // Termina de ingresar nivelAlerta
+          }).catch(()=>{
+            this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+              if(data.rows.length > 0){
+                var arr = []
+                var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                AR.forEach(i=>{
+                  var tmp = {
+                    ASSETNUM:data.rows.item(i).id,
+                    DESCRIPTION:data.rows.item(i).name,
+                    SITEID:data.rows.item(i).cod,
+                    SERVICEADDRESS:{
+                      REGIONDISTRICT:data.rows.item(i).lugar,
+                      LATITUDEY:data.rows.item(i).lat,
+                      LONGITUDEX:data.rows.item(i).lng
+                    }
+                  }
+                  // arr.push(tmp)
+                  this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+                })
+                // this.activosVial = arr;
+              }
+            })     
+          })
+        })
+      }
+    }else{
+      this._ds.activos().subscribe((res:any)=>{
+        if(res && res.status == '200'){
+          this._us.xmlToJson(res).then((result:any)=>{
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
+            path.forEach(p=>{
+              this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                "ASSETNUM": p.LOCATION[0],
+                "DESCRIPTION": p.DESCRIPTION[0],
+                "SITEID": p.SITEID[0],
+                "SERVICEADDRESS": {
+                  "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                  "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                  "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                }
+              })
+            })
+            this.db.open().then(()=>{
+              this.db.transaction(rx=>{
+                rx.executeSql('delete from activos', [], ()=>{
+                  this.activosPorRegion.forEach((a,i)=>{
+                    this.activosPorRegion[i].forEach(activo=>{
+                      this.db.transaction(tx=>{
+                        tx.executeSql('insert into activos (id,name,lat,lng,cod,lugar) values (?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
+                      })
+                    })
+                  })
+                })
+              }).then(()=>{
+                // Termina de ingresar nivelAlerta
+              }).catch(()=>{
+                this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
+                  if(data.rows.length > 0){
+                    var arr = []
+                    var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                    AR.forEach(i=>{
+                      var tmp = {
+                        ASSETNUM:data.rows.item(i).id,
+                        DESCRIPTION:data.rows.item(i).name,
+                        SITEID:data.rows.item(i).cod,
+                        SERVICEADDRESS:{
+                          REGIONDISTRICT:data.rows.item(i).lugar,
+                          LATITUDEY:data.rows.item(i).lat,
+                          LONGITUDEX:data.rows.item(i).lng
+                        }
+                      }
+                      // arr.push(tmp)
+                      this.activosPorRegion[Number(data.rows.item(i).region - 1)].push(tmp)
+                    })
+                    // this.activosVial = arr;
+                  }
+                })     
+              })
+            })
+          })
+        }
+      })
+    }
+
+  }
+
+
+
   // FIN CARGAS INICIALES
   // OTROS
   async presentLoader(msg) {
@@ -890,7 +1064,9 @@ export class HomePage implements OnInit {
       breakpoints:[0, 0.5, 0.75, 0.95],
       initialBreakpoint:0.75,
       componentProps:{
-        activos:this.activosEncontrados,
+        activos:this.activosPorRegion,
+        region:this.region,
+        posicion:this.dataPosicion.region,
         coord:olProj.toLonLat(this.marker.getGeometry().getCoordinates())
       }
     });
@@ -899,7 +1075,7 @@ export class HomePage implements OnInit {
       const { data } = await modal.onWillDismiss();
       if (data) {
         this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-        this.view.setCenter(olProj.transform([data.activo.SERVICEADDRESS.LONGITUDEX,data.activo.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
+        this.view.setCenter(olProj.transform([data.SERVICEADDRESS.LONGITUDEX,data.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
         this.obtenerUbicacionRegion()
         this.view.setZoom(15)
       }
@@ -1108,7 +1284,7 @@ export class HomePage implements OnInit {
       // }
       if(this.firstFormGroup.value.activoSeleccionado){
         if(this.firstFormGroup.value.activoSeleccionado){
-          data.locations = this.firstFormGroup.value.activoSeleccionado.activo.ASSETNUM
+          data.locations = this.firstFormGroup.value.activoSeleccionado.ASSETNUM
         }else{
           data.locations = '';
         }

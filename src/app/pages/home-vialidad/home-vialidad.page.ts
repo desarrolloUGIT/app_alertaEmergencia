@@ -1691,9 +1691,11 @@ export class HomeVialidadPage implements OnInit {
                 this.db.open().then(()=>{
                   this.db.transaction(rx=>{
                     rx.executeSql('delete from activosVialidad', [], ()=>{
-                      this.activosVial.forEach((activo,i)=>{
-                        this.db.transaction(tx=>{
-                          tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                      this.activosPorRegion.forEach((a,i)=>{
+                        this.activosPorRegion[i].forEach(activo=>{
+                          this.db.transaction(tx=>{
+                            tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                          })
                         })
                       })
                     })
@@ -1729,9 +1731,11 @@ export class HomeVialidadPage implements OnInit {
               this.db.open().then(()=>{
                 this.db.transaction(rx=>{
                   rx.executeSql('delete from activosVialidad', [], ()=>{
-                    this.activosVial.forEach((activo,i)=>{
-                      this.db.transaction(tx=>{
-                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                    this.activosPorRegion.forEach((a,i)=>{
+                      this.activosPorRegion[i].forEach(activo=>{
+                        this.db.transaction(tx=>{
+                          tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                        })
                       })
                     })
                   })
@@ -1768,9 +1772,11 @@ export class HomeVialidadPage implements OnInit {
         this.db.open().then(()=>{
           this.db.transaction(rx=>{
             rx.executeSql('delete from activosVialidad', [], ()=>{
-              this.activosVial.forEach((activo,i)=>{
-                this.db.transaction(tx=>{
-                  tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+              this.activosPorRegion.forEach((a,i)=>{
+                this.activosPorRegion[i].forEach(activo=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                  })
                 })
               })
             })
@@ -1809,9 +1815,11 @@ export class HomeVialidadPage implements OnInit {
             this.db.open().then(()=>{
               this.db.transaction(rx=>{
                 rx.executeSql('delete from activosVialidad', [], ()=>{
-                  this.activosVial.forEach((activo,i)=>{
-                    this.db.transaction(tx=>{
-                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                  this.activosPorRegion.forEach((a,i)=>{
+                    this.activosPorRegion[i].forEach(activo=>{
+                      this.db.transaction(tx=>{
+                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                      })
                     })
                   })
                 })

@@ -46,7 +46,7 @@ export class DireccionService {
     return from(Http.post(options))
   }
 
-  activos(){
+  activos(vuelta?){
     this.headers['Authorization'] = "Basic " + btoa((this._us.getUser().user + ':' + this._us.getUser().password));
     let sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
             <soapenv:Header/>
@@ -55,7 +55,7 @@ export class DireccionService {
                   <max:MOP_OPERLOC_DOHQuery operandMode="AND">
                     <max:LOCATIONS>
                         <max:LOCATION >%</max:LOCATION>
-                        <max:SITEID operator="=">`+this._us.usuario.DEFSITE+`</max:SITEID>
+                        <max:SITEID operator="=">`+vuelta ? vuelta : this._us.usuario.DEFSITE+`</max:SITEID>
                         <max:TYPE operator="=">OPERATIVO</max:TYPE>
                         <max:ESOBRA operator="=">1</max:ESOBRA>
                         <max:SERVICEADDRESS >

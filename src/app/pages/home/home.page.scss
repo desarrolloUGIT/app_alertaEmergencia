@@ -317,8 +317,10 @@ ion-button[shape=circle] {
 }
 
 .select{
-  --background: #093f753b;
-  color:black !important;
+  // --background: #bababaa1;
+  --background: #093F75;
+  color:white !important;
+  padding-bottom: 1%;
 }
 
 .tituloTable{
@@ -333,4 +335,14 @@ ion-button[shape=circle] {
 
 .p_error{
   float: right;padding-right: 3%;color: red;font-size: 12px;
+}
+
+.select-text{
+  width: 60%;
+  max-width: 60%;
+}
+
+ion-select::part(text) {
+  text-overflow: unset;
+  white-space: break-spaces;
 }

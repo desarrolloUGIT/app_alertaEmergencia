@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ModalController, NavParams } from '@ionic/angular';
+import { ModalController, NavParams, PopoverController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { PopoverRegionPage } from '../popoverRegion/popoverRegion.page';
 addIcons({
   'distance': 'assets/img/distance.svg',
 });
@@ -14,8 +15,13 @@ export class ModalActivosPage implements OnInit {
   @Input() coord;
   activosShow = [];
   todos = []
-  constructor(public modalCtrl:ModalController,public navParams: NavParams) {
+  region:string;
+  posicion;
+  regionSelec;
+  constructor(public modalCtrl:ModalController,public navParams: NavParams,public popoverCtrl:PopoverController) {
     this.activos = navParams.get('activos');
+    this.region = navParams.get('region');
+    this.posicion = navParams.get('posicion');
     this.coord = navParams.get('coord');
     this.calcularActivos()    
   }
@@ -29,9 +35,32 @@ export class ModalActivosPage implements OnInit {
 
   calcularActivos(){
     var temp = []
-    this.activos.forEach(f=>{
-      temp.push({activo:f,distancia:Number(this.getKilometros(this.coord[1],this.coord[0],f.SERVICEADDRESS.LATITUDEY,f.SERVICEADDRESS.LONGITUDEX))})
+    this.activos.forEach((a,i)=>{
+      this.activos[i].forEach((f,j)=>{
+        this.activos[i][j] = { ASSETNUM:f.ASSETNUM,
+          DESCRIPTION:f.DESCRIPTION,
+          SITEID:f.SITEID,
+          SERVICEADDRESS:{
+            REGIONDISTRICT:f.SERVICEADDRESS.REGIONDISTRICT,
+            LATITUDEY:f.SERVICEADDRESS.LATITUDEY,
+            LONGITUDEX:f.SERVICEADDRESS.LONGITUDEX
+          }
+          ,distancia:Number(this.getKilometros(this.coord[1],this.coord[0],f.SERVICEADDRESS.LATITUDEY,f.SERVICEADDRESS.LONGITUDEX))
+        }
+      })
     })
+    temp = this.activos[Number(this.posicion) - 1]
+    // this.activos[Number(this.posicion) - 1].forEach((f,i)=>{
+    //   temp.push({ ASSETNUM:f.ASSETNUM,
+    //     DESCRIPTION:f.DESCRIPTION,
+    //     SITEID:f.SITEID,
+    //     SERVICEADDRESS:{
+    //       REGIONDISTRICT:f.SERVICEADDRESS.REGIONDISTRICT,
+    //       LATITUDEY:f.SERVICEADDRESS.LATITUDEY,
+    //       LONGITUDEX:f.SERVICEADDRESS.LONGITUDEX
+    //     }
+    //     ,distancia:Number(this.getKilometros(this.coord[1],this.coord[0],f.SERVICEADDRESS.LATITUDEY,f.SERVICEADDRESS.LONGITUDEX))})
+    // })
     temp = this.sortJSON(temp,'distancia','asc')
     this.todos = temp;
     this.activosShow = temp.slice(0,5)
@@ -62,15 +91,41 @@ export class ModalActivosPage implements OnInit {
 
 getActivos(ev: any) {
   const val = ev.target.value;
-  if (val && val.trim() != '' && val.length >=3 ) {
-    this.activosShow = this.todos.filter((item) => {
-      return (item.activo.DESCRIPTION.toLowerCase().indexOf(val.toLowerCase()) > -1);
+  if (val && val.trim() != '' && val.length >=2 ) {
+    this.activosShow = this.activos[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)].filter((item) => {
+      return (item.DESCRIPTION.toLowerCase().indexOf(val.toLowerCase()) > -1);
     }).splice(0,5)
   }else{
     if(val.length == 0 || val == null){
       this.inicializar()
     }
   }
+}
+
+async presentPopoverRegion(myEvent) {
+  const popover = await this.popoverCtrl.create({
+    component: PopoverRegionPage,
+    translucent: true,
+    cssClass: 'my-custom-modal-css',
+    showBackdrop:true,
+    mode:'ios',
+    event: myEvent,
+    componentProps:{
+      region:this.regionSelec,
+    }
+  });
+  popover.onDidDismiss().then(data=>{
+    if(data.data){
+     if(data.data.region){
+      this.regionSelec = data.data.region
+     }else{
+      this.regionSelec = null;
+     }
+    }else{
+      this.regionSelec = null;
+    } 
+  })
+  return await popover.present();
 }
  
 selectActivo(e){

@@ -15,9 +15,11 @@ export class PopoverPage implements OnInit {
   centrarT:string;
   traductorT:string;
   redvial:boolean;
+  novialidad:boolean;
   constructor(public popctrl: PopoverController,public navParams: NavParams) { 
     this.mapa = navParams.get('mapa');
     this.redvial = navParams.get('red');
+    this.novialidad = navParams.get('novialidad');
     if(this.mapa != 'osm'){
       this.tipo = 'Mapa topo-vector';
     }else{

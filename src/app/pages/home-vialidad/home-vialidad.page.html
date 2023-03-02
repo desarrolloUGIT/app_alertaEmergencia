@@ -20,8 +20,6 @@
 
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <!-- <ion-item lines="none">
-    </ion-item> -->
     <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
       <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
@@ -139,7 +137,6 @@
         </ion-button>
       </ion-item>
       <form [formGroup]="secondFormGroup">
-        <ng-template matStepLabel>Operatividad y daño</ng-template>
         <ion-card center>
           <ion-label style="font-size: 17px;">Detalle Emergencia</ion-label>
           <ion-list style="margin-top: 3%;margin-bottom: 3%;">
