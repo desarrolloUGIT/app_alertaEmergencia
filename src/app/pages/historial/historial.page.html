@@ -3,15 +3,15 @@
     <ion-buttons slot="start" >
       <ion-menu-button style="color: white;" ></ion-menu-button>
     </ion-buttons>
-    <ion-title>Historial de Emergencias</ion-title>
+    <ion-title>Historial</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
   <ion-accordion-group *ngIf="mostrar" mode="ios" style="margin-bottom: 5%;margin-top: 3%;" [value]="alertas.length > 0 ? alertas[0].id : null">
-    <ion-accordion [value]="item.id" *ngFor="let item of alertas;let i = index">
+    <ion-accordion [value]="alertas[i].id" *ngFor="let item of alertas;let i = index">
       <ion-item slot="header" color="accordion">
-        <ion-badge slot="start" color="medium">{{i+1}}</ion-badge>
+        <ion-badge slot="start" color="medium">{{item.id}}</ion-badge>
         <ion-label style="font-weight: bold;">{{item.titulo}}</ion-label>
       </ion-item>
       <div class="ion-padding contenido" slot="content" align="center">
@@ -23,6 +23,9 @@
               <ion-col size="12" >
                 <ion-row>
                   <p><span>Fecha de envío:</span> {{item.name | date:'dd/MM/yyyy HH:mm'}}</p>
+                </ion-row>
+                <ion-row *ngIf="item.error == 'doh' && item.location">
+                  <p><span>Código:</span> {{item.location}}</p>
                 </ion-row>
                 <ion-row>
                   <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
@@ -77,5 +80,13 @@
       </div>
     </ion-accordion>
   </ion-accordion-group>
+  <div *ngIf="alertas.length == 0" style=" position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);-webkit-transform: translate(-50%, -50%);">
+    <div style="text-align: center;">    
+      <ion-label>No se ha encontrado historial de emergencias enviadas</ion-label>
+    </div>
+    <div style="text-align: center;" >
+      <ion-icon name="sad-outline"></ion-icon>
+     </div>
+  </div>
   
 </ion-content>

@@ -45,9 +45,11 @@ toast;
                     for(let i = 0;i<data.rows.length;i++){
                       this.alertas.push(data.rows.item(i))
                     }
-                    this.loader.dismiss()
-                    this.mostrar = true;
                   }
+                  this.alertas.reverse()
+                  console.log(this.alertas)
+                  this.loader.dismiss()
+                  this.mostrar = true;
                 })
             })
            
@@ -56,7 +58,7 @@ toast;
        
       }else{
         this.presentLoader('Cargando historial ...').then(()=>{
-        this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"Titulo de la alerta","nivelalerta":"Moderado","descripcion":"Esta es la descripción de la alerta","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"}]
+        // this.alertas = [{"id":1,"usuario":"mauricio.donoso","destino":"APR","operatividad":"RESTRICCIÓN","titulo":"Titulo de la alerta","nivelalerta":"Moderado","descripcion":"Esta es la descripción de la alerta","lat":-33.293582,"date":"2022-07-15T14:19:55.830Z","location":"SSR001492","region":"13","lng":-70.69901,"name":"Thu Jul 14 2022 09:17:21 GMT-0400 (hora estándar de Chile)"}]
         // this.alertas = [{"id":1,"usuario":"maximo.emrdv","nivelalerta":"Muy Grave","elemento":"Elementos de Saneamiento","titulo":"jbivksn isno s","competencia":"Si","km_f":"84.754","descripcion":"ñsjs. jxbdi ceyv js hce lc eunidbud. ke uce lceblc ei. dl cie cei celg elg el cel cel ","km_i":"68.5","lat":-33.036,"codigo":"65A10602","date":"Tue Aug 02 2022 10:58:46 GMT-0400 (-04)","region":"05","transito":"Con Restricción","lng":-71.655293,"fechaEmergencia":"2022-08-16T10:58:00-04:00","restriccion":"Sólo Vehículos Livianos","name":"Cruce Ruta 68 (Placilla) - Camino La Pólvora - Valparaíso (Puerto)"}]
         this.loader.dismiss()  
         this.mostrar = true;

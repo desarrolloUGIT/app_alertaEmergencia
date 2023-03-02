@@ -18,8 +18,5 @@
 			"layoutName": "launch_screen",
 			"useDialog": true
 		}
-	},
-	"server": {
-		"url": "http://172.20.10.5:8101"
 	}
 }

@@ -468,7 +468,7 @@ export class HomePage implements OnInit {
   }
 
   actualizarOperatividad(){
-    this._ds.dominios('TRANSEMER').subscribe((res:any)=>{
+    this._ds.dominios('ESTADOUB').subscribe((res:any)=>{
       // console.log('OPERATIVIDAD -> ',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
@@ -1332,7 +1332,7 @@ export class HomePage implements OnInit {
                       this.alertasMaximas()
                     }else{
                       tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh']);
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1354,7 +1354,7 @@ export class HomePage implements OnInit {
                     }
                   }else{
                     tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'doh']);
+                    [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1386,24 +1386,29 @@ export class HomePage implements OnInit {
             if(res && res.status == '200'){
               this.db.open().then(()=>{
                 this.db.transaction( tx1=>{
-                  this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+                  this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
                     this.db.transaction(async tx=>{
                       if(dat.rows.length > 0){
                         tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                        [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
+                        [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh']);
+                        this.estadoEnvioAlerta = 'exitoso'
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this.openModalEnvio(this.estadoEnvioAlerta)
+                        this.presentToast('Emergencia enviada exitosamente',null,true);
                       }else{
-                        tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                        [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet']);
+                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                        [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'doh']);
+                        this.estadoEnvioAlerta = 'exitoso'
+                        this.deleteImage(this.images[0])
+                        this.volverInicio()
+                        this.openModalEnvio(this.estadoEnvioAlerta)
+                        this.presentToast('Emergencia enviada exitosamente',null,true);
                       }
                     })
                   })
                 })
               })
-              this.estadoEnvioAlerta = 'exitoso'
-              this.deleteImage(this.images[0])
-              this.volverInicio()
-              this.openModalEnvio(this.estadoEnvioAlerta)
-              this.presentToast('Emergencia enviada exitosamente',null,true);
             }else{
               this.intento++
               this.estadoEnvioAlerta = 'fallido'
@@ -1531,8 +1536,16 @@ export class HomePage implements OnInit {
     this.secondFormGroup.reset();
     this.thirdFormGroup.reset();
     this.secondFormGroup.controls['competencia'].setValue('Si')
-    this.stepper.reset();
+    // this.stepper.reset();
     this.intento = 0;
+    this.tab = 0;
+    this._us.cargar_storage().then(()=>{
+      if(this._us.conexion == 'si'){
+        this.mostrarMapa = true;
+      }else{
+        this.mostrarMapa = false;
+      }
+    })
     // this.view.setCenter(this.stgo)
     this._us.coordenadasRegion.forEach(c=>{
       if(c.region == this.region){

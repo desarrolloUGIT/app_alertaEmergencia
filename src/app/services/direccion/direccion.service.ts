@@ -99,6 +99,7 @@ export class DireccionService {
                 <max:REPORTDATE>`+data.date+`</max:REPORTDATE>
                 <max:ELEMENTO changed="?"></max:ELEMENTO>
                 <max:TRANSITO changed="?"></max:TRANSITO>
+                <max:ESTADOLOC changed="?">`+data.operatividad+`</max:ESTADOLOC>
                 <max:COMPETENCIA changed="?">`+data.competencia+`</max:COMPETENCIA>
                 <max:EVENTO changed="?"></max:EVENTO>
                 <max:APUNTALAR changed="?">False</max:APUNTALAR>
@@ -134,7 +135,7 @@ export class DireccionService {
                    <max:ADDINFO changed="?">1</max:ADDINFO>
                    <!--Optional:-->
                    <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
-                   <!--Optional:-->
+                   <!--Optional:--> 
                    <max:DESCRIPTION changed="Ejemplo de archivo">?</max:DESCRIPTION>
                    <!--Optional:-->
                    <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
@@ -157,6 +158,7 @@ export class DireccionService {
        </max:SyncMOP_SR_EMER_DOH>
     </soapenv:Body>
  </soapenv:Envelope>`
+ console.log(sr)
     let url = URL_SERVICIOS+'MOP_WS_MOP_SR_EMER_DOH';
     const options: HttpOptions = {
       url:url,

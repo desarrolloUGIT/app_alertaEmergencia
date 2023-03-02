@@ -32,6 +32,10 @@
           <ion-icon name="file-tray-full"></ion-icon>
           <span style="margin-left: 3%;">Alertas Pendientes</span>
         </ion-item>
+        <ion-item style="margin-top: 2%;" detail (click)="cambiarPag('historial')" [class.activo]="pagina == 'historial'">
+          <ion-icon name="reader" ></ion-icon>
+          <span style="margin-left: 3%;">Historial</span>
+        </ion-item>
         <ion-item style="margin-top: 2%;" detail (click)="cambiarPag('help')" [class.activo]="pagina == 'help'">
           <ion-icon name="help-circle" ></ion-icon>
           <span style="margin-left: 3%;">Ayuda</span>

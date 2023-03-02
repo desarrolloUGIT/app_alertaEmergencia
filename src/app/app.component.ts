@@ -122,7 +122,7 @@ export class AppComponent {
           this._us.cargar_storage().then(()=>{
             var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
             this.db.executeSql(sql, []).then((data)=>{
-              console.log('PENDIENTES-> ',data.rows.length)
+              // console.log('PENDIENTES-> ',data.rows.length)
               if(data.rows.length > 0){
                 this.alertas = [];
                 this.porenviar = [];
@@ -138,7 +138,7 @@ export class AppComponent {
                 }else{
                   if(this.alertas.length > 0){
                     this.porenviar = this.porenviar.concat(this.alertas)
-                    console.log('TOTAL POR ENVIAR->',this.porenviar.length,this.porenviar,this.alertas.length)
+                    // console.log('TOTAL POR ENVIAR->',this.porenviar.length,this.porenviar,this.alertas.length)
                     if(this.porenviar.length > 0){
                       this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
                     }
