@@ -27,6 +27,8 @@ addIcons({
   'ruta': 'assets/img/ruta.svg',
   'pin-3': 'assets/img/pin_3.svg',
   'red-vial': 'assets/img/red-vial.svg',
+  'red-vial-white': 'assets/img/red-vial-white.svg',
+  'red-vial-black': 'assets/img/red-vial-black.svg',
 });
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { PopoverPage } from '../popover/popover.page';
@@ -697,36 +699,6 @@ export class HomeVialidadPage implements OnInit {
     return nuevoArray;
   }
 
-  agregarPuntero(point,Graphics?,puntero2?){
-    // this.view2.goTo({
-    //   center:[point.longitude,point.latitude]
-    // })
-    // let point2 = {
-    //   type: "point",
-    //   longitude: point.longitude,
-    //   latitude: point.latitude
-    //   // longitude: -71.015,
-    //   // latitude: -30.004
-    // };
-    // let markerSymbol = {
-    //   type: "picture-marker",
-    //   url: !puntero2 ? "assets/img/pin.png" : "assets/img/pin_2.png",
-    //   width: "50px",
-    //   height: "40px"
-    // };
-
-    // let pointGraphic = new Graphic({
-    //   geometry: point2 as any,
-    //   symbol: markerSymbol as any,
-    //   popupTemplate:null
-    // });
-    // if(puntero2){
-    //   this.view2.zoom = 16
-    // }
-    // this.view2.graphics.removeAll();
-    // this.view2.graphics.add(pointGraphic);
-  }
-
   customZoom(){
     if(this.modo == 'osm'){
       this.osm.setVisible(false)
@@ -827,14 +799,6 @@ export class HomeVialidadPage implements OnInit {
     }
   }
 
-  moverStepperr(direction){
-    if(direction == 'next'){
-      this.stepper.next();
-    }else{
-      this.stepper.previous()
-    }
-  }
-
   sortJSON(data, key, orden) {
     return data.sort(function (a, b) {
         var x = a[key],
@@ -869,11 +833,7 @@ export class HomeVialidadPage implements OnInit {
       if(data.data){
        if(data.data.region){
         this.regionSelec = data.data.region
-       }else{
-        this.regionSelec = null;
        }
-      }else{
-        this.regionSelec = null;
       } 
     })
     return await popover.present();
@@ -881,8 +841,7 @@ export class HomeVialidadPage implements OnInit {
 
   buscarActivos(ev: any) {
     const val = ev.target.value;
-    if (val && val.trim() != '' && val.length >=2 ) {
-      console.log('LARGO-> ',this.activosPorRegion[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)][0])
+    if (val && val.trim() != '' && val.length >= 3 ) {
       this.buscandoActivos = this.activosPorRegion[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)].filter((item) => {
         return (item.nombre.toLowerCase().indexOf(val.toLowerCase()) > -1);
       })
@@ -980,45 +939,32 @@ export class HomeVialidadPage implements OnInit {
     return await popover.present();
   }
   // CARGAS INICIALES
-
-  activosDV(){
-    let decimalFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
-    this._http.get('assets/activosDV.json',{ responseType: 'json' }).subscribe((res:any)=>{
-      res = this.eliminarObjetosDuplicados(res,'CODIGO_CAMINO')
-      res.forEach(f=>{
-        f.REGION = this.reverseRegion(f.REGION)
-        if(f.REGION == this.region || this.region == '20'){
-          f.KM_I = Number(decimalFormat.format(f.KM_I / 1000));
-          f.KM_F = Number(decimalFormat.format(f.KM_F / 1000));
-          this.activosDVJSON.push(f)
-        }
-      })
-    },err=>{
-      err = this.eliminarObjetosDuplicados(err,'CODIGO_CAMINO')
-      err.forEach(f=>{
-        f.REGION = this.reverseRegion(f.REGION)
-        if(f.REGION == this.region || this.region == '20'){
-          f.KM_I = Number(decimalFormat.format(f.KM_I / 1000));
-          f.KM_F = Number(decimalFormat.format(f.KM_F / 1000));
-          this.activosDVJSON.push(f)
-        }
-      })
-    })
-  }
   
   nivelAlerta(){
     if(this.platform.is('capacitor')){
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM nivelAlerta', []).then((data)=>{
           if(data.rows.length > 0){
-            var arr = []
+            var arr = [,,,]
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
               var tmp = {
                 VALUE:data.rows.item(i).id,
                 DESCRIPTION:data.rows.item(i).name,
               }
-              arr.push(tmp)
+              if(tmp.VALUE == 'Leve'){
+                arr[0] = tmp
+              }else{
+                if(tmp.VALUE == 'Moderado'){
+                  arr[1] = tmp
+                }else{
+                  if(tmp.VALUE == 'Grave'){
+                    arr[2] = tmp
+                  }else{
+                    arr[3] = tmp
+                  }
+                }
+              }
             })
             this.nivelAlertaArray = arr;
             this.actualizarNivelAlerta()
@@ -1027,9 +973,25 @@ export class HomeVialidadPage implements OnInit {
               this._us.xmlToJson(res).then((result:any)=>{
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.nivelAlertaArray = [];
+                var arr = [,,,]
                 path.forEach(f=>{
-                  this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+                  // this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  if(f.VALUE[0] == 'Leve'){
+                    arr[0] = tmp
+                  }else{
+                    if(f.VALUE[0] == 'Moderado'){
+                      arr[1] = tmp
+                    }else{
+                      if(f.VALUE[0] == 'Grave'){
+                        arr[2] = tmp
+                      }else{
+                        arr[3] = tmp
+                      }
+                    }
+                  }
                 })
+                this.nivelAlertaArray = arr;
                 if(this.platform.is('capacitor')){
                   this.actualizarNivelAlerta()
                 }
@@ -1038,9 +1000,25 @@ export class HomeVialidadPage implements OnInit {
               this._us.xmlToJson(err.error.text).then((result:any)=>{
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.nivelAlertaArray = [];
+                var arr = [,,,]
                 path.forEach(f=>{
-                  this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+                  // this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  if(f.VALUE[0] == 'Leve'){
+                    arr[0] = tmp
+                  }else{
+                    if(f.VALUE[0] == 'Moderado'){
+                      arr[1] = tmp
+                    }else{
+                      if(f.VALUE[0] == 'Grave'){
+                        arr[2] = tmp
+                      }else{
+                        arr[3] = tmp
+                      }
+                    }
+                  }
                 })
+                this.nivelAlertaArray = arr;
                 if(this.platform.is('capacitor')){
                   this.actualizarNivelAlerta()
                 }
@@ -1054,9 +1032,25 @@ export class HomeVialidadPage implements OnInit {
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.nivelAlertaArray = [];
+          var arr = [,,,]
           path.forEach(f=>{
-            this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+            // this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(f.VALUE[0] == 'Leve'){
+              arr[0] = tmp
+            }else{
+              if(f.VALUE[0] == 'Moderado'){
+                arr[1] = tmp
+              }else{
+                if(f.VALUE[0] == 'Grave'){
+                  arr[2] = tmp
+                }else{
+                  arr[3] = tmp
+                }
+              }
+            }
           })
+          this.nivelAlertaArray = arr;
           if(this.platform.is('capacitor')){
             this.actualizarNivelAlerta()
           }
@@ -1065,9 +1059,25 @@ export class HomeVialidadPage implements OnInit {
         this._us.xmlToJson(err.error.text).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.nivelAlertaArray = [];
+          var arr = [,,,]
           path.forEach(f=>{
-            this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+            // this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(f.VALUE[0] == 'Leve'){
+              arr[0] = tmp
+            }else{
+              if(f.VALUE[0] == 'Moderado'){
+                arr[1] = tmp
+              }else{
+                if(f.VALUE[0] == 'Grave'){
+                  arr[2] = tmp
+                }else{
+                  arr[3] = tmp
+                }
+              }
+            }
           })
+          this.nivelAlertaArray = arr;
           if(this.platform.is('capacitor')){
             this.actualizarNivelAlerta()
           }
@@ -1082,9 +1092,25 @@ export class HomeVialidadPage implements OnInit {
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.nivelAlertaArray = [];
+          var arr = [,,,]
           path.forEach(f=>{
-            this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+            // this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            if(f.VALUE[0] == 'Leve'){
+              arr[0] = tmp
+            }else{
+              if(f.VALUE[0] == 'Moderado'){
+                arr[1] = tmp
+              }else{
+                if(f.VALUE[0] == 'Grave'){
+                  arr[2] = tmp
+                }else{
+                  arr[3] = tmp
+                }
+              }
+            }
           })
+          this.nivelAlertaArray = arr;
           this.db.open().then(()=>{
             this.db.transaction(rx=>{
               rx.executeSql('delete from nivelAlerta', [], ()=>{
@@ -1099,14 +1125,26 @@ export class HomeVialidadPage implements OnInit {
             }).catch(()=>{
               this.db.executeSql('SELECT * FROM nivelAlerta', []).then((data)=>{
                 if(data.rows.length > 0){
-                  var arr = []
+                  var arr = [,,,]
                   var AR = Array.from({length: data.rows.length}, (x, i) => i);
                   AR.forEach(i=>{
                     var tmp = {
                       VALUE:data.rows.item(i).id,
                       DESCRIPTION:data.rows.item(i).name,
                     }
-                    arr.push(tmp)
+                    if(tmp.VALUE == 'Leve'){
+                      arr[0] = tmp
+                    }else{
+                      if(tmp.VALUE == 'Moderado'){
+                        arr[1] = tmp
+                      }else{
+                        if(tmp.VALUE == 'Grave'){
+                          arr[2] = tmp
+                        }else{
+                          arr[3] = tmp
+                        }
+                      }
+                    }
                   })
                   this.nivelAlertaArray = arr;
                 }
@@ -1117,14 +1155,26 @@ export class HomeVialidadPage implements OnInit {
       }else{
         this.db.executeSql('SELECT * FROM nivelAlerta', []).then((data)=>{
           if(data.rows.length > 0){
-            var arr = []
+            var arr = [,,,]
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
               var tmp = {
                 VALUE:data.rows.item(i).id,
                 DESCRIPTION:data.rows.item(i).name,
               }
-              arr.push(tmp)
+              if(tmp.VALUE == 'Leve'){
+                arr[0] = tmp
+              }else{
+                if(tmp.VALUE == 'Moderado'){
+                  arr[1] = tmp
+                }else{
+                  if(tmp.VALUE == 'Grave'){
+                    arr[2] = tmp
+                  }else{
+                    arr[3] = tmp
+                  }
+                }
+              }
             })
             this.nivelAlertaArray = arr;
           }
@@ -1268,14 +1318,26 @@ export class HomeVialidadPage implements OnInit {
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM transito', []).then((data)=>{
           if(data.rows.length > 0){
-            var arr = []
+            var arr = [,,,]
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
               var tmp = {
                 VALUE:data.rows.item(i).id,
                 DESCRIPTION:data.rows.item(i).name,
               }
-              arr.push(tmp)
+              if(tmp.VALUE == 'Transitable'){
+                arr[0] = tmp
+              }else{
+                if(tmp.VALUE == 'Con Restricción'){
+                  arr[1] = tmp
+                }else{
+                  if(tmp.VALUE == 'Interrumpido'){
+                    arr[2] = tmp
+                  }else{
+                    arr[3] = tmp
+                  }
+                }
+              }
             })
             this.transito = arr;
             this.actualizarTransito()
@@ -1284,9 +1346,24 @@ export class HomeVialidadPage implements OnInit {
               this._us.xmlToJson(res).then((result:any)=>{
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.transito = [];
+                var arr = [,,,]
                 path.forEach(f=>{
-                  this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+                  if(f.VALUE[0] == 'Transitable'){
+                    arr[0] = tmp
+                  }else{
+                    if(f.VALUE[0] == 'Con Restricción'){
+                      arr[1] = tmp
+                    }else{
+                      if(f.VALUE[0] == 'Interrumpido'){
+                        arr[2] = tmp
+                      }else{
+                        arr[3] = tmp
+                      }
+                    }
+                  }
                 })
+                this.transito = arr;
                 if(this.platform.is('capacitor')){
                   this.actualizarTransito()
                 }
@@ -1295,9 +1372,24 @@ export class HomeVialidadPage implements OnInit {
               this._us.xmlToJson(err.error.text).then((result:any)=>{
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.transito = [];
+                var arr = [,,,]
                 path.forEach(f=>{
-                  this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+                  var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+                  if(f.VALUE[0] == 'Transitable'){
+                    arr[0] = tmp
+                  }else{
+                    if(f.VALUE[0] == 'Con Restricción'){
+                      arr[1] = tmp
+                    }else{
+                      if(f.VALUE[0] == 'Interrumpido'){
+                        arr[2] = tmp
+                      }else{
+                        arr[3] = tmp
+                      }
+                    }
+                  }
                 })
+                this.transito = arr;
                 if(this.platform.is('capacitor')){
                   this.actualizarTransito()
                 }
@@ -1311,9 +1403,24 @@ export class HomeVialidadPage implements OnInit {
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.transito = [];
+          var arr = [,,,]
           path.forEach(f=>{
-            this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+            if(f.VALUE[0] == 'Transitable'){
+              arr[0] = tmp
+            }else{
+              if(f.VALUE[0] == 'Con Restricción'){
+                arr[1] = tmp
+              }else{
+                if(f.VALUE[0] == 'Interrumpido'){
+                  arr[2] = tmp
+                }else{
+                  arr[3] = tmp
+                }
+              }
+            }
           })
+          this.transito = arr;
           if(this.platform.is('capacitor')){
             this.actualizarTransito()
           }
@@ -1322,9 +1429,24 @@ export class HomeVialidadPage implements OnInit {
         this._us.xmlToJson(err.error.text).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.transito = [];
+          var arr = [,,,]
           path.forEach(f=>{
-            this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+            if(f.VALUE[0] == 'Transitable'){
+              arr[0] = tmp
+            }else{
+              if(f.VALUE[0] == 'Con Restricción'){
+                arr[1] = tmp
+              }else{
+                if(f.VALUE[0] == 'Interrumpido'){
+                  arr[2] = tmp
+                }else{
+                  arr[3] = tmp
+                }
+              }
+            }
           })
+          this.transito = arr;
           if(this.platform.is('capacitor')){
             this.actualizarTransito()
           }
@@ -1339,10 +1461,25 @@ export class HomeVialidadPage implements OnInit {
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.transito = [];
+          var arr = [,,,]
           path.forEach(f=>{
-            this.transito.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+            var tmp = {DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]}
+            if(f.VALUE[0] == 'Transitable'){
+              arr[0] = tmp
+            }else{
+              if(f.VALUE[0] == 'Con Restricción'){
+                arr[1] = tmp
+              }else{
+                if(f.VALUE[0] == 'Interrumpido'){
+                  arr[2] = tmp
+                }else{
+                  arr[3] = tmp
+                }
+              }
+            }
           })
-          this.transito = this.sortJSON(this.transito,'VALUE','asc')
+          this.transito = arr;
+          // this.transito = this.sortJSON(this.transito,'VALUE','asc')
           this.db.open().then(()=>{
             this.db.transaction(rx=>{
               rx.executeSql('delete from transito', [], ()=>{
@@ -1357,17 +1494,29 @@ export class HomeVialidadPage implements OnInit {
             }).catch(()=>{
               this.db.executeSql('SELECT * FROM transito', []).then((data)=>{
                 if(data.rows.length > 0){
-                  var arr = []
+                  var arr = [,,,]
                   var AR = Array.from({length: data.rows.length}, (x, i) => i);
                   AR.forEach(i=>{
                     var tmp = {
                       VALUE:data.rows.item(i).id,
                       DESCRIPTION:data.rows.item(i).name,
                     }
-                    arr.push(tmp)
+                    if(tmp.VALUE == 'Transitable'){
+                      arr[0] = tmp
+                    }else{
+                      if(tmp.VALUE == 'Con Restricción'){
+                        arr[1] = tmp
+                      }else{
+                        if(tmp.VALUE == 'Interrumpido'){
+                          arr[2] = tmp
+                        }else{
+                          arr[3] = tmp
+                        }
+                      }
+                    }
                   })
                   this.transito = arr;
-                  this.transito = this.sortJSON(this.transito,'VALUE','asc')
+                  // this.transito = this.sortJSON(this.transito,'VALUE','asc')
                 }
               })     
             })
@@ -1376,17 +1525,29 @@ export class HomeVialidadPage implements OnInit {
       }else{
         this.db.executeSql('SELECT * FROM transito', []).then((data)=>{
           if(data.rows.length > 0){
-            var arr = []
+            var arr = [,,,]
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
               var tmp = {
                 VALUE:data.rows.item(i).id,
                 DESCRIPTION:data.rows.item(i).name,
               }
-              arr.push(tmp)
+              if(tmp.VALUE == 'Transitable'){
+                arr[0] = tmp
+              }else{
+                if(tmp.VALUE == 'Con Restricción'){
+                  arr[1] = tmp
+                }else{
+                  if(tmp.VALUE == 'Interrumpido'){
+                    arr[2] = tmp
+                  }else{
+                    arr[3] = tmp
+                  }
+                }
+              }
             })
             this.transito = arr;
-            this.transito = this.sortJSON(this.transito,'VALUE','asc')
+            // this.transito = this.sortJSON(this.transito,'VALUE','asc')
           }
         })  
       }
@@ -2208,7 +2369,6 @@ export class HomeVialidadPage implements OnInit {
           this.dataPosicion.region = this.region;
         }
       })
-      this.agregarPuntero(pointInicial,Graphic)
     })
   }
 

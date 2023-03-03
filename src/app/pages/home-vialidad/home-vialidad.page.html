@@ -8,7 +8,7 @@
     </ion-title>
   </ion-toolbar>
   <ion-toolbar mode="ios" *ngIf="(mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')" >
-    <ion-searchbar [disabled]="!regionSelec" mode="ios" color="light"  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <ion-searchbar [disabled]="!regionSelec" mode="ios" color="light"  search-icon="red-vial-black" [placeholder]="!regionSelec ? 'Selecciona Región para filtrar' : 'Buscar camino o rol'" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <ion-buttons  slot="end">
       <ion-button size="small" color="light" (click)="presentPopoverRegion($event)">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
@@ -20,7 +20,7 @@
 
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (modo == 'osm' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (modo == 'osm' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
       <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
@@ -52,7 +52,7 @@
     </div>
     <div  class="map-container" id="map" [style.height]="mostrarMapa? '100%' : '0'"> 
       <img class="pinCenter" src="assets/img/pin.png" alt="" *ngIf="mostrarMapa && internet">
-      <ion-button expand="block" class="buscarCamino" [disabled]="buscando"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet">
+      <ion-button expand="block" class="buscarCamino" mode="ios" [disabled]="buscando"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet">
         Buscar Camino <ion-icon *ngIf="!buscando" slot="end" name="chevron-forward-outline"></ion-icon><ion-spinner slot="end" *ngIf="buscando" name="circles"></ion-spinner>
       </ion-button>   
     </div>
@@ -143,7 +143,7 @@
             <ion-item lines="none" [class.select]="secondFormGroup.value.transito">
               <ion-label >Tránsito</ion-label>
               <ion-select mode="ios" interface="alert" placeholder="Selecciona tránsito" class="select-text" cancelText="Cancelar" okText="OK" title="Tránsito" formControlName="transito">
-                <ion-select-option *ngFor="let item of transito" [value]="item.VALUE">{{item.VALUE}}</ion-select-option>
+                <ion-select-option *ngFor="let item of transito" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
               </ion-select>
             </ion-item>
             <ion-item lines="none" *ngIf="secondFormGroup.value.transito == 'Con Restricción'" [class.select]="secondFormGroup.value.restriccion">
@@ -313,7 +313,7 @@
   <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
       <ion-label>Activo</ion-label>
-      <ion-icon name="distance"></ion-icon>
+      <ion-icon name="red-vial-white"></ion-icon>
     </ion-segment-button>
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
       <ion-label>Operatividad</ion-label>
