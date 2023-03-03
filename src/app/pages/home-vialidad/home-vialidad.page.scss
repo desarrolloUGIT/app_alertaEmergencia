@@ -100,6 +100,10 @@ ion-segment{
     top: 85% !important;
     left: 90% !important;
   }
+  ::ng-deep .ol-rotate{
+    top: 75% !important;
+    right: 1%;
+  }
 }
 
 :ng-deep .ol-zoom .ol-unselectable .ol-control button{

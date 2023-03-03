@@ -8,7 +8,7 @@
 </ion-header>
 
 <ion-content>
-  <ion-accordion-group *ngIf="mostrar" mode="ios" style="margin-bottom: 5%;margin-top: 3%;" [value]="alertas.length > 0 ? alertas[0].id : null">
+  <ion-accordion-group *ngIf="mostrar" mode="ios" style="margin-bottom: 5%;margin-top: 3%;" [value]="alertas.length > 0 ? alertas[0].id : null" >
     <ion-accordion [value]="alertas[i].id" *ngFor="let item of alertas;let i = index">
       <ion-item slot="header" color="accordion">
         <ion-badge slot="start" color="medium">{{item.id}}</ion-badge>
@@ -19,10 +19,10 @@
             <ion-row>
               <p style="word-break: break-all;"><span>Descripción:</span> {{item.descripcion}}</p>
             </ion-row>
-            <ion-row *ngIf="tipo != 'vialidad'">
+            <ion-row *ngIf="item.error != 'vialidad'">
               <ion-col size="12" >
                 <ion-row>
-                  <p><span>Fecha de envío:</span> {{item.name | date:'dd/MM/yyyy HH:mm'}}</p>
+                  <p><span>Fecha de envío:</span> {{ item.name | date:'dd/MM/yyyy HH:mm'}}</p>
                 </ion-row>
                 <ion-row *ngIf="item.error == 'doh' && item.location">
                   <p><span>Código:</span> {{item.location}}</p>
@@ -41,18 +41,19 @@
             </ion-row>
             <ion-row *ngIf="item.error == 'vialidad'">
               <ion-row>
-                <ion-col size="8" >
+                <p><span>Fecha de envío:</span> {{item.date | date:'dd/MM/yyyy HH:mm'}}</p>
+              </ion-row>
+              <ion-row>
+                <ion-col size="12" >
                   <ion-row>
                     <p><span>Camino:</span> {{item.name}}</p>
                   </ion-row>
                   <ion-row>
+                    <p><span>Código:</span> {{item.codigo}}</p>
+                  </ion-row>
+                  <ion-row>
                     <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
                   </ion-row>
-                </ion-col>
-                <ion-col size="4">
-                  <div align="center">
-                    <ion-img [src]="item.foto ? 'data:image/jpeg;base64,'+item.foto.data : 'data:image/jpeg;base64,'+item.name.data" style="height: 100px;"></ion-img>
-                  </div>
                 </ion-col>
               </ion-row>
               <ion-row style="width: 100%;">

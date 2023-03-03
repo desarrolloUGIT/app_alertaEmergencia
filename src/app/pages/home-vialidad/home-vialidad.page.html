@@ -20,7 +20,7 @@
 
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (modo == 'osm' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="activosDV()" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
       <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
@@ -56,7 +56,7 @@
         Buscar Camino <ion-icon *ngIf="!buscando" slot="end" name="chevron-forward-outline"></ion-icon><ion-spinner slot="end" *ngIf="buscando" name="circles"></ion-spinner>
       </ion-button>   
     </div>
-    <ion-fab horizontal="end" style="margin-top: 10%;" [style.margin-top]="((mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')) ? '5%' : '10%'" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet" (click)="presentPopover($event)">
+    <ion-fab horizontal="end" style="margin-top: 10%;" [style.margin-top]="((mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')) ? '5%' : '10%'" vertical="top" slot="fixed" *ngIf="mostrarMapa && internet && buscandoActivos.length <= 0" (click)="presentPopover($event)">
       <ion-fab-button size="small" color="botonazul">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>

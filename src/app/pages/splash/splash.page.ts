@@ -47,7 +47,7 @@ export class SplashPage implements OnInit {
         this.nativePageTransitions.fade(options);
         this._us.cargar_storage().then(()=>{
           if(this._us.usuario){
-            let body = {user:this._us.getUser().user,password:this._us.getUser().paswword}
+            let body = {user:this._us.getUser().user,password:this._us.getUser().password}
             this._us.login(body).subscribe((res:any)=>{
               if(res && res.status == '200'){
                 this._mc.enable(true,'first')
