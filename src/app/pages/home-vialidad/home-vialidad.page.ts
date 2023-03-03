@@ -30,6 +30,7 @@ addIcons({
   'distance': 'assets/img/distance.svg',
   'ruta': 'assets/img/ruta.svg',
   'pin-3': 'assets/img/pin_3.svg',
+  'red-vial': 'assets/img/red-vial.svg',
 });
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { PopoverPage } from '../popover/popover.page';

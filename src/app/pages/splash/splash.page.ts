@@ -32,7 +32,7 @@ export class SplashPage implements OnInit {
       header: 'Actualización',
       message: 'La app se ha actualizado, favor vuelve a iniciar sesión',
       buttons: ['OK'],
-      mode:'ios'
+      mode:'ios' 
     });
     await alert.present();
   }
@@ -45,23 +45,57 @@ export class SplashPage implements OnInit {
           duration:200
         }
         this.nativePageTransitions.fade(options);
-      }
-      this._us.cargar_storage().then(()=>{
-        if(this._us.usuario){
-          this._mc.enable(true,'first')
-          if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
-            this.navctrl.navigateRoot('/home_vialidad')
+        this._us.cargar_storage().then(()=>{
+          if(this._us.usuario){
+            let body = {user:this._us.getUser().user,password:this._us.getUser().paswword}
+            this._us.login(body).subscribe((res:any)=>{
+              if(res && res.status == '200'){
+                this._mc.enable(true,'first')
+                if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                  this.navctrl.navigateRoot('/home_vialidad')
+                }else{
+                  this.navctrl.navigateRoot('/home')
+                }
+              }else{
+                this.salir()
+                this._mc.enable(false,'first') 
+                this.navctrl.navigateRoot('/login')
+              }
+            },err=>{
+              this._mc.enable(true,'first')
+              if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                this.navctrl.navigateRoot('/home_vialidad')
+              }else{
+                this.navctrl.navigateRoot('/home')
+              }
+            })
           }else{
-            this.navctrl.navigateRoot('/home')
+            this._mc.enable(false,'first')
+            this.navctrl.navigateRoot('/login')
           }
-        }else{
+        }).catch(()=>{
           this._mc.enable(false,'first')
           this.navctrl.navigateRoot('/login')
-        }
-      }).catch(()=>{
-        this._mc.enable(false,'first')
-        this.navctrl.navigateRoot('/login')
-      })
+        })
+      }else{
+        this._us.cargar_storage().then(()=>{
+          if(this._us.usuario){
+            this._mc.enable(true,'first')
+            if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+              this.navctrl.navigateRoot('/home_vialidad')
+            }else{
+              this.navctrl.navigateRoot('/home')
+            }
+          }else{
+            this._mc.enable(false,'first')
+            this.navctrl.navigateRoot('/login')
+          }
+        }).catch(()=>{
+          this._mc.enable(false,'first')
+          this.navctrl.navigateRoot('/login')
+        })
+      }
+     
      }, 7000);
   }
 

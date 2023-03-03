@@ -139,7 +139,7 @@ export class LoginPage implements OnInit {
           this.presentAlert('¡Error!','Usuario y/o contraseña incorrecta')
         })
       }else{
-        this._http.get('assets/usuario_2.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+        this._http.get('assets/usuario.xml',{ responseType: 'text' }).subscribe((res:any)=>{
           this._us.xmlToJson(res).then((result:any)=>{
             let path = result['SOAPENV:ENVELOPE']['SOAPENV:BODY'][0].QUERYMOP_USUARIO_DOHRESPONSE[0].MOP_USUARIO_DOHSET[0].MAXUSER[0]
             var grupo = '';
