@@ -20,7 +20,7 @@
 
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (modo == 'osm' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
       <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
@@ -67,7 +67,7 @@
     </div>
     <section *ngIf="tab == 1">
       <ion-item mode="ios" lines="none" style="--background: transparent;">
-        <ion-button (click)="mostrarMapa = true;tab = 0;"  mode="ios"  color="botonazul"  size="small" *ngIf="camino">
+        <ion-button (click)="mostrarMapa = true;tab = 0;"  mode="ios"  color="botonazul"  size="small" *ngIf="dibujarCamino">
           Ver camino <ion-icon  slot="start" name="map"></ion-icon>
         </ion-button> 
         <ion-title  style="margin-left: -3%;">Activo</ion-title>

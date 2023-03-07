@@ -20,7 +20,7 @@ export class PopoverPage implements OnInit {
     this.mapa = navParams.get('mapa');
     this.redvial = navParams.get('red');
     this.novialidad = navParams.get('novialidad');
-    if(this.mapa != 'osm'){
+    if(this.mapa == 'satellite'){
       this.tipo = 'Mapa topo-vector';
     }else{
       this.tipo = 'Mapa Satelital';
@@ -33,10 +33,10 @@ export class PopoverPage implements OnInit {
   }
 
   tipoMapa() {
-    if(this.mapa == 'osm'){
-      this.mapa = 'satelite';
+    if(this.mapa == 'topo-vector'){
+      this.mapa = 'satellite';
     }else{
-      this.mapa = 'osm';
+      this.mapa = 'topo-vector';
     }
     let data = { mapa:this.mapa };
     this.popctrl.dismiss(data);
