@@ -42,6 +42,7 @@ import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
 import {FullScreen, defaults as defaultControls} from 'ol/control.js';
 import {TileArcGISRest} from 'ol/source.js';
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -833,6 +834,15 @@ export class HomeVialidadPage implements OnInit {
       if(data.data){
        if(data.data.region){
         this.regionSelec = data.data.region
+        const reg = String(Number(data.data.region) + 1).length == 1 ? '0'+(Number(data.data.region) + 1) : String(Number(data.data.region) + 1);
+        this._us.coordenadasRegion.forEach(c=>{
+          if(c.region == reg){
+            this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+            this.dataPosicion.lng = Number(c.lng.toFixed(6))
+            this.dataPosicion.lat = Number(c.lat.toFixed(6))
+            this.dataPosicion.region = this.region;
+          }
+        })
        }
       } 
     })
@@ -867,8 +877,6 @@ export class HomeVialidadPage implements OnInit {
     this.caminosEncontrados = [];
     this.caminosEncontrados.push(body)
     this.firstFormGroup.controls['activoSeleccionado'].setValue(body)
-    // this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-    // this.hoy = this._us.fecha(new Date())
     this.km = null;
     this.km_i = data.km_i;
     this.km_f = data.km_f;
@@ -881,7 +889,25 @@ export class HomeVialidadPage implements OnInit {
     this._us.seleccionMapa = 'no';
     this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
     this.hoy = this._us.fecha(new Date())
-    this._us.cargar_storage().then(()=>{})
+
+    var layer = new FeatureLayer( {
+      url:this.vialidadRedVialURL+'/3',
+      definitionExpression:'',
+			outFields : [ '*' ],		});
+    let query = {
+      outFields:[],
+      returnGeometry:true,
+      where:''
+    }
+    query.outFields = ['*'];
+    query.where =  "CODIGO_CAMINO = '"+data.codigo+"'";
+    query.returnGeometry =  true;
+    layer.queryFeatures(query).then(result =>{
+      console.log(result)
+    })
+
+
+    // this._us.cargar_storage().then(()=>{})
   }
 
   selectTab(i){
