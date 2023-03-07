@@ -20,7 +20,7 @@
 
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="distance" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'topo-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="red-vial-black" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
       <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">

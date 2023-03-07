@@ -27,8 +27,8 @@ addIcons({
   'ruta': 'assets/img/ruta.svg',
   'pin-3': 'assets/img/pin_3.svg',
   'red-vial': 'assets/img/red-vial.svg',
-  'red-vial-white': 'assets/img/red-vial-white.svg',
-  'red-vial-black': 'assets/img/red-vial-black.svg',
+  'red-vial-white': 'assets/img/ruta-white.svg',
+  'red-vial-black': 'assets/img/ruta-black.svg',
 });
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { PopoverPage } from '../popover/popover.page';
