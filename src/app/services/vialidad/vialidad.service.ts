@@ -180,7 +180,7 @@ export class VialidadService {
 
   obtenerCapas(geometryX,geometryY,extent){
     let promesa = new Promise((resolve,reject)=>{
-      return this.http.get('https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer/identify?f=json&returnFieldName=true&returnGeometry=true&returnUnformattedValues=false&returnZ=true&returnM=true&tolerance=20&imageDisplay=310,200,96&geometry={"x":'+geometryX+',"y":'+geometryY+'}&geometryType=esriGeometryPoint&sr=5360&mapExtent='+(extent)+'&layers=3').subscribe(res=>{
+      return this.http.get('https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer/identify?f=json&returnFieldName=true&returnGeometry=true&returnUnformattedValues=false&returnZ=true&returnM=true&tolerance=10&imageDisplay=310,200,96&geometry={"x":'+geometryX+',"y":'+geometryY+'}&geometryType=esriGeometryPoint&sr=5360&mapExtent='+(extent)+'&layers=3').subscribe(res=>{
         resolve(res)
       },err=>{
         reject(err)

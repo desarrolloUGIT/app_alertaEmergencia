@@ -50,9 +50,9 @@
         </ion-accordion>
       </ion-accordion-group>
     </div>
-    <div  class="map-container" id="map" [style.height]="mostrarMapa? '100%' : '0'"> 
+    <div   id="container" [style.height]="mostrarMapa? '100%' : '0'"> 
       <img class="pinCenter" src="assets/img/pin.png" alt="" *ngIf="mostrarMapa && internet">
-      <ion-button expand="block" class="buscarCamino" mode="ios" [disabled]="buscando"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet">
+      <ion-button expand="block" class="buscarCamino" mode="ios" [disabled]="buscando"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet && buscandoActivos.length <= 0">
         Buscar Camino <ion-icon *ngIf="!buscando" slot="end" name="chevron-forward-outline"></ion-icon><ion-spinner slot="end" *ngIf="buscando" name="circles"></ion-spinner>
       </ion-button>   
     </div>
@@ -66,8 +66,11 @@
       <img src="assets/img/not_signal.png" alt="" width="60%">
     </div>
     <section *ngIf="tab == 1">
-      <ion-item lines="none" style="--background: transparent;">
-        <ion-title style="margin-left: -3%;">Activo</ion-title>
+      <ion-item mode="ios" lines="none" style="--background: transparent;">
+        <ion-button (click)="mostrarMapa = true;tab = 0;"  mode="ios"  color="botonazul"  size="small" *ngIf="camino">
+          Ver camino <ion-icon  slot="start" name="map"></ion-icon>
+        </ion-button> 
+        <ion-title  style="margin-left: -3%;">Activo</ion-title>
         <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
           <ion-icon name="close-outline" slot="icon-only"></ion-icon>
         </ion-button>
@@ -130,7 +133,7 @@
       </div>
     </section>
     <section *ngIf="tab == 2">
-      <ion-item lines="none" style="--background: transparent;">
+      <ion-item lines="none"  mode="ios" style="--background: transparent;">
         <ion-title style="margin-left: -3%;"><div class="ion-text-wrap">Operatividad y Daño</div></ion-title>
         <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
           <ion-icon name="close-outline" slot="icon-only"></ion-icon>
@@ -172,7 +175,7 @@
       </form>
     </section>
     <section *ngIf="tab == 3">
-      <ion-item lines="none" style="--background: transparent;">
+      <ion-item lines="none"  mode="ios" style="--background: transparent;">
         <ion-title style="margin-left: -3%;">Datos adicionales</ion-title>
         <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
           <ion-icon name="close-outline" slot="icon-only"></ion-icon>
@@ -217,7 +220,7 @@
       </div>
     </section>
     <section *ngIf="tab == 4">
-      <ion-item lines="none" style="--background: transparent;">
+      <ion-item lines="none"  mode="ios" style="--background: transparent;">
         <ion-title style="margin-left: -3%;">Resumen</ion-title>
         <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
           <ion-icon name="close-outline" slot="icon-only"></ion-icon>

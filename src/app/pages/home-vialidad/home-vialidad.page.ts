@@ -34,14 +34,20 @@ import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { PopoverPage } from '../popover/popover.page';
 import { PopoverRegionPage } from '../popoverRegion/popoverRegion.page';
 
-import TileLayer from 'ol/layer/Tile';
-import OSM, {ATTRIBUTION} from 'ol/source/OSM';
-import {View, Feature, Map } from 'ol';
-import Point from 'ol/geom/Point';
-import Style from 'ol/style/Style';
-import Icon from 'ol/style/Icon';
-import {FullScreen, defaults as defaultControls} from 'ol/control.js';
-import {TileArcGISRest} from 'ol/source.js';
+// import TileLayer from 'ol/layer/Tile';
+// import OSM, {ATTRIBUTION} from 'ol/source/OSM';
+// import {View, Feature, Map } from 'ol';
+// import Point from 'ol/geom/Point';
+// import Style from 'ol/style/Style';
+// import Icon from 'ol/style/Icon';
+// import {FullScreen, defaults as defaultControls} from 'ol/control.js';
+// import {TileArcGISRest} from 'ol/source.js';
+
+
+import Map from "@arcgis/core/Map";
+import MapView from "@arcgis/core/views/MapView";
+import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
+import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 
 const IMAGE_DIR = 'stored-images';
@@ -61,54 +67,57 @@ interface LocalFile {
 export class HomeVialidadPage implements OnInit {
   @ViewChild('stepper')  stepper: MatStepper;
   @ViewChild('modal') modal: ElementRef;
-  stgo = olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')
-  view2 =  new View({
-    center: this.stgo, 
-    zoom: 13,
-  })
+  // stgo = olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')
+  // view2 =  new View({
+  //   center: this.stgo, 
+  //   zoom: 13,
+  // })
   map: Map;
   chile = new VectorLayer({})
-  baseLayer = new TileLayer({
-    source: new OSM({
-      attributions: ['Mapa de Esri',''],
-      url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    })
-  })
-  osm = new TileLayer({
-    source: new OSM({
-      url:'https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
-    })
-  });
+  // baseLayer = new TileLayer({
+  //   source: new OSM({
+  //     attributions: ['Mapa de Esri',''],
+  //     url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  //   })
+  // })
+  // osm = new TileLayer({
+  //   source: new OSM({
+  //     url:'https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+  //   })
+  // });
   modo = 'satelite'
-  iconFeature = new Feature({
-    geometry: new Point(this.stgo),
-    name: 'Mi ubicación'
-  });
+  // iconFeature = new Feature({
+  //   geometry: new Point(this.stgo),
+  //   name: 'Mi ubicación'
+  // });
   vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
-  flVialidad =  new TileLayer({
-    source: new TileArcGISRest({
+  flVialidad = new MapImageLayer({
+    url: this.vialidadRedVialURL
+  })
+  // flVialidad =  new TileLayer({
+  //   source: new TileArcGISRest({
 
-    url:this.vialidadRedVialURL
-    })
-  })
-  markers = new VectorLayer({
-    source: new VectorSource(),
-    style: new Style({
-      image: new Icon({
-        anchor: [0.5, 1],
-        src: 'assets/img/pin.png',
-        scale:0.08
-      })
-    })
-  });
-  marker = new Feature(new Point(olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')));
-  dvRedVIal =  new ImageLayer({
-    source: new ImageArcGISRest({
-      ratio: 1,
-      params: {},
-      url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer',
-    }),
-  })
+  //   url:this.vialidadRedVialURL
+  //   })
+  // })
+  // markers = new VectorLayer({
+  //   source: new VectorSource(),
+  //   style: new Style({
+  //     image: new Icon({
+  //       anchor: [0.5, 1],
+  //       src: 'assets/img/pin.png',
+  //       scale:0.08
+  //     })
+  //   })
+  // });
+  // marker = new Feature(new Point(olProj.transform([-70.65266161399654,-33.44286267068381], 'EPSG:4326', 'EPSG:3857')));
+  // dvRedVIal =  new ImageLayer({
+  //   source: new ImageArcGISRest({
+  //     ratio: 1,
+  //     params: {},
+  //     url: 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer',
+  //   }),
+  // })
   regiones = null;
   firstFormGroup:FormGroup;
   secondFormGroup:FormGroup;
@@ -121,6 +130,8 @@ export class HomeVialidadPage implements OnInit {
   picture = null;
   estadoEnvioAlerta = null;
   map2;
+  view2:any;
+
   basemap = "satellite"
   operatividadArray = [];
   nivelAlertaArray = [];
@@ -155,6 +166,7 @@ export class HomeVialidadPage implements OnInit {
   footer = true;
   regionSelec;
   redactiva = false
+  camino:any;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
@@ -225,6 +237,10 @@ export class HomeVialidadPage implements OnInit {
 
   iniciar(){
     this._us.cargar_storage().then(()=>{
+      this.region = this._us.usuario.PERSON.STATEPROVINCE
+      this.dataPosicion.region = this.region;
+      this._us.nextmessage('usuario_logeado') 
+      this.loadFiles()
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
@@ -239,13 +255,6 @@ export class HomeVialidadPage implements OnInit {
         this.internet = false;
         this._us.cargar_storage().then(()=>{})
       }
-      this.region = this._us.usuario.PERSON.STATEPROVINCE
-      // this.region = this.region == '20' ? '13' : this.region;
-      this.dataPosicion.region = this.region;
-      this._us.nextmessage('usuario_logeado') 
-      this.loadFiles()
-      // this.loadMapVialidad()
-    
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[]);
@@ -420,63 +429,96 @@ export class HomeVialidadPage implements OnInit {
   }
 
   async loadMapVialidad(){
-    this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
-      this.chile = new VectorLayer({
-        source:new VectorSource({
-          features: new GeoJSON().readFeatures(chileJSON),
-        })
-      })
-      this.map = new Map({
-        
-        layers: [
-         this.osm,
-         this.baseLayer,
-        //  this.chile
-        this.flVialidad
-        ],
-        view:this.view2,
+      this.map2 = new Map({
+        basemap: 'satellite'
       });
-      // this.map.addControl(new FullScreen)
-      setTimeout(() => {
-        this.map.setTarget("map");
-      }, 500);
+      this.view2 = new MapView({
+        container: "container", 
+        zoom: 13,
+        map: this.map2,
+        spatialReference:{wkid:3857},
+        constraints : {
+          minZoom :5,
+          maxZoom:18
+        },
+      });
+      let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
-          this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+          this.view2.center = [c.lng,c.lat]
+          pointInicial = {longitude:c.lng,latitude:c.lat};
+          this.home = pointInicial;
           this.dataPosicion.lng = Number(c.lng.toFixed(6))
           this.dataPosicion.lat = Number(c.lat.toFixed(6))
           this.dataPosicion.region = this.region;
         }
       })
-      // this.marker.getGeometry().setCoordinates(this.view2.getCenter());
-      this.chile.setVisible(true)
-      this.osm.setVisible(false)
-      this.baseLayer.setVisible(true)
-      this.flVialidad.setVisible(false)
-      this.regiones = this.chile.getSource().getFeatures();
-      // this.markers.getSource().addFeature(this.marker);
-      // this.map.addLayer(this.markers);
-      var lonlat = olProj.toLonLat(this.view2.getCenter());
-      this.dataPosicion.lng = Number(lonlat[0].toFixed(6))
-      this.dataPosicion.lat = Number(lonlat[1].toFixed(6))
-      this.map.getView().on('change:center', (w)=>{
-        this.marker.getGeometry().setCoordinates(this.view2.getCenter());
-        this.obtenerUbicacionRegion()
+      // this.agregarPuntero(pointInicial,Graphic)
+      this.view2.on("click", (e:any)=>{
+        let point = this.view2.toMap(e);
+        this.view2.center = [point.longitude, point.latitude]
+        this.view2.zoom = 16
+        // this.agregarPuntero(point,Graphic)
+        this.obtenerUbicacionRegion(point)
+        // this.buscarCamino(e,this.vialidadRedVialURL)
       });
-    })
+      this._http.get('assets/maps/chile.geojson').subscribe((chileJSON:any)=>{
+        this.chile = new VectorLayer({
+          source:new VectorSource({
+            features: new GeoJSON().readFeatures(chileJSON),
+          })
+        })
+        this.view2.on("drag",{action:'end'}, (e)=>{
+            let point2 = {
+              type: "point",
+              longitude: this.view2.center.longitude,
+              latitude: this.view2.center.latitude
+            };
+            this.obtenerUbicacionRegion(point2)
+          })
+      })
     
   }
 
+  agregarPuntero(point,Graphics?,puntero2?){
+    this.view2.goTo({
+      center:[point.longitude,point.latitude]
+    })
+    let point2 = {
+      type: "point",
+      longitude: point.longitude,
+      latitude: point.latitude
+      // longitude: -71.015,
+      // latitude: -30.004
+    };
+    let markerSymbol = {
+      type: "picture-marker",
+      url: !puntero2 ? "assets/img/pin.png" : "assets/img/pin_2.png",
+      width: "50px",
+      height: "40px"
+    };
 
-  obtenerUbicacionRegion(){
-    var curr = olProj.toLonLat(this.view2.getCenter());
+    let pointGraphic = new Graphic({
+      geometry: point2 as any,
+      symbol: markerSymbol as any,
+      popupTemplate:null
+    });
+    if(puntero2){
+      this.view2.zoom = 16
+    }
+    this.view2.graphics.removeAll();
+    this.view2.graphics.add(pointGraphic);
+  }
+
+  obtenerUbicacionRegion(point){
+    var curr =  [point.longitude,point.latitude] ;
     this.dataPosicion.lat = Number(curr[1].toFixed(6));
     this.dataPosicion.lng = Number(curr[0].toFixed(6));
     var region;
     this.regiones = this.chile.getSource().getFeatures();
     for (var i in this.regiones) {
         var polygonGeometry = this.regiones[i].getGeometry();
-        var coords = olProj.toLonLat(this.marker.getGeometry().getCoordinates());
+        var coords = [point.longitude.toFixed(3),point.latitude.toFixed(3)] ;
         if (polygonGeometry && typeof polygonGeometry != "undefined") {
             if (polygonGeometry.intersectsCoordinate(coords)) {
                 region = this.regiones[i].get("region") + "";
@@ -490,32 +532,27 @@ export class HomeVialidadPage implements OnInit {
   }
   
  async centrarInicial(){
-    const [Graphic]:any = await loadModules([
-      'esri/Graphic',
-    ])
-      .catch(err => {
-        console.error("ArcGIS: ", err);
-      });
-    this.firstFormGroup.reset();
-    this.secondFormGroup.reset();
-    this.secondFormGroup.controls['competencia'].setValue('Si')
-    this.thirdFormGroup.reset();
-    this.caminosEncontrados = []
-    this._us.coordenadasRegion.forEach(c=>{
-      if(c.region == this.region){
-        this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
-        this.dataPosicion.lng = Number(c.lng.toFixed(6))
-        this.dataPosicion.lat = Number(c.lat.toFixed(6))
-        this.dataPosicion.region = this.region;
-      }
-    })
-    this.marker.getGeometry().setCoordinates(this.view2.getCenter());
-    this.view2.setZoom(13)
-    this.obtenerUbicacionRegion()
+  const [Graphic]:any = await loadModules([
+    'esri/Graphic',
+  ])
+    .catch(err => {
+      console.error("ArcGIS: ", err);
+    });
+  this.view2.center = [this.home.longitude,this.home.latitude]
+  this.dataPosicion.lng = Number(this.home.longitude.toFixed(6))
+  this.dataPosicion.lat = Number(this.home.latitude.toFixed(6))
+  // this.agregarPuntero(this.home,Graphic)
+  this.firstFormGroup.reset();
+  this.secondFormGroup.reset();
+  this.secondFormGroup.controls['competencia'].setValue('Si')
+  this.thirdFormGroup.reset();
+  this.caminosEncontrados = []
+  this.obtenerUbicacionRegion(this.home)
+  this.view2.zoom = 13
   }
 
   async buscarCamino(e?,vialidadRedVialURL?){
-    const [ IdentifyTask,Point]:any = await loadModules(['esri/tasks/IdentifyTask','esri/geometry/Point'])
+    this.view2.graphics.remove(this.camino)
       this.firstFormGroup.reset();
       this.secondFormGroup.reset();
       this.secondFormGroup.controls['competencia'].setValue('Si')
@@ -527,13 +564,10 @@ export class HomeVialidadPage implements OnInit {
       if(!this.firstFormGroup.value.activoSeleccionado){
         this.presentToast('Buscando camino ...',null,true,null)
       }
-      var latlong = olProj.toLonLat(this.view2.getCenter());
-      // this.view2.getCenter()
-      // var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
-      var extent:any = olProj.transformExtent(this.view2.calculateExtent(),  'EPSG:3857','EPSG:4326');
+      var center = this.view2.center
+      var extent:any = Array(this.view2.extent.xmin/100000,this.view2.extent.ymin/100000,this.view2.extent.xmax/100000,this.view2.extent.ymax/100000)
       extent = (String(extent).substring(0,String(extent).length -1)).replace(/,/gi,'%2C')
-      this._vs.obtenerCapas(latlong[0].toFixed(6),latlong[1].toFixed(6),extent).then((response:any)=>{
-      // this._vs.obtenerCapas(e.mapPoint.longitude,e.mapPoint.latitude,extent).then((response:any)=>{
+      this._vs.obtenerCapas(center.longitude,center.latitude,extent).then((response:any)=>{
         this.firstFormGroup.controls['activoSeleccionado'].reset()
         this.buscando = false;
         if(response.results.length > 0){
@@ -554,8 +588,8 @@ export class HomeVialidadPage implements OnInit {
                 rol:r.attributes.ROL,
                 clasificacion:r.attributes['CLASIFICACIÓN'],
                 tramo:r.attributes['LONGITUD DEL TRAMO'] ?  new Intl.NumberFormat("en-US").format(r.attributes['LONGITUD DEL TRAMO']) :  new Intl.NumberFormat("en-US").format((r.attributes['KM FINAL']) - (r.attributes['KM INICIAL'])) ,
-                latitude:latlong[1].toFixed(6),
-                longitude:latlong[0].toFixed(6),
+                latitude:center.latitude,
+                longitude:center.longitude,
                 region:region,
                 puntoInicial:r.geometry.paths[0]
               })
@@ -633,7 +667,9 @@ export class HomeVialidadPage implements OnInit {
         // this.agregarPuntero(e.mapPoint,Graphic,false)
         this.buscando = false; 
         if(!this.firstFormGroup.value.activoSeleccionado){
-          this.toast.dismiss();
+          if(this.toast){
+            this.toast.dismiss();
+          }
         }
       })
   }
@@ -701,28 +737,47 @@ export class HomeVialidadPage implements OnInit {
   }
 
   customZoom(){
-    if(this.modo == 'osm'){
-      this.osm.setVisible(false)
-      this.baseLayer.setVisible(true)
-      this.modo = 'satelite'
+    if(this.basemap == "topo-vector"){
+      this.map2.basemap = 'satellite' 
+      this.basemap = 'satellite' 
     }else{
-      this.osm.setVisible(true)
-      this.baseLayer.setVisible(false)
-      this.modo = 'osm'
+      this.map2.basemap = 'topo-vector' 
+      this.basemap = 'topo-vector' 
     }
   }
 
   obtenerGeolocalizacion(){
     this.presentLoader('Localizando ...').then(()=>{
       this.geolocation.getCurrentPosition().then((resp) => {
-        this.view2.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
-        this.marker.getGeometry().setCoordinates(this.view2.getCenter());
-        this.view2.setZoom(15)
-        this.loader.dismiss();
-        this.obtenerUbicacionRegion()
-       }).catch((error) => {
-         console.log('Error getting location', error);
-       });
+        loadModules(['esri/Graphic']).then(([Graphic]) => {
+          this.view2.graphics.removeAll();
+          this.loader.dismiss();
+          this.dataPosicion.lat = resp.coords.latitude
+          this.dataPosicion.lng = resp.coords.longitude
+          let point = {
+            type: "point",
+            longitude: this.dataPosicion.lng,
+            latitude: this.dataPosicion.lat
+          };
+          let markerSymbol = {
+            type: "picture-marker",
+            url: "assets/img/pin_2.png",
+            width: "50px",
+            height: "40px"
+          };
+          let pointGraphic = new Graphic({
+            geometry: point as any,
+            symbol: markerSymbol as any,
+            popupTemplate:null
+          });
+          this.view2.graphics.add(pointGraphic);
+          this.view2.center = [this.dataPosicion.lng, this.dataPosicion.lat]
+          this.view2.zoom = 15;  
+          this.obtenerUbicacionRegion(point)
+        })
+      }).catch((error) => {
+        console.log('Error getting location', error);
+      });
       })
   }
 
@@ -837,10 +892,10 @@ export class HomeVialidadPage implements OnInit {
         const reg = String(Number(data.data.region) + 1).length == 1 ? '0'+(Number(data.data.region) + 1) : String(Number(data.data.region) + 1);
         this._us.coordenadasRegion.forEach(c=>{
           if(c.region == reg){
-            this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+            this.view2.center = [c.lng,c.lat]
             this.dataPosicion.lng = Number(c.lng.toFixed(6))
             this.dataPosicion.lat = Number(c.lat.toFixed(6))
-            this.dataPosicion.region = this.region;
+            this.dataPosicion.region = reg;
           }
         })
        }
@@ -904,6 +959,24 @@ export class HomeVialidadPage implements OnInit {
     query.returnGeometry =  true;
     layer.queryFeatures(query).then(result =>{
       console.log(result)
+      if(result && result.features[0]){
+        let symbolTerritory = {
+          type: "simple-fill",
+          color: [207, 226, 99, 1],
+          style: "solid",
+          outline: {
+            color: "red",
+            width: 3
+          }
+        };
+        this.camino = new Graphic({
+          symbol: symbolTerritory,
+          geometry: result.features[0].geometry,
+        });
+        this.view2.graphics.add(this.camino)
+        this.view2.goTo(this.camino.geometry);
+      }
+
     })
 
 
@@ -950,10 +1023,12 @@ export class HomeVialidadPage implements OnInit {
           if(data.data.red){
             if(this.redactiva){
               this.redactiva = false;
-              this.flVialidad.setVisible(false)
+              this.map2.remove(this.flVialidad);
+              // this.flVialidad.setVisible(false)
             }else{
               this.redactiva = true;
-              this.flVialidad.setVisible(true)
+              this.map2.add(this.flVialidad);
+              // this.flVialidad.setVisible(true)
             }
           }else{
             this.centrarInicial()
@@ -2368,6 +2443,7 @@ export class HomeVialidadPage implements OnInit {
       this.firstFormGroup.reset();
       this.secondFormGroup.reset();
       this.thirdFormGroup.reset();
+      this.view2.graphics.remove(this.camino)
       // this.stepper.reset();
       this.secondFormGroup.controls['competencia'].setValue('Si')
       this.view2.setZoom(13)
@@ -2386,9 +2462,9 @@ export class HomeVialidadPage implements OnInit {
       let pointInicial = {longitude:-70.65266161399654,latitude:-33.44286267068381};
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
-          this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+          // this.view2.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
 
-          // this.view2.center = [c.lng,c.lat]
+          this.view2.center = [c.lng,c.lat]
           pointInicial = {longitude:c.lng,latitude:c.lat};
           this.dataPosicion.lng = Number(c.lng.toFixed(6))
           this.dataPosicion.lat = Number(c.lat.toFixed(6))
