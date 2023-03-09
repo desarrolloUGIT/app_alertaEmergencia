@@ -47,28 +47,38 @@ export class SplashPage implements OnInit {
         this.nativePageTransitions.fade(options);
         this._us.cargar_storage().then(()=>{
           if(this._us.usuario){
-            let body = {user:this._us.getUser().user,password:this._us.getUser().password}
-            this._us.login(body).subscribe((res:any)=>{
-              if(res && res.status == '200'){
+            if(this._us.conexion == 'si'){
+              let body = {user:this._us.getUser().user,password:this._us.getUser().password}
+              this._us.login(body).subscribe((res:any)=>{
+                if(res && res.status == '200'){
+                  this._mc.enable(true,'first')
+                  if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                    this.navctrl.navigateRoot('/home_vialidad')
+                  }else{
+                    this.navctrl.navigateRoot('/home')
+                  }
+                }else{
+                  this.salir()
+                  this._mc.enable(false,'first') 
+                  this.navctrl.navigateRoot('/login')
+                }
+              },err=>{
                 this._mc.enable(true,'first')
                 if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
                   this.navctrl.navigateRoot('/home_vialidad')
                 }else{
                   this.navctrl.navigateRoot('/home')
                 }
-              }else{
-                this.salir()
-                this._mc.enable(false,'first') 
-                this.navctrl.navigateRoot('/login')
-              }
-            },err=>{
+              })
+            }else{
               this._mc.enable(true,'first')
               if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
                 this.navctrl.navigateRoot('/home_vialidad')
               }else{
                 this.navctrl.navigateRoot('/home')
               }
-            })
+            }
+            
           }else{
             this._mc.enable(false,'first')
             this.navctrl.navigateRoot('/login')

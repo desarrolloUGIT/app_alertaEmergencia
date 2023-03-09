@@ -35,6 +35,7 @@ export class AppComponent {
   images = [];
   alertas = [];
   porenviar = [];
+  enviadas = []
   constructor(
     public network: Network,
     private platform: Platform,
@@ -116,13 +117,14 @@ export class AppComponent {
 
   buscarAlertasPendientes(){
     if(this.platform.is('capacitor')){
-      this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+      this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
+        db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         this.db = db;
         this.db.transaction(async tx=>{
           this._us.cargar_storage().then(()=>{
             var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
             this.db.executeSql(sql, []).then((data)=>{
-              // console.log('PENDIENTES-> ',data.rows.length)
+              console.log('PENDIENTES-> ',data.rows.length)
               if(data.rows.length > 0){
                 this.alertas = [];
                 this.porenviar = [];
@@ -182,9 +184,9 @@ export class AppComponent {
         directory:Directory.Data,
         path:SAVE_IMAGE_DIR
       }).then(res=>{
-        if(res.files.length == 0){
-          this._us.nextmessage('sin pendiente')        
-        }
+        // if(res.files.length == 0){
+        //   this._us.nextmessage('sin pendiente')        
+        // }
         this.loadFileData(res.files)
       })
     
@@ -239,20 +241,43 @@ export class AppComponent {
   }
 
   enviar(data,id,i,posicion,enviadas){
-    data.picture = data.foto.data;
+    data.picture = (data.foto && data.foto.data) ? data.foto.data : '';
     this._vs.enviarAlerta(data).subscribe((res:any)=>{
       if(res && res.status == '200'){
+        this.enviadas.push(data)
         this.eliminar(id,i)
         if((posicion + 1) >= this.alertas.length){
           this.alertas = [];
           enviadas++;
           this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes')
-          setTimeout(()=>{
-            if(this.porenviar.length > 0){
-              this.pendientes = true;
-              this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-            }
-          },4000)
+          this.db.open().then(()=>{
+            this.db.transaction( tx1=>{
+              this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
+                this.db.transaction(async tx=>{
+                  if(dat.rows.length > 0){
+                    tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
+                    setTimeout(()=>{
+                      if(this.porenviar.length > 0){
+                        this.pendientes = true;
+                        this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                      }
+                    },4000)
+                  }else{
+                    tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
+                    setTimeout(()=>{
+                      if(this.porenviar.length > 0){
+                        this.pendientes = true;
+                        this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                      }
+                    },4000)
+                  }
+                })
+              })
+            })
+          })
+         
         }else{
           posicion++;
           enviadas++;

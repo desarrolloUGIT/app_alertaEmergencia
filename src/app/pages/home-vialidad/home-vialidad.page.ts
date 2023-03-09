@@ -74,7 +74,7 @@ export class HomeVialidadPage implements OnInit {
   estadoEnvioAlerta = null;
   map2;
   view2:any;
-  basemap = "satellite"
+  basemap = "topo-vector"
   operatividadArray = [];
   nivelAlertaArray = [];
   caminosEncontrados = []
@@ -197,6 +197,12 @@ export class HomeVialidadPage implements OnInit {
         this.storage.setItem('seleccionMapa', 'no');
         localStorage.setItem('seleccionMapa','no')
         this.internet = false;
+        this._us.coordenadasRegion.forEach(c=>{
+          if(c.region == this.region){
+            this.dataPosicion.lng = Number(c.lng.toFixed(6))
+            this.dataPosicion.lat = Number(c.lat.toFixed(6))
+          }
+        })
         this._us.cargar_storage().then(()=>{})
       }
     if(this.platform.is('capacitor')){
@@ -374,7 +380,7 @@ export class HomeVialidadPage implements OnInit {
 
   async loadMapVialidad(){
       this.map2 = new Map({
-        basemap: 'satellite'
+        basemap: 'streets-vector'
       });
       this.view2 = new MapView({
         container: "container", 
@@ -715,12 +721,12 @@ export class HomeVialidadPage implements OnInit {
   }
 
   customZoom(){
-    if(this.basemap == "topo-vector"){
-      this.map2.basemap = 'satellite' 
-      this.basemap = 'satellite' 
+    if(this.basemap == "streets-vector"){
+      this.map2.basemap = 'streets-relief-vector' 
+      this.basemap = 'streets-relief-vector' 
     }else{
-      this.map2.basemap = 'topo-vector' 
-      this.basemap = 'topo-vector' 
+      this.map2.basemap = 'streets-vector' 
+      this.basemap = 'streets-vector' 
     }
   }
 
@@ -2269,15 +2275,17 @@ export class HomeVialidadPage implements OnInit {
                     this.alertasMaximas()
                   }else{
                     tx.executeSql('insert into alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [(dat.rows.item(length).id + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'internet']);
+                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'internet']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
                     this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
+                    console.log('PICTURE PENDIENTE->',this.picture)
+
                     if(this.picture){
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
-                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.item(length).id + 1)+'_foto.jpg',
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
                         this.deleteImage(this.images[0])
@@ -2300,6 +2308,7 @@ export class HomeVialidadPage implements OnInit {
                   this.estadoEnvioAlerta = 'pendiente'
                   this.openModalEnvio(this.estadoEnvioAlerta)
                   this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
+                  console.log('PICTURE->',this.picture)
                   if(this.picture){
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data,
@@ -2334,7 +2343,7 @@ export class HomeVialidadPage implements OnInit {
                   this.db.transaction(async tx=>{
                     if(dat.rows.length > 0){
                       tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.item(length).id + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
                       this.estadoEnvioAlerta = 'exitoso'
                       this.deleteImage(this.images[0])
                       this.volverInicio()
@@ -2460,14 +2469,11 @@ export class HomeVialidadPage implements OnInit {
   }
 
   volverInicio(){
-    loadModules(['esri/Graphic']).then(([Graphic]) => {
       this.firstFormGroup.reset();
       this.secondFormGroup.reset();
       this.thirdFormGroup.reset();
-      this.view2.graphics.remove(this.camino)
       // this.stepper.reset();
       this.secondFormGroup.controls['competencia'].setValue('Si')
-      this.view2.zoom = 13
       this.enviando = false;
       this.menorI = false;
       this.mayorI = false;
@@ -2480,6 +2486,8 @@ export class HomeVialidadPage implements OnInit {
       this.tab = 0;
       if(this.internet){
         this.mostrarMapa = true;
+        this.view2.graphics.remove(this.camino)
+        this.view2.zoom = 13
       }else{
         this.mostrarMapa = false;
       }
@@ -2494,7 +2502,7 @@ export class HomeVialidadPage implements OnInit {
       //     this.dataPosicion.region = this.region;
       //   }
       // })
-    })
+    
   }
 
   // Animación para modal de envio de alerta

@@ -36,7 +36,7 @@ toast;
     public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public _modalCtrl:ModalController,
     public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService,public _vs:VialidadService) { 
       if(this.platform.is('capacitor')){
-        this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+        this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
           this.db = db;
           this._us.cargar_storage().then(()=>{
             if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
@@ -53,6 +53,7 @@ toast;
             }else{
               this.tipo = 'vialidad';
               db.executeSql('SELECT * FROM alertaVialidad', []).then((data)=>{
+                console.log('PENDIENTES ??? ->>>>>>>> ',data.rows.length)
                 if(data.rows.length > 0){
                   for(let i = 0;i<data.rows.length;i++){
                     this.alertas.push(data.rows.item(i))
@@ -89,7 +90,7 @@ toast;
         path:SAVE_IMAGE_DIR
       }).then(res=>{
         if(res.files.length == 0){
-          this._us.nextmessage('sin pendiente')        
+          // this._us.nextmessage('sin pendiente')        
         }
         this.loadFileData(res.files)
         this.loader.dismiss()
@@ -230,7 +231,7 @@ toast;
 
   enviar(data,id,i){
     if(this.tipo == 'vialidad'){
-      data.picture = data.foto.data;
+      data.picture = (data.foto && data.foto.data) ? data.foto.data : '';
       this.presentLoader('Enviando Emergencia ...').then(()=>{
         if(this._us.conexion == 'no'){
           this.loader.dismiss()

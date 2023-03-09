@@ -20,10 +20,10 @@ export class PopoverPage implements OnInit {
     this.mapa = navParams.get('mapa');
     this.redvial = navParams.get('red');
     this.novialidad = navParams.get('novialidad');
-    if(this.mapa == 'satellite'){
-      this.tipo = 'Mapa topo-vector';
+    if(this.mapa == 'streets-relief-vector'){
+      this.tipo = 'Mapa de calle';
     }else{
-      this.tipo = 'Mapa Satelital';
+      this.tipo = 'Mapa con relieve';
     }
     this.posicionT = 'Mi posición'
     this.centrarT = 'Posición inicial'
@@ -33,10 +33,10 @@ export class PopoverPage implements OnInit {
   }
 
   tipoMapa() {
-    if(this.mapa == 'topo-vector'){
-      this.mapa = 'satellite';
+    if(this.mapa == 'streets-vector'){
+      this.mapa = 'streets-relief-vector';
     }else{
-      this.mapa = 'topo-vector';
+      this.mapa = 'streets-vector';
     }
     let data = { mapa:this.mapa };
     this.popctrl.dismiss(data);
