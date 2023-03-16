@@ -121,7 +121,7 @@ export class AppComponent {
   buscarAlertasPendientes(){
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error,operatividad)',[]);
         this.db = db;
         this.db.transaction(async tx=>{
           this._us.cargar_storage().then(()=>{
@@ -257,7 +257,7 @@ export class AppComponent {
             this.alertas = [];
             enviadas++;
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial()
+            this.guardarHistorial('dv')
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -276,7 +276,7 @@ export class AppComponent {
             this.alertas = [];
             enviadas++;
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial()
+            this.guardarHistorial('dv')
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -296,7 +296,7 @@ export class AppComponent {
           this.alertas = [];
           enviadas++;
           this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-          this.guardarHistorial()
+          this.guardarHistorial('dv')
           setTimeout(()=>{
             if(this.porenviar.length > 0){
               this.pendientes = true;
@@ -318,7 +318,7 @@ export class AppComponent {
             this.alertas = [];
             enviadas++;
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial()
+            this.guardarHistorial('doh')
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -338,7 +338,7 @@ export class AppComponent {
             this.alertas = [];
             enviadas++;
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial()
+            this.guardarHistorial('doh')
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -358,7 +358,7 @@ export class AppComponent {
           this.alertas = [];
           enviadas++;
           this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-          this.guardarHistorial()
+          this.guardarHistorial('doh')
           setTimeout(()=>{
             if(this.porenviar.length > 0){
               this.pendientes = true;
@@ -376,15 +376,14 @@ export class AppComponent {
   }
 
 
-  guardarHistorial(){
-
+  guardarHistorial(direccion){
     this.db.open().then(()=>{
-      this.db.transaction(rx=>{
-        rx.executeSql('delete from activos', [], ()=>{
-          this.temporales.forEach((a,i)=>{
-            this.db.transaction(tx=>{
-              // tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
-            })
+      this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
+        this.db.transaction(async tx=>{
+          var largo = dat.rows.length;
+          this.temporales.forEach((data,i)=>{
+            tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,operatividad) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+            [(largo+(i+1)),data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,(direccion == 'dv' ? 'vialidad' : 'doh'),(direccion == 'doh' ? data.operatividad : '')]);
           })
         })
       })
