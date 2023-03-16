@@ -42,6 +42,7 @@ export class UsuarioService {
   conexion;
   token_user;
   user;
+  fechaActualizacion;
   tokenESRI;
   menuType;
   messages: "";
@@ -173,6 +174,11 @@ export class UsuarioService {
               this.token_user = token_user;
             }
           });
+          this.storage.getItem("fechaActualizacion").then(fechaActualizacion=>{
+            if(fechaActualizacion){
+              this.fechaActualizacion = fechaActualizacion;
+            }
+          });
           this.storage.getItem("menuType").then(menuType=>{
             if(menuType){
               this.menuType = menuType;
@@ -197,6 +203,7 @@ export class UsuarioService {
           this.conexion = localStorage.getItem("conexion");
           this.token_user = localStorage.getItem("token_user");
           this.menuType = localStorage.getItem("menuType");
+          this.fechaActualizacion = localStorage.getItem("fechaActualizacion");
           this.tokenESRI = Number(localStorage.getItem("tokenESRI"));
           this.user = JSON.parse(localStorage.getItem("user"));
           resolve(null);

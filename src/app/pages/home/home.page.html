@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
-  <div class="map-container" id="map" [style.height]="tab == 0  ? '60%' : '0'">
+  <div class="map-container" id="map" [style.height]="tab == 0  ? '65%' : '0'">
   </div>
   <div  class="notSignal" *ngIf="!mostrarMapa && !internet && tab == 0"> 
     <label>Sin Internet</label><br>
@@ -27,7 +27,15 @@
     </ion-fab-button>
   </ion-fab>
   <form [formGroup]="firstFormGroup"  [style.margin-top]="!mostrarMapa && !internet ? '20%' : ''" *ngIf="tab == 0">
+  
     <ion-card center>
+      <ion-item lines="none" mode="ios" style="position: absolute;right: -5%;top: 0%;--background: transparent;" *ngIf="firstFormGroup.value.activoSeleccionado">
+        <ion-buttons  slot="end">
+          <ion-button size="small" color="medium" (click)="firstFormGroup.reset()">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
       ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
       <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.DESCRIPTION}}<br></span><span *ngIf="firstFormGroup.value.activoSeleccionado">Código: {{firstFormGroup.value.activoSeleccionado.ASSETNUM}}<br></span> Región: {{dataPosicion.region}}</h4>
       <ion-grid *ngIf="existenActivos">
@@ -208,15 +216,15 @@
     </div>
   </ion-toolbar>
   <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
-    <ion-segment-button  value="2" (click)="selectTab(2)" [ngClass]="tab == 1 ? 'selectTab' : ''">
+    <ion-segment-button  value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
       <ion-label>Operatividad</ion-label>
       <ion-icon name="construct"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button  value="3" (click)="selectTab(3)" [ngClass]="tab == 2 ? 'selectTab' : ''">
+    <ion-segment-button  value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
       <ion-label>Datos</ion-label>
       <ion-icon name="create"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button  value="4" (click)="selectTab(4)" [ngClass]="tab == 3 ? 'selectTab' : ''">
+    <ion-segment-button  value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
       <ion-label>Resumen</ion-label>
       <ion-icon name="document-text"></ion-icon>
     </ion-segment-button>

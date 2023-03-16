@@ -144,14 +144,14 @@ export class HomePage implements OnInit {
         }
       })
       this.keyboard.hideFormAccessoryBar(false)
-      this.platform.keyboardDidHide.subscribe(r=>{
-        // oculta teclado
-        this.footer = true;
-      })
-      this.platform.keyboardDidShow.subscribe(r=>{
-        // muestra teclado
-        this.footer = false;
-      })
+      // this.platform.keyboardDidHide.subscribe(r=>{
+      //   // oculta teclado
+      //   this.footer = true;
+      // })
+      // this.platform.keyboardDidShow.subscribe(r=>{
+      //   // muestra teclado
+      //   this.footer = false;
+      // })
     }
 
     async reiniciarHome(){
@@ -201,10 +201,7 @@ export class HomePage implements OnInit {
         this._us.cargar_storage().then(()=>{})
       }
       this._us.nextmessage('usuario_logeado') 
-      this.loadFiles().then(()=>{
-      }).catch(()=>{
-        // this.geolocate()
-      })
+      this.loadFiles()
       setTimeout(()=>{
         this.geolocate()
       },1000)

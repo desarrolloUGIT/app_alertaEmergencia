@@ -55,6 +55,12 @@ export class AppComponent {
     public _vs:VialidadService,
     public _ds:DireccionService
   ) {
+    if(this.platform.is('capacitor')){
+      this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
+        this.db = db;
+        this.buscarAlertasPendientes()
+      })
+    }
     this.initializeApp()
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
       this.presentToast('Sin conexión ...')
@@ -69,7 +75,6 @@ export class AppComponent {
         this.storage.setItem('seleccionMapa', 'si');
         localStorage.setItem('seleccionMapa','si')
       }
-      this.buscarAlertasPendientes()
     })
     this._us.message.subscribe(res=>{
       if(res == 'pendiente'){
@@ -97,37 +102,33 @@ export class AppComponent {
           if((String(this.router.url).includes('home_vialidad') || String(this.router.url).includes('modal-caminos')) && this._us.seleccionMapa == 'no'){
             this._us.nextmessage('conexión establecida sin mapa') 
               // this.router.navigateByUrl('/home_vialidad',{skipLocationChange:true}).then(()=>{this.router.navigate(["/home_vialidad"])})
-              setTimeout((()=>{
-                this.buscarAlertasPendientes()
-              }),4000);
+              
           }else{
             this._us.nextmessage('conexión establecida') 
             this.presentToast('Conexión establecida').then(()=>{
-              setTimeout((()=>{
-                this.buscarAlertasPendientes()
-              }),4000)
             })
           }
         }
+        setTimeout((()=>{
+          this.buscarAlertasPendientes()
+        }),4000);
         this.storage.setItem('conexion', 'si');
         localStorage.setItem('conexion','si')
         this._us.cargar_storage().then(()=>{})
       })
     },(err)=>{
-            console.log('ACA2')
+      this.buscarAlertasPendientes()
+      console.log('ACA2')
     })
   }
 
   buscarAlertasPendientes(){
     if(this.platform.is('capacitor')){
-      this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
-        db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error,operatividad)',[]);
-        this.db = db;
-        this.db.transaction(async tx=>{
+    
           this._us.cargar_storage().then(()=>{
             var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
             this.db.executeSql(sql, []).then((data)=>{
-              console.log('PENDIENTES-> ',data.rows.length)
+              console.log('PENDIENTES --------> ',data.rows.length)
               if(data.rows.length > 0){
                 this.alertas = [];
                 this.porenviar = [];
@@ -173,11 +174,10 @@ export class AppComponent {
                 }
                 this.pagina = 'home'
               }
+            }).catch(err=>{
+              console.log('PENDIENTES ERR ->',err)
             })
           })
-
-        })
-      })
     }
   }
 
@@ -274,9 +274,11 @@ export class AppComponent {
           this.porenviar.push(data)
           if((posicion + 1) >= this.alertas.length){
             this.alertas = [];
-            enviadas++;
-            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial('dv')
+            // enviadas++;
+            if(enviadas > 0){
+              this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+              this.guardarHistorial('dv')
+            }
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -285,7 +287,7 @@ export class AppComponent {
             },4000)
           }else{
             posicion++;
-            enviadas++;
+            // enviadas++;
             this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
           } 
         }
@@ -294,9 +296,10 @@ export class AppComponent {
         this.porenviar.push(data)
         if((posicion + 1) >= this.alertas.length){
           this.alertas = [];
-          enviadas++;
-          this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-          this.guardarHistorial('dv')
+          if(enviadas > 0){
+            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+            this.guardarHistorial('dv')
+          }
           setTimeout(()=>{
             if(this.porenviar.length > 0){
               this.pendientes = true;
@@ -305,7 +308,7 @@ export class AppComponent {
           },4000)
         }else{
           posicion++;
-          enviadas++;
+          // enviadas++;
           this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
         } 
       })
@@ -317,8 +320,10 @@ export class AppComponent {
           if((posicion + 1) >= this.alertas.length){
             this.alertas = [];
             enviadas++;
-            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial('doh')
+            if(enviadas > 0){
+              this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+              this.guardarHistorial('doh')
+            }
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -336,9 +341,10 @@ export class AppComponent {
           this.porenviar.push(data)
           if((posicion + 1) >= this.alertas.length){
             this.alertas = [];
-            enviadas++;
-            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial('doh')
+            if(enviadas > 0){
+              this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+              this.guardarHistorial('doh')
+            }
             setTimeout(()=>{
               if(this.porenviar.length > 0){
                 this.pendientes = true;
@@ -347,7 +353,7 @@ export class AppComponent {
             },4000)
           }else{
             posicion++;
-            enviadas++;
+            // enviadas++;
             this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
           } 
         }
@@ -356,9 +362,10 @@ export class AppComponent {
         this.porenviar.push(data)
         if((posicion + 1) >= this.alertas.length){
           this.alertas = [];
-          enviadas++;
-          this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-          this.guardarHistorial('doh')
+          if(enviadas > 0){
+            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+            this.guardarHistorial('doh')
+          }
           setTimeout(()=>{
             if(this.porenviar.length > 0){
               this.pendientes = true;
@@ -367,7 +374,7 @@ export class AppComponent {
           },4000)
         }else{
           posicion++;
-          enviadas++;
+          // enviadas++;
           this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
         } 
       })
@@ -377,17 +384,33 @@ export class AppComponent {
 
 
   guardarHistorial(direccion){
-    this.db.open().then(()=>{
-      this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
-        this.db.transaction(async tx=>{
-          var largo = dat.rows.length;
-          this.temporales.forEach((data,i)=>{
-            tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,operatividad) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-            [(largo+(i+1)),data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,(direccion == 'dv' ? 'vialidad' : 'doh'),(direccion == 'doh' ? data.operatividad : '')]);
+      if(direccion == 'dv'){
+        this.db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
+      }else{
+        if(direccion == 'doh'){
+         this.db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
+        }
+      }
+      this.db.open().then(()=>{
+        this.db.transaction(tx=>{
+          this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
+            var largo = dat.rows.length;
+            this.temporales.forEach((data,i)=>{
+              this.db.transaction(rx=>{
+                if(direccion == 'dv'){
+                  this.db.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                  [(largo+(i+1)),data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);      
+                }else{
+                  this.db.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                  [(largo+(i+1)),data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh']).then(res=>{console.log(res)})      
+                }
+              })
           })
         })
       })
     })
+    
+
 
 
     // this.db.open().then(()=>{

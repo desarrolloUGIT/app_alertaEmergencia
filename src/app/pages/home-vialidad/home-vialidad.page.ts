@@ -111,6 +111,7 @@ export class HomeVialidadPage implements OnInit {
   camino = new Graphic({});
   dibujarCamino = false;
   center;
+  fechaActualizar = new Date();
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
@@ -147,14 +148,14 @@ export class HomeVialidadPage implements OnInit {
         }
       })
       this.keyboard.hideFormAccessoryBar(false)
-      this.platform.keyboardDidHide.subscribe(r=>{
-        // oculta teclado
-        this.footer = true;
-      })
-      this.platform.keyboardDidShow.subscribe(r=>{
-        // muestra teclado
-        this.footer = false;
-      })
+      // this.platform.keyboardDidHide.subscribe(r=>{
+      //   // oculta teclado
+      //   this.footer = true;
+      // })
+      // this.platform.keyboardDidShow.subscribe(r=>{
+      //   // muestra teclado
+      //   this.footer = false;
+      // })
     }
 
   ngOnInit() {
@@ -184,7 +185,6 @@ export class HomeVialidadPage implements OnInit {
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region;
       this._us.nextmessage('usuario_logeado') 
-      this.loadFiles()
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
@@ -205,6 +205,10 @@ export class HomeVialidadPage implements OnInit {
         })
         this._us.cargar_storage().then(()=>{})
       }
+      this.loadFiles()
+      setTimeout(()=>{
+        this.obtenerGeolocalizacion()
+      },1000)
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[]);
@@ -549,6 +553,7 @@ export class HomeVialidadPage implements OnInit {
           if(fueraregion){
             this.buscando = false;
             this.caminosEncontrados = [];
+            this.toast.dismiss()
             this.presentToast('No puedes seleccionar caminos/rutas/activos que no pertenezcan a tu región',null,true,true)
           }else{
             this.toast.dismiss()
@@ -733,35 +738,42 @@ export class HomeVialidadPage implements OnInit {
   obtenerGeolocalizacion(){
     this.presentLoader('Localizando ...').then(()=>{
       this.geolocation.getCurrentPosition().then((resp) => {
-        loadModules(['esri/Graphic']).then(([Graphic]) => {
-          this.view2.graphics.removeAll();
-          this.loader.dismiss();
-          this.dataPosicion.lat = resp.coords.latitude
-          this.dataPosicion.lng = resp.coords.longitude
-          let point = {
-            type: "point",
-            longitude: this.dataPosicion.lng,
-            latitude: this.dataPosicion.lat
-          };
-          let markerSymbol = {
-            type: "picture-marker",
-            url: "assets/img/pin_2.png",
-            width: "50px",
-            height: "40px"
-          };
-          let pointGraphic = new Graphic({
-            geometry: point as any,
-            symbol: markerSymbol as any,
-            popupTemplate:null
-          });
-          this.view2.graphics.add(pointGraphic);
-          this.view2.center = [this.dataPosicion.lng, this.dataPosicion.lat]
-          this.view2.zoom = 15;  
-          this.obtenerUbicacionRegion(point)
-        })
+        this.dataPosicion.lat = resp.coords.latitude
+        this.dataPosicion.lng = resp.coords.longitude
+        let point = {
+          type: "point",
+          longitude: this.dataPosicion.lng,
+          latitude: this.dataPosicion.lat
+        };
+        this.obtenerUbicacionRegion(point)
+        if(this.internet){
+          loadModules(['esri/Graphic']).then(([Graphic]) => {
+            this.view2.graphics.removeAll();
+            let markerSymbol = {
+              type: "picture-marker",
+              url: "assets/img/pin_2.png",
+              width: "50px",
+              height: "40px"
+            };
+            let pointGraphic = new Graphic({
+              geometry: point as any,
+              symbol: markerSymbol as any,
+              popupTemplate:null
+            });
+            this.view2.graphics.add(pointGraphic);
+            this.view2.center = [this.dataPosicion.lng, this.dataPosicion.lat]
+            this.view2.zoom = 15;  
+            }).catch(err=>{
+              console.log('err')
+          })
+        }
+      this.loader.dismiss();          
       }).catch((error) => {
+        this.loader.dismiss();
         console.log('Error getting location', error);
       });
+      }).catch(()=>{
+        this.loader.dismiss();
       })
   }
 
