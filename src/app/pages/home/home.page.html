@@ -10,14 +10,23 @@
 </ion-header>
 
 <ion-content force-overscroll="false">
-  <div class="map-container" id="map" [style.height]="mostrarMapa ? (!firstFormGroup.value.activoSeleccionado ? '75%' : '60%') : '0'">
+  <div class="map-container" id="map" [style.height]="tab == 0  ? '60%' : '0'">
   </div>
-  <ion-fab vertical="top" slot="fixed" horizontal="start" style="margin-top: 18%;"  *ngIf="mostrarMapa && internet">
-    <ion-fab-button size="small" color="botonazul" (click)="presentPopover($event)">
-      <ion-icon name="add"></ion-icon>
+  <div  class="notSignal" *ngIf="!mostrarMapa && !internet && tab == 0"> 
+    <label>Sin Internet</label><br>
+    <img src="assets/img/not_signal.png" alt="" width="60%">
+  </div>
+  <ion-fab vertical="top" slot="fixed" horizontal="start" style="margin-top: 18%;" *ngIf="tab == 0" >
+    <ion-fab-button size="small" color="botonazul" (click)="geolocate()">
+      <ion-icon name="location"></ion-icon>
     </ion-fab-button>
   </ion-fab>
-  <form [formGroup]="firstFormGroup"  *ngIf="mostrarMapa && internet">
+  <ion-fab vertical="top" slot="fixed" horizontal="start" style="margin-top: 30%;" *ngIf="tab == 0 && internet" >
+    <ion-fab-button size="small" color="botonazul" (click)="changeMap()">
+      <ion-icon name="map"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+  <form [formGroup]="firstFormGroup"  [style.margin-top]="!mostrarMapa && !internet ? '20%' : ''" *ngIf="tab == 0">
     <ion-card center>
       ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
       <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.DESCRIPTION}}<br></span><span *ngIf="firstFormGroup.value.activoSeleccionado">Código: {{firstFormGroup.value.activoSeleccionado.ASSETNUM}}<br></span> Región: {{dataPosicion.region}}</h4>
@@ -44,55 +53,18 @@
           </ion-col>
         </ion-row>
       </ion-grid>
-      <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
+      <!-- <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
         <ion-button fill="clear" color="dark" (click)="selectTab(2)">
           Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
         </ion-button>
-      </div>      
+      </div>       -->
     </ion-card>  
     
   </form>
   <section *ngIf="tab == 1">
-      <ion-item lines="none" style="--background: transparent;">
-        <ion-title style="margin-left: -3%;">Activo</ion-title>
-        <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
-          <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-      </ion-item>
-      <form [formGroup]="firstFormGroup">
-      <ion-card center>
-        ({{dataPosicion.lat}},{{dataPosicion.lng}})<br>
-        <h4 *ngIf="dataPosicion.region != ''" style="font-weight: bold;"><span *ngIf="firstFormGroup.value.activoSeleccionado">{{firstFormGroup.value.activoSeleccionado.activo.DESCRIPTION}}<br></span> Región: {{dataPosicion.region}}</h4>
-        <ion-grid *ngIf="existenActivos">
-          <ion-row *ngIf="activosEncontrados" style="margin-top: -12%;" (click)="openModalActivos()">
-            <ion-col size="9">
-              <h4 style="margin: 0;margin-top: 8%;margin-left: 8%;">Seleccione Activo  </h4>
-            </ion-col>
-            <ion-col size="3" align="left">
-              <ion-button shape="circle" class="pulse" ><ion-icon slot="icon-only" name="search"></ion-icon></ion-button>
-            </ion-col>
-          </ion-row>
-          <ion-row *ngIf="!activosEncontrados" style="margin-bottom: -3%;margin-top: -5%;">
-            <ion-col size="9">
-              <h4>Cargando activos  </h4>
-            </ion-col>
-            <ion-col size="3" align="left">
-              <ion-spinner name="bubbles"></ion-spinner>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </ion-card>        
-    </form>
-    <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
-      <ion-button fill="clear" color="dark" (click)="selectTab(2)">
-        Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
-      </ion-button>
-    </div>
-  </section>
-  <section *ngIf="tab == 2">
     <ion-item lines="none" style="--background: transparent;">
       <ion-title style="margin-left: -3%;"><div class="ion-text-wrap">Operatividad y Daño</div></ion-title>
-      <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+      <ion-button color="botonazul" (click)="tab = 0;(internet ? mostrarMapa = true : '');" slot="end" fill="outline">
         <ion-icon name="close-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-item>
@@ -121,17 +93,17 @@
 
         </ion-list>
       </ion-card>      
-      <div align="center">
+      <!-- <div align="center">
         <ion-button fill="clear" color="dark" (click)="selectTab(3)">
           Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
         </ion-button>
-      </div>
+      </div> -->
     </form>
   </section>
-  <section *ngIf="tab == 3">
+  <section *ngIf="tab == 2">
     <ion-item lines="none" style="--background: transparent;">
       <ion-title style="margin-left: -3%;">Datos adicionales</ion-title>
-      <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+      <ion-button color="botonazul" (click)="tab = 0;(internet ? mostrarMapa = true : '');" slot="end" fill="outline">
         <ion-icon name="close-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-item>
@@ -164,19 +136,19 @@
       </ion-list>
       <ion-button expand="block" color="botonazul" (click)="presentActionSheet()">Adjuntar Foto</ion-button>
     </form>
-    <div align="center" >
+    <!-- <div align="center" >
       <ion-button fill="clear" color="dark" (click)="selectTab(2)">
         Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
       </ion-button>
       <ion-button fill="clear" color="dark" (click)="selectTab(4)">
         Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
       </ion-button>
-    </div>
+    </div> -->
   </section>
-  <section *ngIf="tab == 4">
+  <section *ngIf="tab == 3">
     <ion-item lines="none" style="--background: transparent;">
       <ion-title style="margin-left: -3%;">Resumen</ion-title>
-      <ion-button color="botonazul" (click)="tab = 0;mostrarMapa = true;" slot="end" fill="outline">
+      <ion-button color="botonazul" (click)="tab = 0;(internet ? mostrarMapa = true : '');" slot="end" fill="outline">
         <ion-icon name="close-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-item>
@@ -211,11 +183,11 @@
         <ion-col size="8" class="cierreTabla"><p style="color: black;text-align: left;">{{thirdFormGroup.value.descripcion}}</p></ion-col>
       </ion-row>
     </ion-grid>
-    <div align="center" >
+    <!-- <div align="center" >
       <ion-button fill="clear" color="dark" (click)="selectTab(3)">
         Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
       </ion-button>
-    </div>
+    </div> -->
     <div align="center" >
       <ion-button expand="block"  color="botonazul" (click)="enviar()" [disabled]="!secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region">
         REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
@@ -225,20 +197,26 @@
 </ion-content>
 
 <ion-footer *ngIf="footer">
+  <ion-toolbar mode="ios">
+    <div align="center" >
+      <ion-button fill="clear" color="light" (click)="selectTab(tab,false,true)" *ngIf="tab > 0">
+        Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" color="light" (click)="selectTab(tab,true,false)" *ngIf="tab < 3">
+        Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+    </div>
+  </ion-toolbar>
   <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
-    <!-- <ion-segment-button  value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
-      <ion-label>Activo</ion-label>
-      <ion-icon name="distance"></ion-icon>
-    </ion-segment-button> -->
-    <ion-segment-button  value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
+    <ion-segment-button  value="2" (click)="selectTab(2)" [ngClass]="tab == 1 ? 'selectTab' : ''">
       <ion-label>Operatividad</ion-label>
       <ion-icon name="construct"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button  value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
+    <ion-segment-button  value="3" (click)="selectTab(3)" [ngClass]="tab == 2 ? 'selectTab' : ''">
       <ion-label>Datos</ion-label>
       <ion-icon name="create"></ion-icon>
     </ion-segment-button>
-    <ion-segment-button  value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
+    <ion-segment-button  value="4" (click)="selectTab(4)" [ngClass]="tab == 3 ? 'selectTab' : ''">
       <ion-label>Resumen</ion-label>
       <ion-icon name="document-text"></ion-icon>
     </ion-segment-button>

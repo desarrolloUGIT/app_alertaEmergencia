@@ -86,6 +86,11 @@ ion-toolbar{
     --background:#093F75;
   }
 
+  .toast-custom-classSuccess {
+    --button-color: white;
+    --background:#44870b;
+  }
+
   .toast-custom-classErr {
     --button-color: white;
     --background:rgb(207, 9, 9);

@@ -89,7 +89,7 @@ export class DireccionService {
              <max:ASSETSITEID>`+this._us.usuario.DEFSITE+`</max:ASSETSITEID>
                 <max:STATUS maxvalue="?">NUEVO</max:STATUS>
                 <max:SRTIPO maxvalue="?">E</max:SRTIPO>
-                <max:LOCATION maxvalue="?">`+data.locations+`</max:LOCATION>
+                <max:LOCATION maxvalue="?">`+(data.locations ? data.locations : '')+`</max:LOCATION>
                 <max:ASSETNUM maxvalue="?"></max:ASSETNUM>
                 <max:CLASS maxvalue="?">SR</max:CLASS>
                 <max:DESCRIPTION changed="?">`+data.titulo+`</max:DESCRIPTION>

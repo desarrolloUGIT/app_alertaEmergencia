@@ -107,7 +107,7 @@ export class HomePage implements OnInit {
   footer = true;
   mostrarMapa = false;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
-
+  tabActual = 0;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
@@ -120,6 +120,7 @@ export class HomePage implements OnInit {
           this.internet = true;
           this.tab = 0;
           this._us.cargar_storage().then(()=>{})
+          this.reiniciarHome()
           // this.loadMapVialidad()
         }
         if(res == 'conexión establecida sin mapa'){
@@ -177,6 +178,14 @@ export class HomePage implements OnInit {
 
   iniciar(){
     this._us.cargar_storage().then(()=>{
+      this.region = this._us.usuario.PERSON.STATEPROVINCE
+      this.dataPosicion.region = this.region == '20' ? '13' : this.region;
+      this._us.coordenadasRegion.forEach(c=>{
+        if(c.region == this.region){
+          this.dataPosicion.lng = Number(c.lng.toFixed(6))
+          this.dataPosicion.lat = Number(c.lat.toFixed(6))
+        }
+      })
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
         this.storage.setItem('seleccionMapa', 'si');
@@ -191,10 +200,14 @@ export class HomePage implements OnInit {
         this.internet = false;
         this._us.cargar_storage().then(()=>{})
       }
-      this.region = this._us.usuario.PERSON.STATEPROVINCE
-      this.dataPosicion.region = this.region == '20' ? '13' : this.region;
       this._us.nextmessage('usuario_logeado') 
-      this.loadFiles()
+      this.loadFiles().then(()=>{
+      }).catch(()=>{
+        // this.geolocate()
+      })
+      setTimeout(()=>{
+        this.geolocate()
+      },1000)
       if(this.platform.is('capacitor')){
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
           db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
@@ -255,7 +268,7 @@ export class HomePage implements OnInit {
         ],
         view:this.view,
       });
-      this.map.addControl(new FullScreen)
+      // this.map.addControl(new FullScreen)
       setTimeout(() => {
         this.map.setTarget("map");
       }, 500);
@@ -309,20 +322,23 @@ export class HomePage implements OnInit {
     this.dataPosicion.lat = Number(curr[1].toFixed(6));
     this.dataPosicion.lng = Number(curr[0].toFixed(6));
     var region;
-    this.regiones = this.chile.getSource().getFeatures();
-    for (var i in this.regiones) {
-        var polygonGeometry = this.regiones[i].getGeometry();
-        var coords = olProj.toLonLat(this.marker.getGeometry().getCoordinates());
-        if (polygonGeometry && typeof polygonGeometry != "undefined") {
-            if (polygonGeometry.intersectsCoordinate(coords)) {
-                region = this.regiones[i].get("region") + "";
-                if (region.length == 1) region = "0" + region;
-                this.dataPosicion.region = region;
-            }
-        }else{
-          console.log('fuera de regiones')
-        }
+    if (this.mostrarMapa && this.internet){
+      this.regiones = this.chile.getSource().getFeatures();
+      for (var i in this.regiones) {
+          var polygonGeometry = this.regiones[i].getGeometry();
+          var coords = olProj.toLonLat(this.marker.getGeometry().getCoordinates());
+          if (polygonGeometry && typeof polygonGeometry != "undefined") {
+              if (polygonGeometry.intersectsCoordinate(coords)) {
+                  region = this.regiones[i].get("region") + "";
+                  if (region.length == 1) region = "0" + region;
+                  this.dataPosicion.region = region;
+              }
+          }else{
+            console.log('fuera de regiones')
+          }
+      }
     }
+
   }
 
   changeMap(){
@@ -346,14 +362,29 @@ export class HomePage implements OnInit {
       this.loader.dismiss();
       this.obtenerUbicacionRegion()
      }).catch((error) => {
+      this.loader.dismiss();
+      this.obtenerUbicacionRegion()
        console.log('Error getting location', error);
      });
+    }).catch(()=>{
+      this.loader.dismiss();
     })
   }
 
-  selectTab(i){
-    if(Number(i) == this.tab){
-      this.tab = 0;
+  selectTab(i,sumar?,restar?){
+      if(sumar){
+        this.tab = Number(i) + 1;
+      }else{
+        if(restar){
+          this.tab = Number(i) - 1;
+        }else{
+          if(this.tab ==  Number(i)){
+            this.tab = 0;
+          }else{
+            this.tab = Number(i);
+          }
+        }
+      }
       this._us.cargar_storage().then(()=>{
         if(this._us.conexion == 'si'){
           this.mostrarMapa = true;
@@ -361,10 +392,7 @@ export class HomePage implements OnInit {
           this.mostrarMapa = false;
         }
       })
-    }else{
-      this.mostrarMapa = false;
-      this.tab = Number(i);
-    }
+    
   }
 
   async presentPopover(myEvent) {
@@ -1103,6 +1131,9 @@ export class HomePage implements OnInit {
       const { data } = await modal.onWillDismiss();
       if (data) {
         this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
+        this.dataPosicion.lat = data.SERVICEADDRESS.LATITUDEY;
+        this.dataPosicion.lng = data.SERVICEADDRESS.LONGITUDEX;
+        this.dataPosicion.region = data.SERVICEADDRESS.REGIONDISTRICT;
         this.view.setCenter(olProj.transform([data.SERVICEADDRESS.LONGITUDEX,data.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
         this.obtenerUbicacionRegion()
         this.view.setZoom(15)
@@ -1255,6 +1286,8 @@ export class HomePage implements OnInit {
           })
         }).catch(()=>{this.loader.dismiss()})
       })
+    }).catch(()=>{
+      this.loader.dismiss()
     })
   }
 
@@ -1542,6 +1575,7 @@ export class HomePage implements OnInit {
     this._us.cargar_storage().then(()=>{
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
+        this.internet = true;
       }else{
         this.mostrarMapa = false;
       }

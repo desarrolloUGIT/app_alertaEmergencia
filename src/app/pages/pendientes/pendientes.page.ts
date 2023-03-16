@@ -6,6 +6,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova-plugins/native-page-transitions/ngx';
 import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
+import { DireccionService } from '../../services/direccion/direccion.service';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -34,7 +35,7 @@ toast;
 
   constructor(private sqlite: SQLite,
     public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public _modalCtrl:ModalController,
-    public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService,public _vs:VialidadService) { 
+    public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService,public _vs:VialidadService, public _ds:DireccionService) { 
       if(this.platform.is('capacitor')){
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
           this.db = db;
@@ -169,6 +170,15 @@ toast;
                 }else{
                   this.mostrar = true;
                 }
+              }).catch((err)=>{
+                this.alertas.splice(i,1)
+                this.loader.dismiss()
+                if(this.alertas.length <= 0){
+                  this.mostrar = false;
+                  this._us.nextmessage('sin pendiente')        
+                }else{
+                  this.mostrar = true;
+                }
               })
             }else{
               this.loader.dismiss()
@@ -240,6 +250,38 @@ toast;
           this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
         }else{
           this._vs.enviarAlerta(data).subscribe((res:any)=>{
+            console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+            this.loader.dismiss()
+            if(res && res.status == '200'){
+             this.estadoEnvioAlerta = 'exitoso'
+             this.eliminar(id,i)
+             this.openModalEnvio(this.estadoEnvioAlerta)
+             this.presentToast('La emergencia fue enviada exitosamente',null,true);
+            }else{
+              this.estadoEnvioAlerta = 'fallido'
+              this.openModalEnvio(this.estadoEnvioAlerta)
+              this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+              console.log('******************** ERROR ENVIAR ******************** ')
+            }
+          },err=>{
+            this.loader.dismiss()
+            this.estadoEnvioAlerta = 'fallido'
+            this.openModalEnvio(this.estadoEnvioAlerta)
+            this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+            console.log('******************** ERROR ENVIAR ******************** ',err)
+          })
+        }
+      })
+    }else{
+      data.picture = (data.foto && data.foto.data) ? data.foto.data : '';
+      this.presentLoader('Enviando Emergencia ...').then(()=>{
+        if(this._us.conexion == 'no'){
+          this.loader.dismiss()
+          this.estadoEnvioAlerta = 'pendiente'
+          this.openModalEnvio(this.estadoEnvioAlerta)
+          this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+        }else{
+          this._ds.enviar(data).subscribe((res:any)=>{
             console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
             this.loader.dismiss()
             if(res && res.status == '200'){

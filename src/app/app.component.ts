@@ -11,6 +11,7 @@ import { App } from '@capacitor/app';
 import { SQLite, SQLiteObject } from '@awesome-cordova-plugins/sqlite/ngx';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { VialidadService } from './services/vialidad/vialidad.service';
+import { DireccionService } from './services/direccion/direccion.service';
 
 const SAVE_IMAGE_DIR = 'save-stored-images';
 
@@ -36,6 +37,7 @@ export class AppComponent {
   alertas = [];
   porenviar = [];
   enviadas = []
+  temporales = []
   constructor(
     public network: Network,
     private platform: Platform,
@@ -50,7 +52,8 @@ export class AppComponent {
     // private splashScreen: SplashScreen,
     private statusBar: StatusBar,
     private sqlite: SQLite,
-    public _vs:VialidadService
+    public _vs:VialidadService,
+    public _ds:DireccionService
   ) {
     this.initializeApp()
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
@@ -188,6 +191,8 @@ export class AppComponent {
         //   this._us.nextmessage('sin pendiente')        
         // }
         this.loadFileData(res.files)
+      }).catch(()=>{
+        this.enviar(this.alertas[0],this.alertas[0].id,0,0,0)
       })
     
   }
@@ -241,55 +246,57 @@ export class AppComponent {
   }
 
   enviar(data,id,i,posicion,enviadas){
+    // console.log('DATAAAAA-> ', data)
     data.picture = (data.foto && data.foto.data) ? data.foto.data : '';
-    this._vs.enviarAlerta(data).subscribe((res:any)=>{
-      if(res && res.status == '200'){
-        this.enviadas.push(data)
-        this.eliminar(id,i)
-        if((posicion + 1) >= this.alertas.length){
-          this.alertas = [];
-          enviadas++;
-          this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes')
-          this.db.open().then(()=>{
-            this.db.transaction( tx1=>{
-              this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
-                this.db.transaction(async tx=>{
-                  if(dat.rows.length > 0){
-                    tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
-                    setTimeout(()=>{
-                      if(this.porenviar.length > 0){
-                        this.pendientes = true;
-                        this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-                      }
-                    },4000)
-                  }else{
-                    tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
-                    setTimeout(()=>{
-                      if(this.porenviar.length > 0){
-                        this.pendientes = true;
-                        this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-                      }
-                    },4000)
-                  }
-                })
-              })
-            })
-          })
-         
+    if(this._us.usuario.DEFSITE == 'DV' || this._us.usuario.DEFSITE == 'VIALIDAD'){
+      this._vs.enviarAlerta(data).subscribe((res:any)=>{
+        if(res && res.status == '200'){
+          this.temporales.push(data)
+          this.eliminar(id,i)
+          if((posicion + 1) >= this.alertas.length){
+            this.alertas = [];
+            enviadas++;
+            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+            this.guardarHistorial()
+            setTimeout(()=>{
+              if(this.porenviar.length > 0){
+                this.pendientes = true;
+                this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+              }
+            },4000)
+          }else{
+            posicion++;
+            enviadas++;
+            this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
+          } 
         }else{
-          posicion++;
-          enviadas++;
-          this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
-        } 
-      }else{
-        console.log('******************** ERROR ENVIAR ******************** ')
+          console.log('******************** ERROR ENVIAR ******************** ')
+          this.porenviar.push(data)
+          if((posicion + 1) >= this.alertas.length){
+            this.alertas = [];
+            enviadas++;
+            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+            this.guardarHistorial()
+            setTimeout(()=>{
+              if(this.porenviar.length > 0){
+                this.pendientes = true;
+                this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+              }
+            },4000)
+          }else{
+            posicion++;
+            enviadas++;
+            this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
+          } 
+        }
+      },err=>{
+        console.log('******************** ERROR ENVIAR ******************** ',err)
         this.porenviar.push(data)
         if((posicion + 1) >= this.alertas.length){
           this.alertas = [];
           enviadas++;
-          this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes')
+          this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+          this.guardarHistorial()
           setTimeout(()=>{
             if(this.porenviar.length > 0){
               this.pendientes = true;
@@ -301,26 +308,116 @@ export class AppComponent {
           enviadas++;
           this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
         } 
-      }
-    },err=>{
-      console.log('******************** ERROR ENVIAR ******************** ',err)
-      this.porenviar.push(data)
-      if((posicion + 1) >= this.alertas.length){
-        this.alertas = [];
-        enviadas++;
-        this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes')
-        setTimeout(()=>{
-          if(this.porenviar.length > 0){
-            this.pendientes = true;
-            this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-          }
-        },4000)
-      }else{
-        posicion++;
-        enviadas++;
-        this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
-      } 
+      })
+    }else{
+      this._ds.enviar(data).subscribe((res:any)=>{
+        if(res && res.status == '200'){
+          this.temporales.push(data)
+          this.eliminar(id,i)
+          if((posicion + 1) >= this.alertas.length){
+            this.alertas = [];
+            enviadas++;
+            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+            this.guardarHistorial()
+            setTimeout(()=>{
+              if(this.porenviar.length > 0){
+                this.pendientes = true;
+                this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+              }
+            },4000)
+           
+          }else{
+            posicion++;
+            enviadas++;
+            this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
+          } 
+        }else{
+          console.log('******************** ERROR ENVIAR ******************** ')
+          this.porenviar.push(data)
+          if((posicion + 1) >= this.alertas.length){
+            this.alertas = [];
+            enviadas++;
+            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+            this.guardarHistorial()
+            setTimeout(()=>{
+              if(this.porenviar.length > 0){
+                this.pendientes = true;
+                this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+              }
+            },4000)
+          }else{
+            posicion++;
+            enviadas++;
+            this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
+          } 
+        }
+      },err=>{
+        console.log('******************** ERROR ENVIAR ******************** ',err)
+        this.porenviar.push(data)
+        if((posicion + 1) >= this.alertas.length){
+          this.alertas = [];
+          enviadas++;
+          this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+          this.guardarHistorial()
+          setTimeout(()=>{
+            if(this.porenviar.length > 0){
+              this.pendientes = true;
+              this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+            }
+          },4000)
+        }else{
+          posicion++;
+          enviadas++;
+          this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
+        } 
+      })
+    }
+    
+  }
+
+
+  guardarHistorial(){
+
+    this.db.open().then(()=>{
+      this.db.transaction(rx=>{
+        rx.executeSql('delete from activos', [], ()=>{
+          this.temporales.forEach((a,i)=>{
+            this.db.transaction(tx=>{
+              // tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [activo.ASSETNUM, activo.DESCRIPTION, activo.SERVICEADDRESS.LATITUDEY, activo.SERVICEADDRESS.LONGITUDEX, activo.SITEID, activo.SERVICEADDRESS.REGIONDISTRICT]);
+            })
+          })
+        })
+      })
     })
+
+
+    // this.db.open().then(()=>{
+    //   this.db.transaction( tx1=>{
+    //     this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
+    //       this.db.transaction(async tx=>{
+    //         if(dat.rows.length > 0){
+    //           tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+    //           [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
+    //           setTimeout(()=>{
+    //             if(this.porenviar.length > 0){
+    //               this.pendientes = true;
+    //               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+    //             }
+    //           },4000)
+    //         }else{
+    //           tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+    //           [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
+    //           setTimeout(()=>{
+    //             if(this.porenviar.length > 0){
+    //               this.pendientes = true;
+    //               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+    //             }
+    //           },4000)
+    //         }
+    //       })
+    //     })
+    //   })
+    // })
   }
 
   async deleteImage(file:LocalFile){
@@ -358,10 +455,10 @@ export class AppComponent {
     });
   }
 
-  async presentToast(message) {
+  async presentToast(message,clase?) {
     const toast = await this.toastController.create({
       message: message,
-      cssClass: 'toast-custom-class',
+      cssClass:  !clase ? 'toast-custom-class' : 'toast-custom-classSuccess',
       duration: 4000,
       buttons: [
         {
