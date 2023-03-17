@@ -27,6 +27,7 @@ import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { PopoverPage } from '../popover/popover.page';
 import {FullScreen, defaults as defaultControls} from 'ol/control.js';
+import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -108,8 +109,10 @@ export class HomePage implements OnInit {
   mostrarMapa = false;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   tabActual = 0;
+  fechaActualizar = new Date();
+  actualizar = false;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,
+    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,private locationAccuracy: LocationAccuracy,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
     public storage: NativeStorage) {
       this._us.message.subscribe(res=>{
@@ -176,10 +179,30 @@ export class HomePage implements OnInit {
    this.iniciar()
   }
 
+  
   iniciar(){
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region == '20' ? '13' : this.region;
+     if(this._us.fechaActualizacion){
+      if((this._us.fechaActualizar(this._us.fechaActualizacion) < this._us.fechaActualizar(this.fechaActualizar))){
+        console.log('La fecha guardada es menor')
+        this.actualizar = true;
+        this._us.fechaActualizacion = new Date()
+        this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
+        localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
+      }else{
+        console.log('La fecha es mayor o igual')
+        this.actualizar = false;
+      }
+     }else{
+      console.log('No existe una fecha previa de actualziacion')
+      this.actualizar = true;
+      this._us.fechaActualizacion = new Date()
+      this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
+      localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
+     }
+
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
           this.dataPosicion.lng = Number(c.lng.toFixed(6))
@@ -351,21 +374,43 @@ export class HomePage implements OnInit {
   }
 
   geolocate(){
-    this.presentLoader('Localizando ...').then(()=>{
-    this.geolocation.getCurrentPosition().then((resp) => {
-      this.view.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
-      this.marker.getGeometry().setCoordinates(this.view.getCenter());
-      this.view.setZoom(15)
-      this.loader.dismiss();
-      this.obtenerUbicacionRegion()
-     }).catch((error) => {
-      this.loader.dismiss();
-      this.obtenerUbicacionRegion()
-       console.log('Error getting location', error);
-     });
-    }).catch(()=>{
-      this.loader.dismiss();
-    })
+      this.presentLoader('Localizando ...').then(()=>{
+      this.geolocation.getCurrentPosition().then((resp) => {
+        this.view.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
+        this.marker.getGeometry().setCoordinates(this.view.getCenter());
+        this.view.setZoom(15)
+        this.loader.dismiss();
+        this.obtenerUbicacionRegion()
+      }).catch(async (error) => {
+        this.loader.dismiss();
+        this.obtenerUbicacionRegion()
+        console.log('Error getting location', error);
+        const alert = await this.alertctrl.create({
+          header: 'Debes activar el GPS y permitir la localización',
+          buttons: ['OK'],
+          mode:'ios',
+        });
+        await alert.present()
+      });
+      }).catch(()=>{
+        this.loader.dismiss();
+      })
+      if(this.platform.is('capacitor')){
+        this.locationAccuracy.canRequest().then((canRequest: boolean) => {
+        console.log('permisoo',canRequest)
+        if(canRequest) {
+          // the accuracy option will be ignored by iOS
+          this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY).then(
+            () => console.log('Request successful location'),
+            error => console.log('Error requesting location permissions', error)
+          ).catch(err=>{
+            console.log('error location ->',err)
+          })
+        }
+      
+      });
+      }
+      
   }
 
   selectTab(i,sumar?,restar?){
@@ -437,7 +482,9 @@ export class HomePage implements OnInit {
               arr.push(tmp)
             })
             this.operatividadArray = arr;
-            this.actualizarOperatividad()
+            if(this.actualizar){
+              this.actualizarOperatividad()
+            }
           }else{
             this._http.get('assets/operatividad.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -447,7 +494,9 @@ export class HomePage implements OnInit {
                   this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarOperatividad()
+                  if(this.actualizar){
+                    this.actualizarOperatividad()
+                  }
                 }
               })
             },err=>{
@@ -458,7 +507,9 @@ export class HomePage implements OnInit {
                   this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarOperatividad()
+                  if(this.actualizar){
+                    this.actualizarOperatividad()
+                  }
                 }
               })
             })
@@ -474,7 +525,9 @@ export class HomePage implements OnInit {
             this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
           })
           if(this.platform.is('capacitor')){
-            this.actualizarOperatividad()
+            if(this.actualizar){
+              this.actualizarOperatividad()
+            }
           }
         })
       },err=>{
@@ -485,7 +538,9 @@ export class HomePage implements OnInit {
             this.operatividadArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
           })
           if(this.platform.is('capacitor')){
-            this.actualizarOperatividad()
+            if(this.actualizar){
+             this.actualizarOperatividad()
+            }
           }
         })
       })
@@ -567,7 +622,9 @@ export class HomePage implements OnInit {
               arr.push(tmp)
             })
             this.nivelAlertaArray = arr;
-            this.actualizarNivelAlerta()
+            if(this.actualizar){
+              this.actualizarNivelAlerta()
+            }
           }else{
             this._http.get('assets/nivelAlerta.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -577,7 +634,9 @@ export class HomePage implements OnInit {
                   this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarNivelAlerta()
+                  if(this.actualizar){
+                    this.actualizarNivelAlerta()
+                  }
                 }
               })
             },err=>{
@@ -588,7 +647,9 @@ export class HomePage implements OnInit {
                   this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarNivelAlerta()
+                  if(this.actualizar){
+                    this.actualizarNivelAlerta()
+                  }
                 }
               })
             })
@@ -604,7 +665,9 @@ export class HomePage implements OnInit {
             this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
           })
           if(this.platform.is('capacitor')){
-            this.actualizarNivelAlerta()
+            if(this.actualizar){
+              this.actualizarNivelAlerta()
+            }
           }
         })
       },err=>{
@@ -615,7 +678,9 @@ export class HomePage implements OnInit {
             this.nivelAlertaArray.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
           })
           if(this.platform.is('capacitor')){
-            this.actualizarNivelAlerta()
+            if(this.actualizar){
+              this.actualizarNivelAlerta()
+            }
           }
         })
       })
@@ -736,7 +801,9 @@ export class HomePage implements OnInit {
                     this.nohayActivos = true;
                   }
                   if(this.platform.is('capacitor')){
-                    this.actualizarActivosDOH(this.region)
+                    if(this.actualizar){
+                      this.actualizarActivosDOH(this.region)
+                    }
                   }
                 })
               },err=>{
@@ -760,7 +827,9 @@ export class HomePage implements OnInit {
                     this.nohayActivos = true;
                   }
                   if(this.platform.is('capacitor')){
-                    this.actualizarActivosDOH(this.region)
+                    if(this.actualizar){
+                      this.actualizarActivosDOH(this.region)
+                    }
                   }
                 })
               })
@@ -793,7 +862,9 @@ export class HomePage implements OnInit {
               this.nohayActivos = true;
             }
             if(this.platform.is('capacitor')){
-              this.actualizarActivosDOH(this.region)
+              if(this.actualizar){
+                this.actualizarActivosDOH(this.region)
+              }
             }
           })
         },err=>{
@@ -817,7 +888,9 @@ export class HomePage implements OnInit {
               this.nohayActivos = true;
             }
             if(this.platform.is('capacitor')){
-              this.actualizarActivosDOH(this.region)
+              if(this.actualizar){
+                this.actualizarActivosDOH(this.region)
+              }
             }
           })
         })
@@ -847,7 +920,9 @@ export class HomePage implements OnInit {
         if(newVuelta > 16){
           this.activosEncontrados = true;      
           if(this.platform.is('capacitor')){
-            this.actualizarActivosDOH(this.region,1)
+            if(this.actualizar){
+              this.actualizarActivosDOH(this.region,1)
+            }
           }
         }else{
           this.activosNacional(newVuelta)
@@ -875,7 +950,9 @@ export class HomePage implements OnInit {
         if(newVuelta > 16){
           this.activosEncontrados = true;      
           if(this.platform.is('capacitor')){
-            this.actualizarActivosDOH(this.region,1)
+            if(this.actualizar){
+              this.actualizarActivosDOH(this.region,1)
+            }
           }
         }else{
           this.activosNacional(newVuelta)
@@ -1578,14 +1655,14 @@ export class HomePage implements OnInit {
       }
     })
     // this.view.setCenter(this.stgo)
-    this._us.coordenadasRegion.forEach(c=>{
-      if(c.region == this.region){
-        this.view.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
-        this.dataPosicion.lng = Number(c.lng.toFixed(6))
-        this.dataPosicion.lat = Number(c.lat.toFixed(6))
-        this.dataPosicion.region = this.region == '20' ? '13' : this.region;
-      }
-    })
+    // this._us.coordenadasRegion.forEach(c=>{
+    //   if(c.region == this.region){
+    //     this.view.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
+    //     this.dataPosicion.lng = Number(c.lng.toFixed(6))
+    //     this.dataPosicion.lat = Number(c.lat.toFixed(6))
+    //     this.dataPosicion.region = this.region == '20' ? '13' : this.region;
+    //   }
+    // })
     this.marker.getGeometry().setCoordinates(this.view.getCenter());
     this.view.setZoom(13)
     this.obtenerUbicacionRegion()

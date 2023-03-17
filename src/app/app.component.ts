@@ -58,10 +58,25 @@ export class AppComponent {
     if(this.platform.is('capacitor')){
       this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
         this.db = db;
-        this.buscarAlertasPendientes()
+        if(this.network.type != 'unknown' && this.network.type != 'none'){
+          console.log('ESTA CONECTADO A INTERNET')
+          setTimeout((()=>{
+            this.buscarAlertasPendientes()
+          }),4000);
+          this.storage.setItem('conexion', 'si');
+          localStorage.setItem('conexion','si')
+          this._us.cargar_storage().then(()=>{})
+        }else{
+          this.presentToast('Sin conexión ...')
+          this.storage.setItem('conexion', 'no');
+          localStorage.setItem('conexion','no')
+          this._us.nextmessage('sin conexión') 
+          this._us.cargar_storage().then(()=>{})
+        }
       })
     }
     this.initializeApp()
+    
     let disconnectSubscription = this.network.onDisconnect().subscribe(() => {
       this.presentToast('Sin conexión ...')
       this.storage.setItem('conexion', 'no');
@@ -118,7 +133,6 @@ export class AppComponent {
       })
     },(err)=>{
       this.buscarAlertasPendientes()
-      console.log('ACA2')
     })
   }
 
@@ -271,6 +285,7 @@ export class AppComponent {
           } 
         }else{
           console.log('******************** ERROR ENVIAR ******************** ')
+          console.log('ERROR ENVIAR ->>>>>> ',data.id,data.titulo)
           this.porenviar.push(data)
           if((posicion + 1) >= this.alertas.length){
             this.alertas = [];
@@ -443,7 +458,7 @@ export class AppComponent {
   }
 
   async deleteImage(file:LocalFile){
-    console.log(file.path)
+    // console.log(file.path)
     await Filesystem.deleteFile({
       directory:Directory.Data,
       path:file.path

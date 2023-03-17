@@ -123,7 +123,7 @@ export class DireccionService {
                     <max:LATITUDEY changed="?">`+data.lat+`</max:LATITUDEY>
                    <max:LONGITUDEX changed="?">`+data.lng+`</max:LONGITUDEX>
                     <max:REFERENCEPOINT changed="?"></max:REFERENCEPOINT>
-                    <max:REGIONDISTRICT changed="?">`+this._us.usuario.PERSON.STATEPROVINCE+`</max:REGIONDISTRICT>
+                    <max:REGIONDISTRICT changed="?">`+data.region+`</max:REGIONDISTRICT>
                     <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
                     <max:STREETADDRESS changed="?"></max:STREETADDRESS>
                     <max:ADDRESSLINE2 changed="?"></max:ADDRESSLINE2>

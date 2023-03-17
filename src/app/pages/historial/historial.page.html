@@ -31,11 +31,14 @@
                   <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
                 </ion-row>
                 <ion-row>
-                  <p><span>Operatividad:</span> {{item.operatividad}}</p>
+                  <p><span>Operatividad:</span> {{item.operatividad == 'NOOPERATIVO' ? 'No Operativo' : (item.operatividad == 'OPERATIVO' ? 'Operativo' : 'Operativo con Restricción')}}</p>
                 </ion-row>
-                <ion-row>
+                <ion-row style="margin-bottom: 3%;">
                   <ion-col size="6"><span>Latitud:</span> {{item.lat}}</ion-col>
                   <ion-col size="6"><span>Longitud:</span> {{item.lng}}</ion-col>
+                </ion-row>
+                <ion-row>
+                  <a href="https://www.google.com/maps?q={{item.lat}},{{item.lng}}&hl=es-PY&gl=py&shorturl=1" target="_blank">Ver en Google MAPS</a>
                 </ion-row>
               </ion-col>
             </ion-row>
@@ -75,6 +78,9 @@
               <ion-row style="width: 100%;">
                 <ion-col size="6"><span>Latitud:</span> {{item.lat}}</ion-col>
                 <ion-col size="6"><span>Longitud:</span> {{item.lng}}</ion-col>
+              </ion-row>
+              <ion-row>
+                <a href="https://www.google.com/maps?q={{item.lat}},{{item.lng}}&hl=es-PY&gl=py&shorturl=1" target="_blank">Ver en Google MAPS</a>
               </ion-row>
             </ion-row>
           </ion-grid>

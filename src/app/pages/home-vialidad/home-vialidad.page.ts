@@ -112,6 +112,7 @@ export class HomeVialidadPage implements OnInit {
   dibujarCamino = false;
   center;
   fechaActualizar = new Date();
+  actualizar = false;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
@@ -184,6 +185,8 @@ export class HomeVialidadPage implements OnInit {
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region;
+      console.log(this.fechaActualizar.getDate())
+      // if(this._us.fechaActualizacion && this._us.fechaActualizacion <)
       this._us.nextmessage('usuario_logeado') 
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;

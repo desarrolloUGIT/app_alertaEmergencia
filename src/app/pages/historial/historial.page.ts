@@ -47,7 +47,7 @@ toast;
                     }
                   }
                   this.alertas.reverse()
-                  console.log(this.alertas)
+                  // console.log(this.alertas)
                   this.loader.dismiss()
                   this.mostrar = true;
                 })

@@ -176,7 +176,7 @@ export class UsuarioService {
           });
           this.storage.getItem("fechaActualizacion").then(fechaActualizacion=>{
             if(fechaActualizacion){
-              this.fechaActualizacion = fechaActualizacion;
+              this.fechaActualizacion = JSON.parse(fechaActualizacion);
             }
           });
           this.storage.getItem("menuType").then(menuType=>{
@@ -203,7 +203,7 @@ export class UsuarioService {
           this.conexion = localStorage.getItem("conexion");
           this.token_user = localStorage.getItem("token_user");
           this.menuType = localStorage.getItem("menuType");
-          this.fechaActualizacion = localStorage.getItem("fechaActualizacion");
+          this.fechaActualizacion = JSON.parse(localStorage.getItem("fechaActualizacion"));
           this.tokenESRI = Number(localStorage.getItem("tokenESRI"));
           this.user = JSON.parse(localStorage.getItem("user"));
           resolve(null);
@@ -389,6 +389,25 @@ export class UsuarioService {
       minutos = "0"+minutos;
     }         
     var fec = now.getFullYear()+'-'+month+'-'+dia+'T'+horaN+':'+minutos;
+    return fec;
+  }
+
+  fechaActualizar(fech){
+    var now = new Date(fech);
+    var month = JSON.stringify(now.getMonth() + 1);
+    var horaN = JSON.stringify(now.getHours());
+    var dia = JSON.stringify(now.getDate());
+    var minutos = JSON.stringify(now.getMinutes());
+    if(dia.length == 1){
+      dia ="0"+dia;
+    }if(month.length == 1){
+      month = "0"+month;
+    }if(horaN.length == 1){
+      horaN = "0"+horaN;
+    }if(minutos.length == 1){
+      minutos = "0"+minutos;
+    }         
+    var fec = now.getFullYear()+'-'+month+'-'+dia;
     return fec;
   }
 
