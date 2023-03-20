@@ -185,8 +185,24 @@ export class HomeVialidadPage implements OnInit {
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region;
-      console.log(this.fechaActualizar.getDate())
-      // if(this._us.fechaActualizacion && this._us.fechaActualizacion <)
+      if(this._us.fechaActualizacion){
+        if((this._us.fechaActualizar(this._us.fechaActualizacion) < this._us.fechaActualizar(this.fechaActualizar))){
+          console.log('La fecha guardada es menor')
+          this.actualizar = true;
+          this._us.fechaActualizacion = new Date()
+          this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
+          localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
+        }else{
+          console.log('La fecha es mayor o igual')
+          this.actualizar = false;
+        }
+      }else{
+        console.log('No existe una fecha previa de actualziacion')
+        this.actualizar = true;
+        this._us.fechaActualizacion = new Date()
+        this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
+        localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
+      }
       this._us.nextmessage('usuario_logeado') 
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
@@ -1110,7 +1126,9 @@ export class HomeVialidadPage implements OnInit {
               }
             })
             this.nivelAlertaArray = arr;
-            this.actualizarNivelAlerta()
+            if(this.actualizar){
+              this.actualizarNivelAlerta()
+            }
           }else{
             this._http.get('assets/nivelAlerta.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -1136,7 +1154,9 @@ export class HomeVialidadPage implements OnInit {
                 })
                 this.nivelAlertaArray = arr;
                 if(this.platform.is('capacitor')){
-                  this.actualizarNivelAlerta()
+                  if(this.actualizar){
+                    this.actualizarNivelAlerta()
+                  }
                 }
               })
             },err=>{
@@ -1163,7 +1183,9 @@ export class HomeVialidadPage implements OnInit {
                 })
                 this.nivelAlertaArray = arr;
                 if(this.platform.is('capacitor')){
-                  this.actualizarNivelAlerta()
+                  if(this.actualizar){
+                    this.actualizarNivelAlerta()
+                  }
                 }
               })
             })
@@ -1195,7 +1217,9 @@ export class HomeVialidadPage implements OnInit {
           })
           this.nivelAlertaArray = arr;
           if(this.platform.is('capacitor')){
-            this.actualizarNivelAlerta()
+            if(this.actualizar){
+              this.actualizarNivelAlerta()
+            }
           }
         })
       },err=>{
@@ -1222,7 +1246,9 @@ export class HomeVialidadPage implements OnInit {
           })
           this.nivelAlertaArray = arr;
           if(this.platform.is('capacitor')){
-            this.actualizarNivelAlerta()
+            if(this.actualizar){
+              this.actualizarNivelAlerta()
+            }
           }
         })
       })
@@ -1341,7 +1367,9 @@ export class HomeVialidadPage implements OnInit {
               arr.push(tmp)
             })
             this.elementos = arr;
-            this.actualizarElementos()
+            if(this.actualizar){
+              this.actualizarElementos()
+            }
           }else{
             this._http.get('assets/elementos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -1351,7 +1379,9 @@ export class HomeVialidadPage implements OnInit {
                   this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarElementos()
+                  if(this.actualizar){
+                    this.actualizarElementos()
+                  }
                 }
               })
             },err=>{
@@ -1362,7 +1392,9 @@ export class HomeVialidadPage implements OnInit {
                   this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarElementos()
+                  if(this.actualizar){
+                    this.actualizarElementos()
+                  }
                 }
               })
             })
@@ -1378,7 +1410,9 @@ export class HomeVialidadPage implements OnInit {
             this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
           })
           if(this.platform.is('capacitor')){
-            this.actualizarElementos()
+            if(this.actualizar){
+              this.actualizarElementos()
+            }
           }
         })
       },err=>{
@@ -1389,7 +1423,9 @@ export class HomeVialidadPage implements OnInit {
             this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
           })
           if(this.platform.is('capacitor')){
-            this.actualizarElementos()
+            if(this.actualizar){
+              this.actualizarElementos()
+            }
           }
         })
       })
@@ -1483,7 +1519,9 @@ export class HomeVialidadPage implements OnInit {
               }
             })
             this.transito = arr;
-            this.actualizarTransito()
+            if(this.actualizar){
+              this.actualizarTransito()
+            }
           }else{
             this._http.get('assets/transito.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -1508,7 +1546,9 @@ export class HomeVialidadPage implements OnInit {
                 })
                 this.transito = arr;
                 if(this.platform.is('capacitor')){
-                  this.actualizarTransito()
+                  if(this.actualizar){
+                    this.actualizarTransito()
+                  }                
                 }
               })
             },err=>{
@@ -1534,7 +1574,9 @@ export class HomeVialidadPage implements OnInit {
                 })
                 this.transito = arr;
                 if(this.platform.is('capacitor')){
-                  this.actualizarTransito()
+                  if(this.actualizar){
+                    this.actualizarTransito()
+                  }                
                 }
               })
             })
@@ -1565,7 +1607,9 @@ export class HomeVialidadPage implements OnInit {
           })
           this.transito = arr;
           if(this.platform.is('capacitor')){
-            this.actualizarTransito()
+            if(this.actualizar){
+              this.actualizarTransito()
+            }
           }
         })
       },err=>{
@@ -1591,7 +1635,9 @@ export class HomeVialidadPage implements OnInit {
           })
           this.transito = arr;
           if(this.platform.is('capacitor')){
-            this.actualizarTransito()
+            if(this.actualizar){
+              this.actualizarTransito()
+            }
           }
         })
       })
@@ -1712,7 +1758,9 @@ export class HomeVialidadPage implements OnInit {
               arr.push(tmp)
             })
             this.restriccion = arr;
-            this.actualizarRestriccion()
+            if(this.actualizar){
+              this.actualizarRestriccion()
+            }
           }else{
             this._http.get('assets/restriccion.xml',{ responseType: 'text' }).subscribe((res:any)=>{
               this._us.xmlToJson(res).then((result:any)=>{
@@ -1724,7 +1772,9 @@ export class HomeVialidadPage implements OnInit {
                   }
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarRestriccion()
+                  if(this.actualizar){
+                    this.actualizarRestriccion()
+                  }
                 }
               })
             },err=>{
@@ -1737,7 +1787,9 @@ export class HomeVialidadPage implements OnInit {
                   }
                 })
                 if(this.platform.is('capacitor')){
-                  this.actualizarRestriccion()
+                  if(this.actualizar){
+                    this.actualizarRestriccion()
+                  }
                 }
               })
             })
@@ -1755,7 +1807,9 @@ export class HomeVialidadPage implements OnInit {
             }
           })
           if(this.platform.is('capacitor')){
-            this.actualizarRestriccion()
+            if(this.actualizar){
+              this.actualizarRestriccion()
+            }
           }
         })
       },err=>{
@@ -1768,7 +1822,9 @@ export class HomeVialidadPage implements OnInit {
             }
           })
           if(this.platform.is('capacitor')){
-            this.actualizarRestriccion()
+            if(this.actualizar){
+              this.actualizarRestriccion()
+            }
           }
         })
       })
@@ -1856,7 +1912,9 @@ export class HomeVialidadPage implements OnInit {
             if(region == '20'){
               this.activosNacional(1)
             }else{
-              this.actualizarActivosVialidad(this.region)
+              if(this.actualizar){
+                this.actualizarActivosVialidad(this.region)
+              }
             }
           }else{ 
             if(region == '20'){
@@ -1869,7 +1927,9 @@ export class HomeVialidadPage implements OnInit {
                     this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
                   })
                   if(this.platform.is('capacitor')){
-                    this.actualizarActivosVialidad(this.region)
+                    if(this.actualizar){
+                      this.actualizarActivosVialidad(this.region)
+                    }
                   }
                 })
               },err=>{
@@ -1879,7 +1939,9 @@ export class HomeVialidadPage implements OnInit {
                     this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
                   })
                   if(this.platform.is('capacitor')){
-                    this.actualizarActivosVialidad(this.region)
+                    if(this.actualizar){
+                      this.actualizarActivosVialidad(this.region)
+                    }
                   }
                 })
               })
@@ -1898,7 +1960,9 @@ export class HomeVialidadPage implements OnInit {
               this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
             })
             if(this.platform.is('capacitor')){
-              this.actualizarActivosVialidad(this.region)
+              if(this.actualizar){
+                this.actualizarActivosVialidad(this.region)
+              }
             }
           })
         },err=>{
@@ -1908,7 +1972,9 @@ export class HomeVialidadPage implements OnInit {
               this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
             })
             if(this.platform.is('capacitor')){
-              this.actualizarActivosVialidad(this.region)
+              if(this.actualizar){
+                this.actualizarActivosVialidad(this.region)
+              }
             }
           })
         })
@@ -1926,7 +1992,9 @@ export class HomeVialidadPage implements OnInit {
         const newVuelta = vuelta + 1;
         if(newVuelta > 16){
           if(this.platform.is('capacitor')){
-            this.actualizarActivosVialidad(this.region,1)
+            if(this.actualizar){
+              this.actualizarActivosVialidad(this.region,1)
+            }
           }
         }else{
           this.activosNacional(newVuelta)
@@ -1941,7 +2009,9 @@ export class HomeVialidadPage implements OnInit {
         const newVuelta = vuelta + 1;
         if(newVuelta > 16){
           if(this.platform.is('capacitor')){
-            this.actualizarActivosVialidad(this.region,1)
+            if(this.actualizar){
+              this.actualizarActivosVialidad(this.region,1)
+            }
           }
         }else{
           this.activosNacional(newVuelta)

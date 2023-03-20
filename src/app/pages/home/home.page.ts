@@ -184,25 +184,24 @@ export class HomePage implements OnInit {
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region == '20' ? '13' : this.region;
-     if(this._us.fechaActualizacion){
-      if((this._us.fechaActualizar(this._us.fechaActualizacion) < this._us.fechaActualizar(this.fechaActualizar))){
-        console.log('La fecha guardada es menor')
+      if(this._us.fechaActualizacion){
+        if((this._us.fechaActualizar(this._us.fechaActualizacion) < this._us.fechaActualizar(this.fechaActualizar))){
+          console.log('La fecha guardada es menor')
+          this.actualizar = true;
+          this._us.fechaActualizacion = new Date()
+          this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
+          localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
+        }else{
+          console.log('La fecha es mayor o igual')
+          this.actualizar = false;
+        }
+      }else{
+        console.log('No existe una fecha previa de actualziacion')
         this.actualizar = true;
         this._us.fechaActualizacion = new Date()
         this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
         localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
-      }else{
-        console.log('La fecha es mayor o igual')
-        this.actualizar = false;
       }
-     }else{
-      console.log('No existe una fecha previa de actualziacion')
-      this.actualizar = true;
-      this._us.fechaActualizacion = new Date()
-      this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
-      localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
-     }
-
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
           this.dataPosicion.lng = Number(c.lng.toFixed(6))
