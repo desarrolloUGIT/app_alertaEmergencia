@@ -138,60 +138,58 @@ export class AppComponent {
 
   buscarAlertasPendientes(){
     if(this.platform.is('capacitor')){
-    
-          this._us.cargar_storage().then(()=>{
-            var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
-            this.db.executeSql(sql, []).then((data)=>{
-              console.log('PENDIENTES --------> ',data.rows.length)
-              if(data.rows.length > 0){
-                this.alertas = [];
-                this.porenviar = [];
-                for(let i = 0;i<data.rows.length;i++){
-                  if(data.rows.item(i).error == 'internet'){
-                    this.alertas.push(data.rows.item(i))
-                  }else{
-                    this.porenviar.push(data.rows.item(i))
-                  }
-                }
-                if(this.alertas.length > 0 && this._us.conexion == 'si'){
-                  this.loadFiles()
-                }else{
-                  if(this.alertas.length > 0){
-                    this.porenviar = this.porenviar.concat(this.alertas)
-                    // console.log('TOTAL POR ENVIAR->',this.porenviar.length,this.porenviar,this.alertas.length)
-                    if(this.porenviar.length > 0){
-                      this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-                    }
-                  }else{
-                    if(this.porenviar.length > 0){
-                      this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-                    }
-                  }
-                  
-                }
+      this._us.cargar_storage().then(()=>{
+        var sql = (this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV') ? 'SELECT * FROM alertaVialidad' : 'SELECT * FROM alerta'
+        this.db.executeSql(sql, []).then((data)=>{
+          console.log('PENDIENTES --------> ',data.rows.length)
+          if(data.rows.length > 0){
+            this.alertas = [];
+            this.porenviar = [];
+            for(let i = 0;i<data.rows.length;i++){
+              if(data.rows.item(i).error == 'internet'){
+                this.alertas.push(data.rows.item(i))
+              }else{
+                this.porenviar.push(data.rows.item(i))
+              }
+            }
+            if(this.alertas.length > 0 && this._us.conexion == 'si'){
+              this.loadFiles()
+            }else{
+              if(this.alertas.length > 0){
+                this.porenviar = this.porenviar.concat(this.alertas)
+                // console.log('TOTAL POR ENVIAR->',this.porenviar.length,this.porenviar,this.alertas.length)
                 if(this.porenviar.length > 0){
-                  this.pendientes = true;
-                }else{
-                  this.pendientes = false;
+                  this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
                 }
               }else{
-                this.pendientes = false;
-                let options: NativeTransitionOptions ={
-                  direction:'right',
-                  duration:500
+                if(this.porenviar.length > 0){
+                  this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
                 }
-                this.nativePageTransitions.fade(options);
-                if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
-                  this.navCtrl.navigateRoot('/home_vialidad')
-                }else{
-                  this.navCtrl.navigateRoot('/home')
-                }
-                this.pagina = 'home'
-              }
-            }).catch(err=>{
-              console.log('PENDIENTES ERR ->',err)
-            })
-          })
+              }             
+            }
+            if(this.porenviar.length > 0){
+              this.pendientes = true;
+            }else{
+              this.pendientes = false;
+            }
+          }else{
+            this.pendientes = false;
+            let options: NativeTransitionOptions ={
+              direction:'right',
+              duration:500
+            }
+            this.nativePageTransitions.fade(options);
+            if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+              this.navCtrl.navigateRoot('/home_vialidad')
+            }else{
+              this.navCtrl.navigateRoot('/home')
+            }
+            this.pagina = 'home'
+          }
+        }).catch(err=>{
+          console.log('PENDIENTES ERR ->',err)
+        })
+      })
     }
   }
 

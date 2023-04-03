@@ -224,7 +224,7 @@ export class HomeVialidadPage implements OnInit {
         })
         this._us.cargar_storage().then(()=>{})
       }
-      this.loadFiles()
+      // this.loadFiles()
       setTimeout(()=>{
         this.obtenerGeolocalizacion()
       },1000)
