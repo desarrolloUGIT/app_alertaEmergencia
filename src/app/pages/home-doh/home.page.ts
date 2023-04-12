@@ -27,7 +27,8 @@ import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { PopoverPage } from '../popover/popover.page';
 import {FullScreen, defaults as defaultControls} from 'ol/control.js';
-import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
+import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
+// import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -111,8 +112,12 @@ export class HomePage implements OnInit {
   tabActual = 0;
   fechaActualizar = new Date();
   actualizar = false;
+  regionesAll = [];
+  provinciasAll = [];
+  comunasAll = [];
+  elementos = [];
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
-    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,private locationAccuracy: LocationAccuracy,
+    private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,public _vs:VialidadService,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
     public storage: NativeStorage) {
       this._us.message.subscribe(res=>{
@@ -223,7 +228,7 @@ export class HomePage implements OnInit {
         this._us.cargar_storage().then(()=>{})
       }
       this._us.nextmessage('usuario_logeado') 
-      this.loadFiles()
+      // this.loadFiles()
       setTimeout(()=>{
         this.geolocate()
       },1000)
@@ -231,6 +236,7 @@ export class HomePage implements OnInit {
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
           db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
+          db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name,condition)',[]);
           db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
           db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
@@ -254,17 +260,47 @@ export class HomePage implements OnInit {
           this.activosDOH(this.region);
         }
       }
+      this.cargarRegiones()
+      this.cargarProvincias()
+      this.cargarComunas()
+      if(this._us.usuario.DEFSITE == 'DOH-CAUC' || this._us.usuario.DEFSITE == 'DOH-ALL'){
+        this.elemento()
+      }
+ 
     })
    
     this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
     });
-    this.secondFormGroup = this._formBuilder.group({
-      operatividad:[null,Validators.compose([Validators.required])],
-      nivelAlerta:[null,Validators.compose([Validators.required])],
-      competencia:['Si',Validators.compose([Validators.required])]
-    })
+    if(this._us.usuario.DEFSITE == 'APR' || this._us.usuario.DEFSITE == 'DOH-RIEG'){
+      this.secondFormGroup = this._formBuilder.group({
+        operatividad:[null,Validators.compose([Validators.required])],
+        nivelAlerta:[null,Validators.compose([Validators.required])],
+        competencia:['Si',Validators.compose([Validators.required])]
+      })
+    }else{
+      if(this._us.usuario.DEFSITE == 'DOH-ALL'){
+        this.secondFormGroup = this._formBuilder.group({
+          operatividad:[null,Validators.compose([Validators.required])],
+          nivelAlerta:[null,Validators.compose([Validators.required])],
+          elemento:[null,Validators.compose([])],
+          competencia:['Si',Validators.compose([Validators.required])]
+        })
+      }else{
+        this.secondFormGroup = this._formBuilder.group({
+          nombre:[null,Validators.compose([Validators.required])],
+          elemento:[null,Validators.compose([Validators.required])],
+          operatividad:[null,Validators.compose([Validators.required])],
+          nivelAlerta:[null,Validators.compose([Validators.required])],
+          region:[null,Validators.compose([Validators.required])],
+          provincia:[null,Validators.compose([Validators.required])],
+          comuna:[null,Validators.compose([Validators.required])],
+          localidad:[null,Validators.compose([Validators.required])],
+          competencia:['Si',Validators.compose([Validators.required])]
+        })
+      }
+    }
     this.thirdFormGroup = this._formBuilder.group({
       titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
       descripcion: [null,Validators.compose([Validators.maxLength(300)])],
@@ -394,22 +430,6 @@ export class HomePage implements OnInit {
       }).catch(()=>{
         this.loader.dismiss();
       })
-      if(this.platform.is('capacitor')){
-        this.locationAccuracy.canRequest().then((canRequest: boolean) => {
-        console.log('permisoo',canRequest)
-        if(canRequest) {
-          // the accuracy option will be ignored by iOS
-          this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY).then(
-            () => console.log('Request successful location'),
-            error => console.log('Error requesting location permissions', error)
-          ).catch(err=>{
-            console.log('error location ->',err)
-          })
-        }
-      
-      });
-      }
-      
   }
 
   selectTab(i,sumar?,restar?){
@@ -466,6 +486,228 @@ export class HomePage implements OnInit {
   }
   // FIN MAPA
   // CARGAS INICIALES
+
+  cargarRegiones(){
+    this._http.get('assets/regiones.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+      this._us.xmlToJson(res).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+        this.regionesAll = [];
+        path.forEach(f=>{
+          this.regionesAll.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        })
+      })
+    },err=>{
+      this._us.xmlToJson(err.error.text).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+        this.regionesAll = [];
+        path.forEach(f=>{
+          this.regionesAll.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        })
+      })
+    })
+  }
+
+  cargarProvincias(){
+    this._http.get('assets/provincias.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+      this._us.xmlToJson(res).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+        this.provinciasAll = [];
+        path.forEach(f=>{
+          this.provinciasAll.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        })
+      })
+    },err=>{
+      this._us.xmlToJson(err.error.text).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+        this.provinciasAll = [];
+        path.forEach(f=>{
+          this.provinciasAll.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        })
+      })
+    })
+  }
+
+  cargarComunas(){
+    this._http.get('assets/comunas.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+      this._us.xmlToJson(res).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+        this.comunasAll = [];
+        path.forEach(f=>{
+          this.comunasAll.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        })
+      })
+    },err=>{
+      this._us.xmlToJson(err.error.text).then((result:any)=>{
+        var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+        this.comunasAll = [];
+        path.forEach(f=>{
+          this.comunasAll.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0]})
+        })
+      })
+    })
+  }
+
+
+  elemento(){
+    if(this.platform.is('capacitor')){
+      this.db.open().then(()=>{
+        this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+                CONDITIONNUM:data.rows.item(i).condition
+              }
+              if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
+                arr.push(tmp)
+              }
+            })
+            this.elementos = arr;
+            if(this.actualizar){
+              this.actualizarElementos()
+            }
+          }else{
+            this._http.get('assets/elementos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+              this._us.xmlToJson(res).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.elementos = [];
+                path.forEach(f=>{
+                  if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+                    this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
+                  }
+                })
+                if(this.platform.is('capacitor')){
+                  if(this.actualizar){
+                    this.actualizarElementos()
+                  }
+                }
+              })
+            },err=>{
+              this._us.xmlToJson(err.error.text).then((result:any)=>{
+                var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+                this.elementos = [];
+                path.forEach(f=>{
+                  if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+                    this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
+                  }
+                })
+                if(this.platform.is('capacitor')){
+                  if(this.actualizar){
+                    this.actualizarElementos()
+                  }
+                }
+              })
+            })
+          }
+        })
+      })
+    }else{
+      this._http.get('assets/elementos.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.elementos = [];
+          path.forEach(f=>{
+            if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+              this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
+            }
+          })
+          console.log(this.elementos)
+          if(this.platform.is('capacitor')){
+            if(this.actualizar){
+              this.actualizarElementos()
+            }
+          }
+        })
+      },err=>{
+        this._us.xmlToJson(err.error.text).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.elementos = [];
+          path.forEach(f=>{
+            if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+              this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
+            }
+          })
+          if(this.platform.is('capacitor')){
+            if(this.actualizar){
+              this.actualizarElementos()
+            }
+          }
+        })
+      })
+    }
+  }
+
+  actualizarElementos(){
+    this._vs.dominios('ELEMENTOSIE').subscribe((res:any)=>{
+      if(res && res.status == '200'){
+        this._us.xmlToJson(res).then((result:any)=>{
+          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
+          this.elementos = [];
+          path.forEach(f=>{
+            if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+              this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
+            }
+          })
+          this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
+          this.db.open().then(()=>{
+            this.db.transaction(rx=>{
+              rx.executeSql('delete from elemento', [], ()=>{
+                this.elementos.forEach((activo,i)=>{
+                  this.db.transaction(tx=>{
+                    tx.executeSql('insert into elemento (id,name,condition) values (?,?,?)', [activo.VALUE, activo.DESCRIPTION,activo.CONDITIONNUM]);
+                  })
+                })
+              })
+            }).then(()=>{
+              // Termina de ingresar nivelAlerta
+            }).catch(()=>{
+              this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
+                if(data.rows.length > 0){
+                  var arr = []
+                  var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                  AR.forEach(i=>{
+                    var tmp = {
+                      VALUE:data.rows.item(i).id,
+                      DESCRIPTION:data.rows.item(i).name,
+                      CONDITIONNUM:data.rows.item(i).condition
+                    }
+                    if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
+                      arr.push(tmp)
+                    }
+                  })
+                  this.elementos = arr;
+                  this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
+                }
+              })     
+            })
+          })
+        })
+      }else{
+        this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
+          if(data.rows.length > 0){
+            var arr = []
+            var AR = Array.from({length: data.rows.length}, (x, i) => i);
+            AR.forEach(i=>{
+              var tmp = {
+                VALUE:data.rows.item(i).id,
+                DESCRIPTION:data.rows.item(i).name,
+                CONDITIONNUM:data.rows.item(i).condition
+              }
+              if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
+                arr.push(tmp)
+              }
+            })
+            this.elementos = arr;
+            this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
+          }
+        })  
+      }
+    })
+  }
+
   operatividad(){
     if(this.platform.is('capacitor')){
       this.db.open().then(()=>{
@@ -548,7 +790,6 @@ export class HomePage implements OnInit {
 
   actualizarOperatividad(){
     this._ds.dominios('ESTADOUB').subscribe((res:any)=>{
-      // console.log('OPERATIVIDAD -> ',res)
       if(res && res.status == '200'){
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
@@ -1172,8 +1413,6 @@ export class HomePage implements OnInit {
     }
 
   }
-
-
 
   // FIN CARGAS INICIALES
   // OTROS

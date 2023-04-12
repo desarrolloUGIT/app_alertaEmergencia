@@ -266,11 +266,12 @@ export class UsuarioService {
     this.storage.setItem('tokenESRI', String(226));
     this.storage.setItem('seleccionMapa', 'si');
     var menuType = '';
-    if (res.DEFSITE == "APR" || res.DEFSITE == "DOH-ALL" || res.DEFSITE == "DOH-CAUC" || res.DEFSITE == "DOH-RIEG") {
-      menuType = "APR";
-    } else {
-      menuType = res.DEFSITE;
-    }
+    // if (res.DEFSITE == "APR" || res.DEFSITE == "DOH-ALL" || res.DEFSITE == "DOH-CAUC" || res.DEFSITE == "DOH-RIEG") {
+    //   menuType = "APR";
+    // } else {
+    //   menuType = res.DEFSITE;
+    // }
+    menuType = res.DEFSITE;
     this.storage.setItem('menuType', menuType);
     localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');

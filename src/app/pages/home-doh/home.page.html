@@ -92,6 +92,12 @@
               <ion-select-option *ngFor="let item of nivelAlertaArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
             </ion-select>
           </ion-item>
+          <ion-item lines="none" [class.select]="secondFormGroup.value.elemento" *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
+            <ion-label >Elemento</ion-label>
+            <ion-select mode="ios" interface="alert" placeholder="Selecciona elemento" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="elemento">
+              <ion-select-option *ngFor="let item of elementos" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
+            </ion-select>
+          </ion-item>
           <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
             <ion-label>Competencia</ion-label>
             <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">

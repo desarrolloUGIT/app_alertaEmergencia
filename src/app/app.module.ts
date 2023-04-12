@@ -15,7 +15,7 @@ import { NativePageTransitions } from '@awesome-cordova-plugins/native-page-tran
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
 import { Keyboard } from '@ionic-native/keyboard/ngx';
-import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
+// import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 
 
 @NgModule({
@@ -32,7 +32,7 @@ import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx
     HttpClientModule,
   ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },Network,NativeStorage,
-    NativePageTransitions,SplashScreen,StatusBar,Geolocation,SQLite,Keyboard,LocationAccuracy],
+    NativePageTransitions,SplashScreen,StatusBar,Geolocation,SQLite,Keyboard],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
