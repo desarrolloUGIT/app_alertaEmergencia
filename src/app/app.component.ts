@@ -60,9 +60,9 @@ export class AppComponent {
         this.db = db;
         if(this.network.type != 'unknown' && this.network.type != 'none'){
           console.log('ESTA CONECTADO A INTERNET')
-          setTimeout((()=>{
-            this.buscarAlertasPendientes()
-          }),4000);
+          // setTimeout((()=>{
+          //   this.buscarAlertasPendientes()
+          // }),4000);
           this.storage.setItem('conexion', 'si');
           localStorage.setItem('conexion','si')
           this._us.cargar_storage().then(()=>{})
@@ -73,6 +73,7 @@ export class AppComponent {
           this._us.nextmessage('sin conexión') 
           this._us.cargar_storage().then(()=>{})
         }
+        this.buscarAlertasPendientes()
       })
     }
     this.initializeApp()
@@ -108,6 +109,7 @@ export class AppComponent {
         this._mc.enable(false,'first')
       })
     })
+
   }
 
    observadorConectado(){
@@ -124,15 +126,15 @@ export class AppComponent {
             })
           }
         }
-        setTimeout((()=>{
-          this.buscarAlertasPendientes()
-        }),4000);
+        // setTimeout((()=>{
+        //   this.buscarAlertasPendientes()
+        // }),4000);
         this.storage.setItem('conexion', 'si');
         localStorage.setItem('conexion','si')
         this._us.cargar_storage().then(()=>{})
       })
     },(err)=>{
-      this.buscarAlertasPendientes()
+      // this.buscarAlertasPendientes()
     })
   }
 
@@ -204,9 +206,9 @@ export class AppComponent {
         // }
         this.loadFileData(res.files)
       }).catch(()=>{
+        this._us.nextmessage('enviando') 
         this.enviar(this.alertas[0],this.alertas[0].id,0,0,0)
       })
-    
   }
 
   async loadFileData(fileNames:string[]){
@@ -222,6 +224,8 @@ export class AppComponent {
         data:readFile.data
       })
     }
+    // console.log('IMAGENES->>>>>>>>>>>>',(this.images.length))
+
     this.images.forEach(i=>{
       this.alertas.forEach(a=>{
         if('save_'+a.id+'_foto.jpg' == i.name){
@@ -229,18 +233,36 @@ export class AppComponent {
         }
       })
     })
+    this.alertas.forEach((f,i)=>{
+     console.log('EXISTE FOTO?',i, f.foto)
+    })
     if(this.alertas.length > 0){
       // ENVIAR
+      this._us.nextmessage('enviando') 
       this.enviar(this.alertas[0],this.alertas[0].id,0,0,0)
     }
   }
 
-  eliminar(id,i){
+  eliminar(id,i,foto){
       this._us.cargar_storage().then(()=>{
         if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){
           this.db.executeSql('DELETE FROM alerta WHERE id = '+id, []).then((data)=>{
             if(data.rowsAffected > 0){
-              this.deleteImage(this.alertas[i].name)
+              if(foto){
+                var del = null;
+                this.images.forEach((im,j)=>{
+                  this.alertas.forEach((a,k)=>{
+                    if(a.foto){
+                      if(a.foto.name == i.name){
+                        del = i;
+                      }
+                    }
+                  })
+                })
+                if(del){
+                  this.deleteImage(del)
+                }
+              }
             }else{
               this.presentToast('No se pudo eliminar la emergencia');
             }
@@ -248,7 +270,21 @@ export class AppComponent {
         }else{
           this.db.executeSql('DELETE FROM alertaVialidad WHERE id = '+id, []).then((data)=>{
             if(data.rowsAffected > 0){
-              this.deleteImage(this.alertas[i].foto)
+              if(foto){
+                var del = null;
+                this.images.forEach((im,j)=>{
+                  this.alertas.forEach((a,k)=>{
+                    if(a.foto){
+                      if(a.foto.name == i.name){
+                        del = i;
+                      }
+                    }
+                  })
+                })
+                if(del){
+                  this.deleteImage(del)
+                }
+              }
             }else{
               this.presentToast('No se pudo eliminar la emergencia');
             }
@@ -258,19 +294,21 @@ export class AppComponent {
   }
 
   enviar(data,id,i,posicion,enviadas){
-    // console.log('DATAAAAA-> ', data)
     data.picture = (data.foto && data.foto.data) ? data.foto.data : '';
+    // console.log('INFO->',data.picture)
     if(this._us.usuario.DEFSITE == 'DV' || this._us.usuario.DEFSITE == 'VIALIDAD'){
       this._vs.enviarAlerta(data).subscribe((res:any)=>{
         if(res && res.status == '200'){
           this.temporales.push(data)
-          this.eliminar(id,i)
+          this.eliminar(id,i,(data.picture == '' ? false : true))
           if((posicion + 1) >= this.alertas.length){
-            this.alertas = [];
+            this._us.nextmessage('termino de enviar') 
             enviadas++;
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
             this.guardarHistorial('dv')
             setTimeout(()=>{
+              this.alertas = [];
+              this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
@@ -286,13 +324,15 @@ export class AppComponent {
           console.log('ERROR ENVIAR ->>>>>> ',data.id,data.titulo)
           this.porenviar.push(data)
           if((posicion + 1) >= this.alertas.length){
-            this.alertas = [];
             // enviadas++;
+            this._us.nextmessage('termino de enviar') 
             if(enviadas > 0){
               this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
               this.guardarHistorial('dv')
             }
             setTimeout(()=>{
+              this.alertas = [];
+              this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
@@ -308,12 +348,14 @@ export class AppComponent {
         console.log('******************** ERROR ENVIAR ******************** ',err)
         this.porenviar.push(data)
         if((posicion + 1) >= this.alertas.length){
-          this.alertas = [];
+          this._us.nextmessage('termino de enviar') 
           if(enviadas > 0){
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
             this.guardarHistorial('dv')
           }
           setTimeout(()=>{
+            this.alertas = [];
+            this._us.loadFiles(SAVE_IMAGE_DIR)
             if(this.porenviar.length > 0){
               this.pendientes = true;
               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
@@ -329,15 +371,17 @@ export class AppComponent {
       this._ds.enviar(data).subscribe((res:any)=>{
         if(res && res.status == '200'){
           this.temporales.push(data)
-          this.eliminar(id,i)
+          this.eliminar(id,i,(data.picture == '' ? false : true))
           if((posicion + 1) >= this.alertas.length){
-            this.alertas = [];
             enviadas++;
+            this._us.nextmessage('termino de enviar') 
             if(enviadas > 0){
               this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
               this.guardarHistorial('doh')
             }
             setTimeout(()=>{
+              this.alertas = [];
+              this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
@@ -353,12 +397,14 @@ export class AppComponent {
           console.log('******************** ERROR ENVIAR ******************** ')
           this.porenviar.push(data)
           if((posicion + 1) >= this.alertas.length){
-            this.alertas = [];
+            this._us.nextmessage('termino de enviar') 
             if(enviadas > 0){
               this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
               this.guardarHistorial('doh')
             }
             setTimeout(()=>{
+              this.alertas = [];
+              this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
@@ -374,12 +420,14 @@ export class AppComponent {
         console.log('******************** ERROR ENVIAR ******************** ',err)
         this.porenviar.push(data)
         if((posicion + 1) >= this.alertas.length){
-          this.alertas = [];
+          this._us.nextmessage('termino de enviar') 
           if(enviadas > 0){
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
             this.guardarHistorial('doh')
           }
           setTimeout(()=>{
+            this.alertas = [];
+            this._us.loadFiles(SAVE_IMAGE_DIR)
             if(this.porenviar.length > 0){
               this.pendientes = true;
               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')

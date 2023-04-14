@@ -114,6 +114,8 @@ export class HomeVialidadPage implements OnInit {
   fechaActualizar = new Date();
   actualizar = false;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+  iconEnviando = false;
+
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -146,6 +148,12 @@ export class HomeVialidadPage implements OnInit {
           this.internet = false;
           this.mostrarMapa = false;
           this.buscandoActivos = [];
+        }
+        if(res == 'enviando'){
+          this.iconEnviando = true;
+        }
+        if(res == 'termino de enviar'){
+          this.iconEnviando = false;
         }
       })
       this.keyboard.hideFormAccessoryBar(false)

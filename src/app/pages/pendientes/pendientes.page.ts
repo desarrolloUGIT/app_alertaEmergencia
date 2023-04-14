@@ -125,6 +125,7 @@ toast;
       })
     })
     if(this.alertas.length > 0){
+      // console.log(JSON.stringify(this.alertas))
       this.mostrar = true;
     }else{
       this._us.nextmessage('sin pendiente')        

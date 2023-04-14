@@ -116,6 +116,7 @@ export class HomePage implements OnInit {
   provinciasAll = [];
   comunasAll = [];
   elementos = [];
+  iconEnviando = false;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,public _vs:VialidadService,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
@@ -149,6 +150,12 @@ export class HomePage implements OnInit {
         if(res == 'sin conexión'){
           this.internet = false;
           this.mostrarMapa = false;
+        }
+        if(res == 'enviando'){
+          this.iconEnviando = true;
+        }
+        if(res == 'termino de enviar'){
+          this.iconEnviando = false;
         }
       })
       this.keyboard.hideFormAccessoryBar(false)
@@ -228,7 +235,7 @@ export class HomePage implements OnInit {
         this._us.cargar_storage().then(()=>{})
       }
       this._us.nextmessage('usuario_logeado') 
-      // this.loadFiles()
+      this.loadFiles()
       setTimeout(()=>{
         this.geolocate()
       },1000)
@@ -409,15 +416,15 @@ export class HomePage implements OnInit {
   }
 
   geolocate(){
-      this.presentLoader('Localizando ...').then(()=>{
+      this.presentToast('Localizando ...',null,null,true).then(()=>{
       this.geolocation.getCurrentPosition().then((resp) => {
         this.view.setCenter(olProj.transform([resp.coords.longitude,resp.coords.latitude], 'EPSG:4326', 'EPSG:3857'))
         this.marker.getGeometry().setCoordinates(this.view.getCenter());
         this.view.setZoom(15)
-        this.loader.dismiss();
+        this.toast.dismiss();
         this.obtenerUbicacionRegion()
       }).catch(async (error) => {
-        this.loader.dismiss();
+        this.toast.dismiss();
         this.obtenerUbicacionRegion()
         console.log('Error getting location', error);
         const alert = await this.alertctrl.create({
@@ -428,7 +435,7 @@ export class HomePage implements OnInit {
         await alert.present()
       });
       }).catch(()=>{
-        this.loader.dismiss();
+        this.toast.dismiss();
       })
   }
 
@@ -1416,8 +1423,8 @@ export class HomePage implements OnInit {
 
   // FIN CARGAS INICIALES
   // OTROS
-  async presentLoader(msg) {
-    this.loader = await this.loadctrl.create({message: msg,mode:'ios'});
+  async presentLoader(msg,mode?) {
+    this.loader = await this.loadctrl.create({message: msg,mode:!mode ? 'ios' : 'md'});
     await this.loader.present();
   }
 
@@ -1456,9 +1463,10 @@ export class HomePage implements OnInit {
   
   }
 
-  async presentToast(message,duration?,cerrar?) {
+  async presentToast(message,duration?,cerrar?,position?) {
     this.toast = await this.toastController.create({
-      message: message,
+      header:message,
+      // message: message,
       cssClass: 'toast-custom-class',
       duration: !cerrar ?(duration ? duration : 4000) : false,
       buttons: !cerrar ? [
@@ -1467,6 +1475,8 @@ export class HomePage implements OnInit {
           role: 'cancel',
         }
       ] : null,
+      position:position ? 'bottom' : 'bottom',
+      color:'accordion',
       mode:'ios'
     });
     await this.toast.present();
@@ -1672,7 +1682,7 @@ export class HomePage implements OnInit {
               this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
                 this.db.transaction(async tx=>{
                   if(dat.rows.length > 0){
-                    if(dat.rows.length >= 20){
+                    if(dat.rows.length >= 10){
                       this.loader.dismiss()
                       this.alertasMaximas()
                     }else{
@@ -1869,7 +1879,7 @@ export class HomePage implements OnInit {
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
       header: 'Límite de alertas',
-      message: 'Se ha llegado al límite de 20 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
+      message: 'Se ha llegado al límite de 10 alertas almacenadas, por lo cual no se pueden guardar más alertas para enviar con posterioridad',
       buttons: ['OK'],
       mode:'ios'
     });

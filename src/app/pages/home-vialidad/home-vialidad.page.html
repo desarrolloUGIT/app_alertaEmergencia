@@ -6,6 +6,12 @@
     <ion-title>
       Crear Emergencia
     </ion-title>
+    <ion-buttons *ngIf="iconEnviando" slot="end">
+      <ion-button disabled size="small" color="light" >
+        <span style="font-size: 15px;">Enviando</span>
+         <ion-spinner color="light" name="dots"></ion-spinner>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar mode="ios" *ngIf="(mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')" >
     <ion-searchbar [disabled]="!regionSelec" mode="ios" color="light"  search-icon="red-vial-black" [placeholder]="!regionSelec ? 'Selecciona Región para filtrar' : 'Buscar camino o rol'" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
