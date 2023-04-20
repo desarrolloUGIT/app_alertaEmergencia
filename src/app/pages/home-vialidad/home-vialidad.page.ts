@@ -74,7 +74,7 @@ export class HomeVialidadPage implements OnInit {
   estadoEnvioAlerta = null;
   map2;
   view2:any;
-  basemap = "topo-vector"
+  basemap = "streets-vector"
   operatividadArray = [];
   nivelAlertaArray = [];
   caminosEncontrados = []
@@ -120,16 +120,16 @@ export class HomeVialidadPage implements OnInit {
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
       this._us.message.subscribe(res=>{
-        if(res == 'conexión establecida'){
-          this.mostrarMapa = true;
-          this.storage.setItem('seleccionMapa', 'si');
-          localStorage.setItem('seleccionMapa','si')
-          this.internet = true;
-          this.tab = 0;
-          this._us.cargar_storage().then(()=>{})
-          // this.loadMapVialidad()
-        }
-        if(res == 'conexión establecida sin mapa'){
+        // if(res == 'conexión establecida'){
+        //   this.mostrarMapa = true;
+        //   this.storage.setItem('seleccionMapa', 'si');
+        //   localStorage.setItem('seleccionMapa','si')
+        //   this.internet = true;
+        //   this.tab = 0;
+        //   this._us.cargar_storage().then(()=>{})
+        //   // this.loadMapVialidad()
+        // }
+        if(res == 'conexión establecida sin mapa' || res == 'conexión establecida'){
           this.storage.setItem('conexion', 'si');
           localStorage.setItem('conexion','si')
           this.mostrarMapa = true;
@@ -232,7 +232,7 @@ export class HomeVialidadPage implements OnInit {
         })
         this._us.cargar_storage().then(()=>{})
       }
-      // this.loadFiles()
+      this.loadFiles()
       setTimeout(()=>{
         this.obtenerGeolocalizacion()
       },1000)
@@ -763,7 +763,7 @@ export class HomeVialidadPage implements OnInit {
   }
 
   obtenerGeolocalizacion(){
-    this.presentLoader('Localizando ...').then(()=>{
+    this.presentToast('Localizando ...').then(()=>{
       this.geolocation.getCurrentPosition().then((resp) => {
         this.dataPosicion.lat = resp.coords.latitude
         this.dataPosicion.lng = resp.coords.longitude
@@ -794,13 +794,25 @@ export class HomeVialidadPage implements OnInit {
               console.log('err')
           })
         }
-      this.loader.dismiss();          
-      }).catch((error) => {
-        this.loader.dismiss();
+      this.toast.dismiss();          
+      }).catch(async (error) => {
+        this.toast.dismiss();
+        const alert = await this.alertctrl.create({
+          header: 'Debes activar el GPS y permitir la localización',
+          buttons: ['OK'],
+          mode:'ios',
+        });
+        await alert.present()
         console.log('Error getting location', error);
       });
-      }).catch(()=>{
-        this.loader.dismiss();
+      }).catch(async ()=>{
+        const alert = await this.alertctrl.create({
+          header: 'Debes activar el GPS y permitir la localización',
+          buttons: ['OK'],
+          mode:'ios',
+        });
+        await alert.present()
+        this.toast.dismiss();
       })
   }
 
@@ -821,6 +833,7 @@ export class HomeVialidadPage implements OnInit {
         }
       ],
       mode:'ios',
+      color:'accordion',
       position:position ? position : 'bottom'
     });
     await this.toast.present();

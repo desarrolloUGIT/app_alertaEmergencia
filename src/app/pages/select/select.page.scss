@@ -1,0 +1,13 @@
+ion-content::part(scroll) { 
+    overflow: hidden;
+  }
+
+ion-row{
+    padding: 4%;
+    border-bottom: 1px solid #b9b6b6;
+    font-size: 15px;
+}
+
+ion-row:hover{
+    background: #dbd9d9;
+}

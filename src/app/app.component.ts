@@ -302,11 +302,13 @@ export class AppComponent {
           this.temporales.push(data)
           this.eliminar(id,i,(data.picture == '' ? false : true))
           if((posicion + 1) >= this.alertas.length){
-            this._us.nextmessage('termino de enviar') 
             enviadas++;
-            this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
-            this.guardarHistorial('dv')
-            setTimeout(()=>{
+            this._us.nextmessage('termino de enviar') 
+            if(enviadas > 0){
+              this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
+              this.guardarHistorial('dv')
+            }           
+             setTimeout(()=>{
               this.alertas = [];
               this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
@@ -386,8 +388,7 @@ export class AppComponent {
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
               }
-            },4000)
-           
+            },4000)           
           }else{
             posicion++;
             enviadas++;
@@ -470,37 +471,6 @@ export class AppComponent {
         })
       })
     })
-    
-
-
-
-    // this.db.open().then(()=>{
-    //   this.db.transaction( tx1=>{
-    //     this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
-    //       this.db.transaction(async tx=>{
-    //         if(dat.rows.length > 0){
-    //           tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-    //           [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
-    //           setTimeout(()=>{
-    //             if(this.porenviar.length > 0){
-    //               this.pendientes = true;
-    //               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-    //             }
-    //           },4000)
-    //         }else{
-    //           tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-    //           [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
-    //           setTimeout(()=>{
-    //             if(this.porenviar.length > 0){
-    //               this.pendientes = true;
-    //               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
-    //             }
-    //           },4000)
-    //         }
-    //       })
-    //     })
-    //   })
-    // })
   }
 
   async deleteImage(file:LocalFile){

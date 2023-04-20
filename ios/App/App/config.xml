@@ -6,6 +6,10 @@
     <param name="ios-package" value="NativePageTransitions"/>
   </feature>
 
+  <feature name="Clipboard">
+    <param name="ios-package" value="CDVClipboard"/>
+  </feature>
+
   <feature name="Geolocation">
     <param name="ios-package" value="CDVLocation"/>
   </feature>

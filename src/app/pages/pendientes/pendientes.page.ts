@@ -7,6 +7,7 @@ import { NativePageTransitions, NativeTransitionOptions } from '@awesome-cordova
 import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
 import { ModalEnviarPage } from '../modal-enviar/modal-enviar.page';
 import { DireccionService } from '../../services/direccion/direccion.service';
+import { Clipboard } from '@ionic-native/clipboard/ngx';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -34,7 +35,7 @@ estadoEnvioAlerta = null;
 toast;
 
   constructor(private sqlite: SQLite,
-    public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public _modalCtrl:ModalController,
+    public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public _modalCtrl:ModalController,private clipboard: Clipboard,
     public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService,public _vs:VialidadService, public _ds:DireccionService) { 
       if(this.platform.is('capacitor')){
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
@@ -76,6 +77,16 @@ toast;
     }
 
   ngOnInit() {
+  }
+
+  copyString(data){
+    if(this.tipo == 'vialidad'){
+      this.clipboard.copy(this._vs.recuperarXML(data));
+      this.presentToast('Se ha copiado en el portapapeles el XML del servicio')
+    }else{
+      this.clipboard.copy(this._ds.recuperarXML(data));
+      this.presentToast('Se ha copiado en el portapapeles el XML del servicio')
+    }
   }
 
   async presentLoader(msg) {
@@ -144,6 +155,7 @@ toast;
     this.toast = await this.toastController.create({
       message: message,
       cssClass: 'toast-custom-class',
+      mode:'ios',
       duration: !cerrar ?(duration ? duration : 4000) : false,
       buttons: !cerrar ? [
         {

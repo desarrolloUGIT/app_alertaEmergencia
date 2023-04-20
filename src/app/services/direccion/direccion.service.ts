@@ -194,5 +194,87 @@ export class DireccionService {
     };
     return from(Http.post(options))
   }
+
+  recuperarXML(data){
+    return  `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
+    <soapenv:Header/>
+    <soapenv:Body>
+       <max:SyncMOP_SR_EMER_DOH >
+          <max:MOP_SR_EMER_DOHSet>
+             <!--Zero or more repetitions:-->
+             <max:SR action="Add">
+             <max:ASSETSITEID>`+this._us.usuario.DEFSITE+`</max:ASSETSITEID>
+                <max:STATUS maxvalue="?">NUEVO</max:STATUS>
+                <max:SRTIPO maxvalue="?">E</max:SRTIPO>
+                <max:LOCATION maxvalue="?">`+(data.locations ? data.locations : '')+`</max:LOCATION>
+                <max:ASSETNUM maxvalue="?"></max:ASSETNUM>
+                <max:CLASS maxvalue="?">SR</max:CLASS>
+                <max:DESCRIPTION changed="?">`+data.titulo+`</max:DESCRIPTION>
+                <max:DESCRIPTION_LONGDESCRIPTION changed="?">`+data.descripcion+`</max:DESCRIPTION_LONGDESCRIPTION>
+                <max:FECHARE changed="?">`+data.date+`</max:FECHARE>
+                <max:CATEGORIAMOP changed="?">`+data.nivelalerta+`</max:CATEGORIAMOP>
+                <max:REPORTDATE>`+data.date+`</max:REPORTDATE>
+                <max:ELEMENTO changed="?"></max:ELEMENTO>
+                <max:TRANSITO changed="?"></max:TRANSITO>
+                <max:ESTADOLOC changed="?">`+data.operatividad+`</max:ESTADOLOC>
+                <max:COMPETENCIA changed="?">`+data.competencia+`</max:COMPETENCIA>
+                <max:EVENTO changed="?"></max:EVENTO>
+                <max:APUNTALAR changed="?">False</max:APUNTALAR>
+                <max:ALZAPRIMAR changed="?">False</max:ALZAPRIMAR>
+                <max:REMOVER changed="?">0</max:REMOVER>
+                <max:ACORDONAR changed="?">False</max:ACORDONAR>
+                <max:PROTECCION changed="?">0</max:PROTECCION>
+                <max:REMCENIZA changed="?">False</max:REMCENIZA>
+                <max:REMBARRO changed="?">False</max:REMBARRO>
+                <max:DESTTUBE changed="?">False</max:DESTTUBE>
+                <max:LIMPCUB changed="?">0</max:LIMPCUB>
+                <max:CORTESUM changed="?">False</max:CORTESUM>
+                <max:OTRO changed="?">0</max:OTRO>
+                <max:COORX changed="?"></max:COORX>
+                <max:COORY changed="?"></max:COORY>
+                <max:PROBLEMCODE_LONGDESCRIPTION changed="?"></max:PROBLEMCODE_LONGDESCRIPTION >
+                <max:TKSERVICEADDRESS action="AddChange">
+                    <max:CITY changed="?"></max:CITY>
+                    <max:COUNTRY changed="?">CL</max:COUNTRY>
+                    <max:COUNTY changed="?"></max:COUNTY>
+                    <max:LATITUDEY changed="?">`+data.lat+`</max:LATITUDEY>
+                   <max:LONGITUDEX changed="?">`+data.lng+`</max:LONGITUDEX>
+                    <max:REFERENCEPOINT changed="?"></max:REFERENCEPOINT>
+                    <max:REGIONDISTRICT changed="?">`+data.region+`</max:REGIONDISTRICT>
+                    <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+                    <max:STREETADDRESS changed="?"></max:STREETADDRESS>
+                    <max:ADDRESSLINE2 changed="?"></max:ADDRESSLINE2>
+                    <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>
+                </max:TKSERVICEADDRESS>
+                <!--Zero or more repetitions:-->
+                <max:DOCLINKS action="AddChange" relationship="?" deleteForInsert="?">
+                   <!--Optional:-->
+                   <max:ADDINFO changed="?">1</max:ADDINFO>
+                   <!--Optional:-->
+                   <max:COPYLINKTOWO changed="?">0</max:COPYLINKTOWO>
+                   <!--Optional:--> 
+                   <max:DESCRIPTION changed="Ejemplo de archivo">?</max:DESCRIPTION>
+                   <!--Optional:-->
+                   <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
+                   <!--Optional:-->
+                   <max:DOCUMENT changed="?">`+data.titulo+`</max:DOCUMENT>
+                   <!--Optional:-->
+                   <max:DOCUMENTDATA changed="?">`+data.picture+`</max:DOCUMENTDATA>
+                   <!--Optional:-->
+                   <max:OWNERTABLE changed="?">SR</max:OWNERTABLE>
+                   <!--Optional:-->
+                   <max:UPLOAD changed="?">1</max:UPLOAD>
+                   <!--Optional:-->
+                   <max:URLNAME changed="?">`+data.titulo+`</max:URLNAME>
+                   <!--Optional:-->
+                   <max:URLTYPE changed="?">FILE</max:URLTYPE>
+                </max:DOCLINKS>
+               <!--Zero or more repetitions:-->
+            </max:SR>
+          </max:MOP_SR_EMER_DOHSet>
+       </max:SyncMOP_SR_EMER_DOH>
+    </soapenv:Body>
+ </soapenv:Envelope>`
+  }
   
 }

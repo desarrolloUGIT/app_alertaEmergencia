@@ -28,6 +28,7 @@ import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { PopoverPage } from '../popover/popover.page';
 import {FullScreen, defaults as defaultControls} from 'ol/control.js';
 import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
+import { SelectPage } from '../select/select.page';
 // import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 
 const IMAGE_DIR = 'stored-images';
@@ -117,6 +118,8 @@ export class HomePage implements OnInit {
   comunasAll = [];
   elementos = [];
   iconEnviando = false;
+  provinciaSelect = []
+  comunaSelect = []
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,public _vs:VialidadService,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
@@ -1419,6 +1422,47 @@ export class HomePage implements OnInit {
       })
     }
 
+  }
+
+  async openSelect(titulo,atributo){
+    const modal = await this._modalCtrl.create({
+      component: SelectPage,
+      showBackdrop:true,
+      mode:'ios',
+      swipeToClose:true,
+      cssClass: 'select-css',
+      backdropDismiss:true,
+      componentProps:{
+        lista:this.nivelAlertaArray,
+        titulo:titulo,
+      }
+    });
+    modal.present();
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      console.log(data)
+    }
+  }
+
+  seleccionarProvincia(region){
+    this.provinciaSelect = []
+    this.secondFormGroup.controls['provincia'].reset()
+    this.provinciasAll.forEach(p=>{
+      if(String(p.VALUE).startsWith(region.VALUE)){
+      this.provinciaSelect.push(p)
+      }
+    })
+  }
+  seleccionarComuna(provincia){
+    this.comunaSelect = []
+    this.secondFormGroup.controls['comuna'].reset()
+    if(provincia){
+      this.comunasAll.forEach(p=>{
+        if(String(p.VALUE).startsWith(provincia.VALUE)){
+        this.comunaSelect.push(p)
+        }
+      })
+    }
   }
 
   // FIN CARGAS INICIALES

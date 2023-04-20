@@ -116,11 +116,18 @@ export class LoginPage implements OnInit {
                       duration:500
                     }
                     this.nativePageTransitions.slide(options);    
-                    this._us.nextmessage('usuario_logeado') 
                     if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                      this._us.nextmessage('usuario_logeado') 
                       this.navctrl.navigateRoot('/home_vialidad')
                     }else{
-                      this.navctrl.navigateRoot('/home')
+                      if(this._us.usuario.DEFSITE == 'APR' || this._us.usuario.DEFSITE == 'DOH-CAUC' || this._us.usuario.DEFSITE == 'DOH-ALL' || this._us.usuario.DEFSITE == 'DOH-RIEG'){
+                        this._us.nextmessage('usuario_logeado') 
+                        this.navctrl.navigateRoot('/home')
+                      }else{
+                        this._us.cerrarSesion()           
+                        this.form.enable()             
+                        this.presentAlert('¡Atención!','La dirección asignada a tu usuario no esta disponible')
+                      }
                     }
                  })
                }else{
@@ -177,11 +184,18 @@ export class LoginPage implements OnInit {
                     duration:500
                   }
                   this.nativePageTransitions.slide(options);    
-                  this._us.nextmessage('usuario_logeado') 
                   if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                    this._us.nextmessage('usuario_logeado') 
                     this.navctrl.navigateRoot('/home_vialidad')
                   }else{
-                    this.navctrl.navigateRoot('/home')
+                    if(this._us.usuario.DEFSITE == 'APR' || this._us.usuario.DEFSITE == 'DOH-CAUC' || this._us.usuario.DEFSITE == 'DOH-ALL' || this._us.usuario.DEFSITE == 'DOH-RIEG'){
+                      this._us.nextmessage('usuario_logeado') 
+                      this.navctrl.navigateRoot('/home')
+                    }else{
+                      this._us.cerrarSesion()           
+                      this.form.enable()             
+                      this.presentAlert('¡Atención!','La dirección asignada a tu usuario no esta disponible')
+                    }
                   }
                 })
               }else{
@@ -226,11 +240,18 @@ export class LoginPage implements OnInit {
                   duration:500
                 }
                 this.nativePageTransitions.slide(options);    
-                this._us.nextmessage('usuario_logeado') 
                 if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
+                  this._us.nextmessage('usuario_logeado') 
                   this.navctrl.navigateRoot('/home_vialidad')
                 }else{
-                  this.navctrl.navigateRoot('/home')
+                  if(this._us.usuario.DEFSITE == 'APR' || this._us.usuario.DEFSITE == 'DOH-CAUC' || this._us.usuario.DEFSITE == 'DOH-ALL' || this._us.usuario.DEFSITE == 'DOH-RIEG'){
+                    this._us.nextmessage('usuario_logeado') 
+                    this.navctrl.navigateRoot('/home')
+                  }else{
+                    this._us.cerrarSesion()           
+                    this.form.enable()             
+                    this.presentAlert('¡Atención!','La dirección asignada a tu usuario no esta disponible')
+                  }
                 }
               })
             }else{

@@ -1,0 +1,7 @@
+
+<ion-content style="background: white;">
+  <ion-toolbar mode="ios" style="margin-bottom: 2%;">
+    <ion-title>{{titulo}}</ion-title>
+  </ion-toolbar>
+  <ion-row item *ngFor="let item of lista" [class.select]="seleccionado == item" (click)="select(item)">{{item.DESCRIPTION}}</ion-row>
+</ion-content>

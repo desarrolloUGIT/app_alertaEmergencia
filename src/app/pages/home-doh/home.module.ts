@@ -12,6 +12,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ModalActivosPageModule } from '../modal-activos/modal-activos.module';
 import { SQLite } from '@awesome-cordova-plugins/sqlite/ngx';
 import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
+import { SelectPageModule } from '../select/select.module';
 
 
 @NgModule({
@@ -26,7 +27,8 @@ import { ModalEnviarPageModule } from '../modal-enviar/modal-enviar.module';
     MatInputModule,
     HttpClientModule,
     ModalActivosPageModule,
-    ModalEnviarPageModule
+    ModalEnviarPageModule,
+    SelectPageModule
   ],
   declarations: [HomePage],providers:[SQLite]
 })
