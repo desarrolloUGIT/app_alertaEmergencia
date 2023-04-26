@@ -172,23 +172,30 @@ export class HomePage implements OnInit {
       // })
     }
 
-    async reiniciarHome(){
-      const alert = await this.alertctrl.create({
-        header: 'Conexión Establecida',
-        message: 'Se reiniciará la página para reactivar el mapa y sus componentes',
-        // buttons: ['OK'],
-        mode:'ios',
-        buttons: [{
-            text: 'OK',
-            id: 'confirm-button',
-            handler: () => {
-              window.location.reload()
-            }
+  async reiniciarHome(){
+    const alert = await this.alertctrl.create({
+      header: 'Conexión Establecida',
+      message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
+      // buttons: ['OK'],
+      mode:'ios',
+      buttons: [{
+        text: 'No, lo haré despues',
+        role: 'cancel',
+        cssClass: 'secondary',
+          handler: () => {
+            this._us.nextmessage('buscarPendientes') 
           }
-        ]
-      });
-      await alert.present()
-    }
+        },{
+          text: 'Si, reiniciar',
+          id: 'confirm-button',
+          handler: () => {
+            window.location.reload()
+          }
+        }
+      ]
+    });
+    await alert.present()
+  }
 
   ngOnInit(){
    this.iniciar()
@@ -248,8 +255,8 @@ export class HomePage implements OnInit {
           db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name,condition)',[]);
           db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
-          db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
-          db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error)',[]);
+          db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error,provincia,comuna,elemento)',[]);
+          db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error,provincia,comuna,elemento)',[]);
           this.db = db;
           this.operatividad();
           this.nivelAlerta();
@@ -259,11 +266,13 @@ export class HomePage implements OnInit {
           }else{
             this.activosDOH(this.region);
           }
+          this.elemento()
         })
       }else{
         this.operatividad();
         this.nivelAlerta();
         this.destinos();
+        this.elemento()
         if(this.region == '20'){
           this.activosDOH('20');
         }else{
@@ -273,9 +282,9 @@ export class HomePage implements OnInit {
       this.cargarRegiones()
       this.cargarProvincias()
       this.cargarComunas()
-      if(this._us.usuario.DEFSITE == 'DOH-CAUC' || this._us.usuario.DEFSITE == 'DOH-ALL'){
-        this.elemento()
-      }
+      // if(this._us.usuario.DEFSITE == 'DOH-CAUC' || this._us.usuario.DEFSITE == 'DOH-ALL'){
+      //   this.elemento()
+      // }
  
     })
    
@@ -289,6 +298,10 @@ export class HomePage implements OnInit {
         nivelAlerta:[null,Validators.compose([Validators.required])],
         competencia:['Si',Validators.compose([Validators.required])]
       })
+      this.thirdFormGroup = this._formBuilder.group({
+        titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
+        descripcion: [null,Validators.compose([Validators.maxLength(300)])],
+      });  
     }else{
       if(this._us.usuario.DEFSITE == 'DOH-ALL'){
         this.secondFormGroup = this._formBuilder.group({
@@ -297,24 +310,29 @@ export class HomePage implements OnInit {
           elemento:[null,Validators.compose([])],
           competencia:['Si',Validators.compose([Validators.required])]
         })
+        this.thirdFormGroup = this._formBuilder.group({
+          titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
+          descripcion: [null,Validators.compose([Validators.maxLength(300)])],
+        });  
       }else{
-        this.secondFormGroup = this._formBuilder.group({
+        this.thirdFormGroup = this._formBuilder.group({
+          titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
+          descripcion: [null,Validators.compose([Validators.maxLength(300)])],
           nombre:[null,Validators.compose([Validators.required])],
+          localidad:[null,Validators.compose([Validators.required])],
+        });  
+        this.secondFormGroup = this._formBuilder.group({
           elemento:[null,Validators.compose([Validators.required])],
           operatividad:[null,Validators.compose([Validators.required])],
           nivelAlerta:[null,Validators.compose([Validators.required])],
           region:[null,Validators.compose([Validators.required])],
           provincia:[null,Validators.compose([Validators.required])],
           comuna:[null,Validators.compose([Validators.required])],
-          localidad:[null,Validators.compose([Validators.required])],
           competencia:['Si',Validators.compose([Validators.required])]
         })
       }
     }
-    this.thirdFormGroup = this._formBuilder.group({
-      titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-      descripcion: [null,Validators.compose([Validators.maxLength(300)])],
-    });  
+   
   }
 
 // INICIO MAPA
@@ -445,6 +463,9 @@ export class HomePage implements OnInit {
   selectTab(i,sumar?,restar?){
       if(sumar){
         this.tab = Number(i) + 1;
+        console.log('formulario->',this.secondFormGroup.valid)
+        console.log('formulario->',this.thirdFormGroup.valid)
+        console.log('formulario->',this.dataPosicion)
       }else{
         if(restar){
           this.tab = Number(i) - 1;
@@ -560,6 +581,7 @@ export class HomePage implements OnInit {
 
   elemento(){
     if(this.platform.is('capacitor')){
+      console.log('POR ACA ELEMENTO')
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
           if(data.rows.length > 0){
@@ -653,6 +675,7 @@ export class HomePage implements OnInit {
   actualizarElementos(){
     this._vs.dominios('ELEMENTOSIE').subscribe((res:any)=>{
       if(res && res.status == '200'){
+        console.log('ELEMENTOS->>>>>',res)
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.elementos = [];
@@ -1686,30 +1709,22 @@ export class HomePage implements OnInit {
      this._us.cargar_storage().then(()=>{
       let data = {
         titulo:this.thirdFormGroup.value.titulo,
-        descripcion:this.thirdFormGroup.value.descripcion,
+        descripcion:this.thirdFormGroup.value.descripcion ? this.thirdFormGroup.value.descripcion : '',
         usuario:this._us.user.user,
         lat:this.dataPosicion.lat,
         lng:this.dataPosicion.lng,
         nivelalerta:this.secondFormGroup.value.nivelAlerta,
         competencia:this.secondFormGroup.value.competencia,
         operatividad:this.secondFormGroup.value.operatividad,
-        region:this.dataPosicion.region,
+        region:this.secondFormGroup.value.region ? this.secondFormGroup.value.region : this.dataPosicion.region,
         locations:'',
         date:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
         picture:this.picture,
         name:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
+        provincia:this.secondFormGroup.value.provincia ? this.secondFormGroup.value.provincia : '',
+        comuna:this.secondFormGroup.value.comuna ? this.secondFormGroup.value.comuna : '',
+        elemento:this.secondFormGroup.value.elemento ? this.secondFormGroup.value.elemento : ''
       }
-      // if (this._us.menuType == "DOP") {
-      //   data.destino = "DOP"; 
-      // } else if (this._us.menuType == "DGA") {
-      //     data.destino = "DGA";
-      // } else if (this._us.menuType == "DAP") {
-      //     data.destino = "DAP";
-      // } else if (this._us.menuType == "APR" || this._us.menuType == "DOH-ALL" || this._us.menuType == "DOH-CAUC" || this._us.menuType == "DOH-RIEG") {
-      //     data.destino = "APR";
-      // }else{
-      //   data.destino = this._us.menuType;
-      // }
       if(this.firstFormGroup.value.activoSeleccionado){
         if(this.firstFormGroup.value.activoSeleccionado){
           data.locations = this.firstFormGroup.value.activoSeleccionado.ASSETNUM
@@ -1730,7 +1745,7 @@ export class HomePage implements OnInit {
                       this.loader.dismiss()
                       this.alertasMaximas()
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
@@ -1752,7 +1767,7 @@ export class HomePage implements OnInit {
                       }       
                     }
                   }else{
-                    tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                    tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                     [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet']);
                     this.loader.dismiss()
                     this.estadoEnvioAlerta = 'pendiente'
@@ -1788,7 +1803,7 @@ export class HomePage implements OnInit {
                   this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
                     this.db.transaction(async tx=>{
                       if(dat.rows.length > 0){
-                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                         [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh']);
                         this.estadoEnvioAlerta = 'exitoso'
                         this.deleteImage(this.images[0])
@@ -1796,7 +1811,7 @@ export class HomePage implements OnInit {
                         this.openModalEnvio(this.estadoEnvioAlerta)
                         this.presentToast('Emergencia enviada exitosamente',null,true);
                       }else{
-                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                         [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'doh']);
                         this.estadoEnvioAlerta = 'exitoso'
                         this.deleteImage(this.images[0])
@@ -1858,7 +1873,7 @@ export class HomePage implements OnInit {
                 this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
                   this.db.transaction(async tx=>{
                     if(dat.rows.length > 0){
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta ,competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta ,competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
@@ -1874,7 +1889,7 @@ export class HomePage implements OnInit {
                         this._us.nextmessage('pendiente') 
                       })
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 

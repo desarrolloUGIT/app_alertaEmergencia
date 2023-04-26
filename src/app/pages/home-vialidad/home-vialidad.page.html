@@ -13,25 +13,28 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar mode="ios" *ngIf="(mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')" >
-    <ion-searchbar [disabled]="!regionSelec" mode="ios" color="light"  search-icon="red-vial-black" [placeholder]="!regionSelec ? 'Selecciona Región para filtrar' : 'Buscar camino o rol'" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+  <ion-toolbar mode="ios"  *ngIf="(mostrarMapa) || (!internet && tab == 0)">
+    <ion-searchbar mode="ios" color="light"  search-icon="red-vial-black" [disabled]="!regionSelec" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <ion-buttons  slot="end">
+      <ion-button size="small" color="light" (click)="presentPopoverFiltro($event)">
+        <ion-icon slot="icon-only" name="search-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons  slot="end"  *ngIf="(mostrarMapa && region == '20') || (!internet && tab == 0 && region == '20')" >
       <ion-button size="small" color="light" (click)="presentPopoverRegion($event)">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-   
   </ion-toolbar>
 </ion-header>
-
 <ion-content force-overscroll="false">
     <!-- MAPA -->
-    <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'streets-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="red-vial-black" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
+    <!-- <ion-searchbar class="searchContainer" *ngIf="(mostrarMapa && region != '20') || (!internet && tab == 0 && region != '20')" mode="ios" [color]="buscandoActivos.length > 0 ? 'medium' : (basemap == 'streets-vector' ? 'medium' : (!internet ? 'medium' : 'light') ) "  search-icon="red-vial-black" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar> -->
     <div *ngIf="buscandoActivos[0]" style="position: absolute;z-index: 3;width: 100%;background: #eaebee;">
-      <ion-accordion-group mode="ios" [style.padding-top]="region != '20' ? '20%' :''">
+      <ion-accordion-group mode="ios">
         <ion-accordion [value]="i" *ngFor="let item of buscandoActivos;let i = index">
           <ion-item slot="header" color="botonazul">
-            <ion-badge slot="start" color="medium">Región<br>{{item.region}}</ion-badge>
+            <ion-badge slot="start" color="medium">{{item.rol}}</ion-badge>
             <ion-label>{{item.nombre}}</ion-label>
           </ion-item>
           <div class="ion-padding contenido" slot="content">

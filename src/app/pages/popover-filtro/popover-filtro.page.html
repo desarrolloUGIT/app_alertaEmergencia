@@ -1,0 +1,14 @@
+<ion-content>
+  <ion-list no-border lines="none" style="padding: 0;margin:0%;" text-wrap>
+    <ion-radio-group [value]="filtro" (ionChange)="SelectFitro($event)">
+    <ion-item>
+      <ion-label>Buscar por ROL</ion-label>
+      <ion-radio slot="start"  value="rol"></ion-radio>
+    </ion-item>
+    <ion-item>
+      <ion-label>Buscar por Nombre</ion-label>
+      <ion-radio slot="start"  value="nombre"></ion-radio>
+    </ion-item>
+    </ion-radio-group>
+  </ion-list>
+</ion-content>

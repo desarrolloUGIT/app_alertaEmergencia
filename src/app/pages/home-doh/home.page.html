@@ -109,6 +109,12 @@
               <ion-select-option *ngFor="let item of elementos" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
             </ion-select>
           </ion-item>
+          <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
+            <ion-label>Competencia</ion-label>
+            <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
+              <ion-select-option *ngFor="let item of competencia" [value]="item.valor">{{item.valor}} - {{item.descripcion}}</ion-select-option>
+            </ion-select>
+          </ion-item>
           <ion-item lines="none" [class.select]="secondFormGroup.value.region" *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
             <ion-label >Región</ion-label>
             <ion-select mode="ios" interface="alert" placeholder="Selecciona región" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="region" (ngModelChange)="seleccionarProvincia($event)">
@@ -127,15 +133,8 @@
               <ion-select-option *ngFor="let item of comunaSelect" [value]="item">{{item.DESCRIPTION}}</ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
-            <ion-label>Competencia</ion-label>
-            <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
-              <ion-select-option *ngFor="let item of competencia" [value]="item.valor">{{item.valor}} - {{item.descripcion}}</ion-select-option>
-            </ion-select>
-          </ion-item>
-
         </ion-list>
-      </ion-card>      
+      </ion-card>   
     </form>
   </section>
   <section *ngIf="tab == 2">
@@ -146,6 +145,22 @@
       </ion-button>
     </ion-item>
     <form [formGroup]="thirdFormGroup">
+      <ion-card center>
+        <ion-item *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC'">
+          <ion-label position="stacked">Nombre Cauce <span style="color:red;font-size: 10px;">*</span></ion-label>
+          <ion-textarea formControlName="nombre" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
+        </ion-item>
+        <p *ngIf="thirdFormGroup.controls['nombre'].hasError('required') && thirdFormGroup.controls['nombre'].touched" class="p_error">Debes ingresar un nombre de cauce<br></p>
+        <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.nombre ? thirdFormGroup.value.nombre.length : '0'}}/100</span>
+      </ion-card>
+      <ion-card center>
+        <ion-item *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC'">
+          <ion-label position="stacked">Localidad <span style="color:red;font-size: 10px;">*</span></ion-label>
+          <ion-textarea formControlName="localidad" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
+        </ion-item>
+        <p *ngIf="thirdFormGroup.controls['localidad'].hasError('required') && thirdFormGroup.controls['localidad'].touched" class="p_error">Debes ingresar una localidad<br></p>
+        <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.localidad ? thirdFormGroup.value.localidad.length : '0'}}/100</span>
+      </ion-card>   
       <ion-card center>
         <ion-item>
           <ion-label position="stacked">Resumen <span style="color:red;font-size: 10px;">*</span></ion-label>

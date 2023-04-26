@@ -111,7 +111,7 @@ export class DireccionService {
                 <max:FECHARE changed="?">`+data.date+`</max:FECHARE>
                 <max:CATEGORIAMOP changed="?">`+data.nivelalerta+`</max:CATEGORIAMOP>
                 <max:REPORTDATE>`+data.date+`</max:REPORTDATE>
-                <max:ELEMENTO changed="?"></max:ELEMENTO>
+                <max:ELEMENTO changed="?">`+data.elemento+`</max:ELEMENTO>
                 <max:TRANSITO changed="?"></max:TRANSITO>
                 <max:ESTADOLOC changed="?">`+data.operatividad+`</max:ESTADOLOC>
                 <max:COMPETENCIA changed="?">`+data.competencia+`</max:COMPETENCIA>
@@ -133,12 +133,12 @@ export class DireccionService {
                 <max:TKSERVICEADDRESS action="AddChange">
                     <max:CITY changed="?"></max:CITY>
                     <max:COUNTRY changed="?">CL</max:COUNTRY>
-                    <max:COUNTY changed="?"></max:COUNTY>
+                    <max:COUNTY changed="?">`+data.comuna+`</max:COUNTY>
                     <max:LATITUDEY changed="?">`+data.lat+`</max:LATITUDEY>
                    <max:LONGITUDEX changed="?">`+data.lng+`</max:LONGITUDEX>
                     <max:REFERENCEPOINT changed="?"></max:REFERENCEPOINT>
                     <max:REGIONDISTRICT changed="?">`+data.region+`</max:REGIONDISTRICT>
-                    <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
+                    <max:STATEPROVINCE changed="?">`+data.provincia+`</max:STATEPROVINCE>
                     <max:STREETADDRESS changed="?"></max:STREETADDRESS>
                     <max:ADDRESSLINE2 changed="?"></max:ADDRESSLINE2>
                     <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>

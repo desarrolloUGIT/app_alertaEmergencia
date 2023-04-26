@@ -38,6 +38,7 @@ import MapView from "@arcgis/core/views/MapView";
 import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import { PopoverFiltroPage } from '../popover-filtro/popover-filtro.page';
 
 const IMAGE_DIR = 'stored-images';
 const SAVE_IMAGE_DIR = 'save-stored-images';
@@ -115,7 +116,7 @@ export class HomeVialidadPage implements OnInit {
   actualizar = false;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   iconEnviando = false;
-
+  filtro = 'rol';
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -174,11 +175,18 @@ export class HomeVialidadPage implements OnInit {
   async reiniciarHome(){
     const alert = await this.alertctrl.create({
       header: 'Conexión Establecida',
-      message: 'Se reiniciará la página para reactivar el mapa y sus componentes',
+      message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
       // buttons: ['OK'],
       mode:'ios',
       buttons: [{
-          text: 'OK',
+        text: 'No, lo haré despues',
+        role: 'cancel',
+        cssClass: 'secondary',
+          handler: () => {
+            this._us.nextmessage('buscarPendientes') 
+          }
+        },{
+          text: 'Si, reiniciar',
           id: 'confirm-button',
           handler: () => {
             window.location.reload()
@@ -242,7 +250,7 @@ export class HomeVialidadPage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS transito (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS restriccion (id unique, name)',[]);
-        db.executeSql('CREATE TABLE IF NOT EXISTS activosVialidad (id, nombre,km_i,km_f,region)',[]);
+        db.executeSql('CREATE TABLE IF NOT EXISTS activosVialidad (id, nombre,km_i,km_f,region,rol)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS alertaVialidad (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         this.db = db;
@@ -251,8 +259,10 @@ export class HomeVialidadPage implements OnInit {
         this.transitos()
         this.restriccioN();
         if(this.region == '20'){
+          this.regionSelec = null;
           this.activosVialidad('20');
         }else{
+          this.regionSelec = this.region;
           this.activosVialidad(this.region);
         }
         this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
@@ -263,8 +273,10 @@ export class HomeVialidadPage implements OnInit {
       this.transitos()
       this.restriccioN();
       if(this.region == '20'){
+        this.regionSelec = null;
         this.activosVialidad('20');
       }else{
+        this.regionSelec = this.region;
         this.activosVialidad(this.region);
       }
       this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
@@ -787,7 +799,7 @@ export class HomeVialidadPage implements OnInit {
               symbol: markerSymbol as any,
               popupTemplate:null
             });
-            this.view2.graphics.add(pointGraphic);
+            // this.view2.graphics.add(pointGraphic);
             this.view2.center = [this.dataPosicion.lng, this.dataPosicion.lat]
             this.view2.zoom = 15;  
             }).catch(err=>{
@@ -975,17 +987,36 @@ export class HomeVialidadPage implements OnInit {
     return await popover.present();
   }
 
+  async presentPopoverFiltro(myEvent) {
+    const popover = await this.popoverCtrl.create({
+      component: PopoverFiltroPage,
+      translucent: true,
+      cssClass: 'my-custom-modal-css',
+      showBackdrop:true,
+      mode:'ios',
+      event: myEvent,
+      componentProps:{
+        filtro:this.filtro,
+      }
+    });
+    popover.onDidDismiss().then(data=>{
+      if(data.data){
+       if(data.data.filtro){
+        this.filtro = data.data.filtro
+       }
+      } 
+    })
+    return await popover.present();
+  }
+
   buscarActivos(ev: any) {
     const val = ev.target.value;
-    if (val && val.trim() != '' && val.length >= 3 ) {
+    if (this.filtro == 'nombre' ? (val && val.trim() != '' && val.length >= 3 ) : (val && val.trim() != '' && val.length >= 2 )) {
       this.buscandoActivos = this.activosPorRegion[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)].filter((item) => {
-        return (item.nombre.toLowerCase().indexOf(val.toLowerCase()) > -1);
+        return (this.filtro == 'nombre' ? (item.nombre.toLowerCase().indexOf(val.toLowerCase()) > -1) : item.rol.toLowerCase().indexOf(val.toLowerCase()) > -1);
       })
     }else{
       this.buscandoActivos = []
-      // if(val.length == 0 || val == null){
-      //   this.activosDV() 
-      // }
     }
   }
 
@@ -994,10 +1025,12 @@ export class HomeVialidadPage implements OnInit {
     this.secondFormGroup.reset();
     this.secondFormGroup.controls['competencia'].setValue('Si')
     this.thirdFormGroup.reset();
+    this.dibujarCamino = false;
     let body = {
       codigo:data.codigo,
       nombre_camino:data.nombre,
-      region:data.region
+      region:data.region,
+      rol:data.rol
     }
     if(this.internet && this.mostrarMapa){
       this.center = this.view2.center
@@ -1036,6 +1069,8 @@ export class HomeVialidadPage implements OnInit {
     query.outFields = ['*'];
     query.where =  "CODIGO_CAMINO = '"+data.codigo+"'";
     query.returnGeometry =  true;
+    this.camino = null;
+    console.log(query)
     layer.queryFeatures(query).then(result =>{
       if(result && result.features[0]){
         let symbolTerritory = {
@@ -1927,6 +1962,7 @@ export class HomeVialidadPage implements OnInit {
                 km_i:data.rows.item(i).km_i,
                 km_f:data.rows.item(i).km_f,
                 region:data.rows.item(i).region,
+                rol:data.rows.item(i).rol,
               }
               this.activosPorRegion[Number(data.rows.item(i).region) - 1].push(tmp)
             })
@@ -1945,7 +1981,7 @@ export class HomeVialidadPage implements OnInit {
                 this._us.xmlToJson(res).then((result:any)=>{
                   var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
                   path.forEach(f=>{
-                    this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+                    this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
                   })
                   if(this.platform.is('capacitor')){
                     if(this.actualizar){
@@ -1957,7 +1993,7 @@ export class HomeVialidadPage implements OnInit {
                 this._us.xmlToJson(err.error.text).then((result:any)=>{
                   var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
                   path.forEach(f=>{
-                    this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+                    this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
                   })
                   if(this.platform.is('capacitor')){
                     if(this.actualizar){
@@ -1978,7 +2014,7 @@ export class HomeVialidadPage implements OnInit {
           this._us.xmlToJson(res).then((result:any)=>{
             var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
             path.forEach(f=>{
-              this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+              this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
             })
             if(this.platform.is('capacitor')){
               if(this.actualizar){
@@ -1990,7 +2026,7 @@ export class HomeVialidadPage implements OnInit {
           this._us.xmlToJson(err.error.text).then((result:any)=>{
             var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
             path.forEach(f=>{
-              this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+              this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
             })
             if(this.platform.is('capacitor')){
               if(this.actualizar){
@@ -2008,7 +2044,7 @@ export class HomeVialidadPage implements OnInit {
       this._us.xmlToJson(res).then((result:any)=>{
         var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
         path.forEach(f=>{
-          this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+          this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
         })
         const newVuelta = vuelta + 1;
         if(newVuelta > 16){
@@ -2025,7 +2061,7 @@ export class HomeVialidadPage implements OnInit {
       this._us.xmlToJson(err.error.text).then((result:any)=>{
         var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
         path.forEach(f=>{
-          this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+          this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
         })
         const newVuelta = vuelta + 1;
         if(newVuelta > 16){
@@ -2049,7 +2085,7 @@ export class HomeVialidadPage implements OnInit {
             this._us.xmlToJson(res).then((result:any)=>{
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
               path.forEach(f=>{
-                this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+                this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
               })
               console.log('VUELTA ->',vuelta)
               const newVuelta = vuelta + 1;
@@ -2060,7 +2096,7 @@ export class HomeVialidadPage implements OnInit {
                       this.activosPorRegion.forEach((a,i)=>{
                         this.activosPorRegion[i].forEach(activo=>{
                           this.db.transaction(tx=>{
-                            tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                            tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
                           })
                         })
                       })
@@ -2078,6 +2114,7 @@ export class HomeVialidadPage implements OnInit {
                             km_i:data.rows.item(i).km_i,
                             km_f:data.rows.item(i).km_f,
                             region:data.rows.item(i).region,
+                            rol:data.rows.item(i).rol,
                           }
                           this.activosPorRegion[Number(data.rows.item(i).region) - 1].push(tmp)
                         })
@@ -2098,7 +2135,7 @@ export class HomeVialidadPage implements OnInit {
                     this.activosPorRegion.forEach((a,i)=>{
                       this.activosPorRegion[i].forEach(activo=>{
                         this.db.transaction(tx=>{
-                          tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                          tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
                         })
                       })
                     })
@@ -2117,6 +2154,7 @@ export class HomeVialidadPage implements OnInit {
                           km_i:data.rows.item(i).km_i,
                           km_f:data.rows.item(i).km_f,
                           region:data.rows.item(i).region,
+                          rol:data.rows.item(i).rol,
                         }
                         // arr.push(tmp)
                         this.activosPorRegion[Number(data.rows.item(i).region) - 1].push(tmp)
@@ -2139,7 +2177,7 @@ export class HomeVialidadPage implements OnInit {
               this.activosPorRegion.forEach((a,i)=>{
                 this.activosPorRegion[i].forEach(activo=>{
                   this.db.transaction(tx=>{
-                    tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                    tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
                   })
                 })
               })
@@ -2158,6 +2196,7 @@ export class HomeVialidadPage implements OnInit {
                     km_i:data.rows.item(i).km_i,
                     km_f:data.rows.item(i).km_f,
                     region:data.rows.item(i).region,
+                    rol:data.rows.item(i).rol,
                   }
                   // arr.push(tmp)
                   this.activosPorRegion[Number(data.rows.item(i).region) - 1].push(tmp)
@@ -2174,7 +2213,7 @@ export class HomeVialidadPage implements OnInit {
           this._us.xmlToJson(res).then((result:any)=>{
             var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
             path.forEach(f=>{
-              this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0]})
+              this.activosPorRegion[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
             })
             this.db.open().then(()=>{
               this.db.transaction(rx=>{
@@ -2182,7 +2221,7 @@ export class HomeVialidadPage implements OnInit {
                   this.activosPorRegion.forEach((a,i)=>{
                     this.activosPorRegion[i].forEach(activo=>{
                       this.db.transaction(tx=>{
-                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region) values (?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region]);
+                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
                       })
                     })
                   })
@@ -2200,6 +2239,7 @@ export class HomeVialidadPage implements OnInit {
                         km_i:data.rows.item(i).km_i,
                         km_f:data.rows.item(i).km_f,
                         region:data.rows.item(i).region,
+                        rol:data.rows.item(i).rol,
                       }
                       this.activosPorRegion[Number(data.rows.item(i).region) - 1].push(tmp)
                     })

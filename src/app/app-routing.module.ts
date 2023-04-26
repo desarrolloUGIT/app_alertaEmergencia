@@ -54,6 +54,10 @@ const routes: Routes = [
   {
     path: 'select',
     loadChildren: () => import('./pages/select/select.module').then( m => m.SelectPageModule)
+  },
+  {
+    path: 'popover-filtro',
+    loadChildren: () => import('./pages/popover-filtro/popover-filtro.module').then( m => m.PopoverFiltroPageModule)
   }
 ];
 

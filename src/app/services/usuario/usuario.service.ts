@@ -295,12 +295,14 @@ export class UsuarioService {
           this.storage.remove('seleccionMapa');
           this.storage.remove('usuario');
           this.storage.remove('menuType');
+          this.storage.remove('fechaActualizacion');
         }else{
           localStorage.removeItem('token_user');
           localStorage.removeItem('conexion');
           localStorage.removeItem('seleccionMapa');
           localStorage.removeItem('usuario');
           localStorage.removeItem('menuType');
+          localStorage.removeItem('fechaActualizacion');
         }
         this.usuario = {
           DEFSITE:'',
