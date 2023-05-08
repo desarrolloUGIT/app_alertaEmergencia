@@ -3,7 +3,7 @@ import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { UsuarioService } from '../../services/usuario/usuario.service';
 import { HttpClient } from '@angular/common/http';
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
-import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController, PopoverController } from '@ionic/angular';
+import { AlertController, LoadingController, MenuController, Platform, ModalController, ToastController, PopoverController, NavController } from '@ionic/angular';
 import TileLayer from 'ol/layer/Tile';
 import {View, Feature, Map } from 'ol';
 import OSM, {ATTRIBUTION} from 'ol/source/OSM';
@@ -29,6 +29,8 @@ import { PopoverPage } from '../popover/popover.page';
 import {FullScreen, defaults as defaultControls} from 'ol/control.js';
 import { VialidadService } from 'src/app/services/vialidad/vialidad.service';
 import { SelectPage } from '../select/select.page';
+import { HelpPage } from '../help/help.page';
+import { NavigationExtras } from '@angular/router';
 // import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 
 const IMAGE_DIR = 'stored-images';
@@ -120,7 +122,10 @@ export class HomePage implements OnInit {
   iconEnviando = false;
   provinciaSelect = []
   comunaSelect = []
-  constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
+  reiniciar = false;
+  elementFinal = [];
+  cargoMapa = false;
+  constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,public _navCtrl:NavController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,public _vs:VialidadService,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
     public storage: NativeStorage) {
@@ -133,7 +138,6 @@ export class HomePage implements OnInit {
           this.tab = 0;
           this._us.cargar_storage().then(()=>{})
           this.reiniciarHome()
-          // this.loadMapVialidad()
         }
         if(res == 'conexión establecida sin mapa'){
           this.storage.setItem('conexion', 'si');
@@ -149,6 +153,7 @@ export class HomePage implements OnInit {
           this.tab = 0;
           this._us.cargar_storage().then(()=>{})
           this.reiniciarHome()
+          // this.loadMapNotVialidad()
         }
         if(res == 'sin conexión'){
           this.internet = false;
@@ -162,20 +167,11 @@ export class HomePage implements OnInit {
         }
       })
       this.keyboard.hideFormAccessoryBar(false)
-      // this.platform.keyboardDidHide.subscribe(r=>{
-      //   // oculta teclado
-      //   this.footer = true;
-      // })
-      // this.platform.keyboardDidShow.subscribe(r=>{
-      //   // muestra teclado
-      //   this.footer = false;
-      // })
     }
-
-  async reiniciarHome(){
+  async reset(){
     const alert = await this.alertctrl.create({
-      header: 'Conexión Establecida',
-      message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
+      header: 'Reiniciar APP',
+      message: '¿Deseas reiniciar ahora la APP?',
       // buttons: ['OK'],
       mode:'ios',
       buttons: [{
@@ -183,18 +179,54 @@ export class HomePage implements OnInit {
         role: 'cancel',
         cssClass: 'secondary',
           handler: () => {
-            this._us.nextmessage('buscarPendientes') 
           }
         },{
           text: 'Si, reiniciar',
           id: 'confirm-button',
           handler: () => {
+            this.reiniciar = false;
             window.location.reload()
           }
         }
       ]
     });
     await alert.present()
+  }
+
+  async reiniciarHome(){
+    this.internet = true;
+    this.mostrarMapa = true;
+    this.tab = 0;
+    if(this.cargoMapa){
+      this.map.updateSize();
+    }else{
+      this.loadMapNotVialidad()
+    }
+
+    // const alert = await this.alertctrl.create({
+    //   header: 'Conexión Establecida',
+    //   message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
+    //   // buttons: ['OK'],
+    //   mode:'ios',
+    //   buttons: [{
+    //     text: 'No, lo haré despues',
+    //     role: 'cancel',
+    //     cssClass: 'secondary',
+    //       handler: () => {
+    //         this.reiniciar = true;
+    //         this._us.nextmessage('buscarPendientes') 
+    //       }
+    //     },{
+    //       text: 'Si, reiniciar',
+    //       id: 'confirm-button',
+    //       handler: () => {
+    //         this.reiniciar = false;
+    //         window.location.reload()
+    //       }
+    //     }
+    //   ]
+    // });
+    // await alert.present()
   }
 
   ngOnInit(){
@@ -255,8 +287,8 @@ export class HomePage implements OnInit {
           db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name,condition)',[]);
           db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[])
-          db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error,provincia,comuna,elemento)',[]);
-          db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error,provincia,comuna,elemento)',[]);
+          db.executeSql('CREATE TABLE IF NOT EXISTS alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error,provincia,comuna,elemento,destino)',[]);
+          db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad,region, name, date,location,error,provincia,comuna,elemento,destino)',[]);
           this.db = db;
           this.operatividad();
           this.nivelAlerta();
@@ -292,47 +324,17 @@ export class HomePage implements OnInit {
     this.firstFormGroup = this._formBuilder.group({
       activoSeleccionado: [null],
     });
-    if(this._us.usuario.DEFSITE == 'APR' || this._us.usuario.DEFSITE == 'DOH-RIEG'){
-      this.secondFormGroup = this._formBuilder.group({
-        operatividad:[null,Validators.compose([Validators.required])],
-        nivelAlerta:[null,Validators.compose([Validators.required])],
-        competencia:['Si',Validators.compose([Validators.required])]
-      })
-      this.thirdFormGroup = this._formBuilder.group({
-        titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-        descripcion: [null,Validators.compose([Validators.maxLength(300)])],
-      });  
-    }else{
-      if(this._us.usuario.DEFSITE == 'DOH-ALL'){
-        this.secondFormGroup = this._formBuilder.group({
-          operatividad:[null,Validators.compose([Validators.required])],
-          nivelAlerta:[null,Validators.compose([Validators.required])],
-          elemento:[null,Validators.compose([])],
-          competencia:['Si',Validators.compose([Validators.required])]
-        })
-        this.thirdFormGroup = this._formBuilder.group({
-          titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-          descripcion: [null,Validators.compose([Validators.maxLength(300)])],
-        });  
-      }else{
-        this.thirdFormGroup = this._formBuilder.group({
-          titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-          descripcion: [null,Validators.compose([Validators.maxLength(300)])],
-          nombre:[null,Validators.compose([Validators.required])],
-          localidad:[null,Validators.compose([Validators.required])],
-        });  
-        this.secondFormGroup = this._formBuilder.group({
-          elemento:[null,Validators.compose([Validators.required])],
-          operatividad:[null,Validators.compose([Validators.required])],
-          nivelAlerta:[null,Validators.compose([Validators.required])],
-          region:[null,Validators.compose([Validators.required])],
-          provincia:[null,Validators.compose([Validators.required])],
-          comuna:[null,Validators.compose([Validators.required])],
-          competencia:['Si',Validators.compose([Validators.required])]
-        })
-      }
-    }
-   
+    this.secondFormGroup = this._formBuilder.group({
+      operatividad:[null,Validators.compose([Validators.required])],
+      nivelAlerta:[null,Validators.compose([Validators.required])],
+      competencia:['Si',Validators.compose([Validators.required])],
+      destino:[null,Validators.compose([Validators.required])],
+      elemento:[null,Validators.compose([])],
+    })
+    this.thirdFormGroup = this._formBuilder.group({
+      titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
+      descripcion: [null,Validators.compose([Validators.maxLength(300)])],
+    });  
   }
 
 // INICIO MAPA
@@ -355,6 +357,7 @@ export class HomePage implements OnInit {
       setTimeout(() => {
         this.map.setTarget("map");
       }, 500);
+      this.cargoMapa = true;
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
           this.view.setCenter(olProj.transform([c.lng,c.lat], 'EPSG:4326', 'EPSG:3857'))
@@ -463,9 +466,6 @@ export class HomePage implements OnInit {
   selectTab(i,sumar?,restar?){
       if(sumar){
         this.tab = Number(i) + 1;
-        console.log('formulario->',this.secondFormGroup.valid)
-        console.log('formulario->',this.thirdFormGroup.valid)
-        console.log('formulario->',this.dataPosicion)
       }else{
         if(restar){
           this.tab = Number(i) - 1;
@@ -578,10 +578,17 @@ export class HomePage implements OnInit {
     })
   }
 
+  elementChange(){
+    this.elementFinal = []
+    this.elementos.forEach(e=>{
+       if((this.secondFormGroup.value.destino == 'DOH-CAUC' && e.CONDITIONNUM == 'SRPLTDOHCAUC') || (this.secondFormGroup.value.destino == 'DOH-ALL' && e.CONDITIONNUM == 'SRPLTDOHALL')){
+        this.elementFinal.push(e)
+        }
+    })
+  }
 
   elemento(){
     if(this.platform.is('capacitor')){
-      console.log('POR ACA ELEMENTO')
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM elemento', []).then((data)=>{
           if(data.rows.length > 0){
@@ -593,9 +600,9 @@ export class HomePage implements OnInit {
                 DESCRIPTION:data.rows.item(i).name,
                 CONDITIONNUM:data.rows.item(i).condition
               }
-              if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
+              // if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-ALL' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
                 arr.push(tmp)
-              }
+              // }
             })
             this.elementos = arr;
             if(this.actualizar){
@@ -607,7 +614,8 @@ export class HomePage implements OnInit {
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.elementos = [];
                 path.forEach(f=>{
-                  if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+                  // if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-ALL' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+                  if(f.MAXDOMVALCOND && f.MAXDOMVALCOND[0].CONDITIONNUM[0] ){  
                     this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
                   }
                 })
@@ -622,7 +630,8 @@ export class HomePage implements OnInit {
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
                 this.elementos = [];
                 path.forEach(f=>{
-                  if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+                  // if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-ALL' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+                  if(f.MAXDOMVALCOND && f.MAXDOMVALCOND[0].CONDITIONNUM[0] ){  
                     this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
                   }
                 })
@@ -642,11 +651,11 @@ export class HomePage implements OnInit {
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.elementos = [];
           path.forEach(f=>{
-            if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+            // if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-ALL' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+            if(f.MAXDOMVALCOND && f.MAXDOMVALCOND[0].CONDITIONNUM[0] ){ 
               this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
             }
           })
-          console.log(this.elementos)
           if(this.platform.is('capacitor')){
             if(this.actualizar){
               this.actualizarElementos()
@@ -658,8 +667,9 @@ export class HomePage implements OnInit {
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.elementos = [];
           path.forEach(f=>{
-            if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
-              this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
+            // if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-ALL' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+            if(f.MAXDOMVALCOND && f.MAXDOMVALCOND[0].CONDITIONNUM[0] ){  
+             this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
             }
           })
           if(this.platform.is('capacitor')){
@@ -675,12 +685,13 @@ export class HomePage implements OnInit {
   actualizarElementos(){
     this._vs.dominios('ELEMENTOSIE').subscribe((res:any)=>{
       if(res && res.status == '200'){
-        console.log('ELEMENTOS->>>>>',res)
+        // console.log('ELEMENTOS->>>>>',res)
         this._us.xmlToJson(res).then((result:any)=>{
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_DOMAIN_DOHRESPONSE[0].MOP_DOMAIN_DOHSET[0].MAXDOMAIN[0].ALNDOMAIN
           this.elementos = [];
           path.forEach(f=>{
-            if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+            // if((f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-CAUC' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHCAUC') || (f.MAXDOMVALCOND && this._us.usuario.DEFSITE == 'DOH-ALL' && f.MAXDOMVALCOND[0].CONDITIONNUM[0] == 'SRPLTDOHALL')){
+            if(f.MAXDOMVALCOND && f.MAXDOMVALCOND[0].CONDITIONNUM[0] ){  
               this.elementos.push({DESCRIPTION:f.DESCRIPTION[0],VALUE:f.VALUE[0],CONDITIONNUM:f.MAXDOMVALCOND[0].CONDITIONNUM[0]})
             }
           })
@@ -707,9 +718,9 @@ export class HomePage implements OnInit {
                       DESCRIPTION:data.rows.item(i).name,
                       CONDITIONNUM:data.rows.item(i).condition
                     }
-                    if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
+                    // if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-ALL' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
                       arr.push(tmp)
-                    }
+                    // }
                   })
                   this.elementos = arr;
                   this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
@@ -729,9 +740,9 @@ export class HomePage implements OnInit {
                 DESCRIPTION:data.rows.item(i).name,
                 CONDITIONNUM:data.rows.item(i).condition
               }
-              if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
+              // if((this._us.usuario.DEFSITE == 'DOH-CAUC' && tmp.CONDITIONNUM == 'SRPLTDOHCAUC') || (this._us.usuario.DEFSITE == 'DOH-ALL' && tmp.CONDITIONNUM == 'SRPLTDOHALL')){
                 arr.push(tmp)
-              }
+              // }
             })
             this.elementos = arr;
             this.elementos = this.sortJSON(this.elementos,'DESCRIPTION','asc')
@@ -1020,10 +1031,10 @@ export class HomePage implements OnInit {
 
   destinos(){
     this.destinosArray = [
-      { code: "APR", name: "Agua Potable Rural" },
-      { code: "DOH-ALL", name: "Aguas Lluvias" },
-      { code: "DOH-CAUC", name: "Obras Fluviales" },
-      { code: "DOH-RIEG", name: "Riego" }
+      { VALUE: "APR", DESCRIPTION: "Servicio Sanitario Rural" },
+      { VALUE: "DOH-ALL", DESCRIPTION: "Aguas Lluvias" },
+      { VALUE: "DOH-CAUC", DESCRIPTION: "Obras Fluviales" },
+      { VALUE: "DOH-RIEG", DESCRIPTION: "Riego" }
     ]
   }
 
@@ -1476,6 +1487,7 @@ export class HomePage implements OnInit {
       }
     })
   }
+
   seleccionarComuna(provincia){
     this.comunaSelect = []
     this.secondFormGroup.controls['comuna'].reset()
@@ -1703,6 +1715,16 @@ export class HomePage implements OnInit {
     });
     this.loadFiles()
   }
+
+  async crearAlerta(title, msg){
+    const alert = await this.alertctrl.create({
+      header: title,
+      message: msg,
+      buttons: ['OK'],
+      mode:'ios',
+    })
+    alert.present()
+  }
   // FIN SECCIÓN FOTO
   // ENVIAR ALERTA
    enviar(){
@@ -1716,45 +1738,68 @@ export class HomePage implements OnInit {
         nivelalerta:this.secondFormGroup.value.nivelAlerta,
         competencia:this.secondFormGroup.value.competencia,
         operatividad:this.secondFormGroup.value.operatividad,
-        region:this.secondFormGroup.value.region ? this.secondFormGroup.value.region : this.dataPosicion.region,
+        region:this.dataPosicion.region,
         locations:'',
         date:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
         picture:this.picture,
         name:JSON.stringify(new Date()).replace(/[\\"]/gi,''),
-        provincia:this.secondFormGroup.value.provincia ? this.secondFormGroup.value.provincia : '',
-        comuna:this.secondFormGroup.value.comuna ? this.secondFormGroup.value.comuna : '',
-        elemento:this.secondFormGroup.value.elemento ? this.secondFormGroup.value.elemento : ''
+        provincia:'',
+        comuna:'',
+        elemento:this.secondFormGroup.value.elemento ? this.secondFormGroup.value.elemento : '',
+        destino:this.secondFormGroup.value.destino
       }
       if(this.firstFormGroup.value.activoSeleccionado){
-        if(this.firstFormGroup.value.activoSeleccionado){
-          data.locations = this.firstFormGroup.value.activoSeleccionado.ASSETNUM
-        }else{
-          data.locations = '';
-        }
+        data.locations = this.firstFormGroup.value.activoSeleccionado.ASSETNUM
       }else{ 
         data.locations = '';
       } 
-      this.presentLoader('Enviando Emergencia ...').then(()=>{
-        if(this._us.conexion == 'no'){
-          this.db.open().then(()=>{
-            this.db.transaction( tx1=>{
-              this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
-                this.db.transaction(async tx=>{
-                  if(dat.rows.length > 0){
-                    if(dat.rows.length >= 10){
-                      this.loader.dismiss()
-                      this.alertasMaximas()
+      data.locations = ((data.destino == 'DOH-RIEG' || data.destino == 'DOH-ALL' || data.destino == 'DOH-CAUC') ? '' : (data.locations ? data.locations : ''))
+      if(this.region != '20' && this.region != this.dataPosicion.region){
+        this.crearAlerta('Región no disponible','No se puede enviar emergencia a una región distinta a la configurada para el usuario')
+      }else{
+        this.presentLoader('Enviando Emergencia ...').then(()=>{
+          if(this._us.conexion == 'no'){
+            this.db.open().then(()=>{
+              this.db.transaction( tx1=>{
+                this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
+                  this.db.transaction(async tx=>{
+                    if(dat.rows.length > 0){
+                      if(dat.rows.length >= 10){
+                        this.loader.dismiss()
+                        this.alertasMaximas()
+                      }else{
+                        tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento,destino) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                        [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet',data.provincia,data.comuna,data.elemento,data.destino]);
+                        this.loader.dismiss()
+                        this.estadoEnvioAlerta = 'pendiente'
+                        this.openModalEnvio(this.estadoEnvioAlerta)
+                        this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
+                        if(this.picture){
+                          const savedFile = await Filesystem.writeFile({
+                            directory:Directory.Data,
+                            path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
+                            data:this.images[0].data
+                            }).then(()=>{
+                            this.deleteImage(this.images[0])
+                            this.volverInicio()
+                            this._us.nextmessage('pendiente') 
+                          })
+                        }else{
+                          this.volverInicio()
+                          this._us.nextmessage('pendiente') 
+                        }       
+                      }
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'internet']);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error,provincia,comuna,elemento,destino) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet',data.provincia,data.comuna,data.elemento,data.destino]);
                       this.loader.dismiss()
                       this.estadoEnvioAlerta = 'pendiente'
                       this.openModalEnvio(this.estadoEnvioAlerta)
                       this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
                       if(this.picture){
                         const savedFile = await Filesystem.writeFile({
-                          directory:Directory.Data,
-                          path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                          directory:Directory.Data, 
+                          path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                           data:this.images[0].data
                           }).then(()=>{
                           this.deleteImage(this.images[0])
@@ -1764,66 +1809,60 @@ export class HomePage implements OnInit {
                       }else{
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
-                      }       
-                    }
-                  }else{
-                    tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                    [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'internet']);
-                    this.loader.dismiss()
-                    this.estadoEnvioAlerta = 'pendiente'
-                    this.openModalEnvio(this.estadoEnvioAlerta)
-                    this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
-                    if(this.picture){
-                      const savedFile = await Filesystem.writeFile({
-                        directory:Directory.Data, 
-                        path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
-                        data:this.images[0].data
-                        }).then(()=>{
-                        this.deleteImage(this.images[0])
-                        this.volverInicio()
-                        this._us.nextmessage('pendiente') 
-                      })
-                    }else{
-                      this.volverInicio()
-                      this._us.nextmessage('pendiente') 
-                    }
-                    
-                  }
-                })
-              })
-            })
-          })
-        }else{
-          this._ds.enviar(data).subscribe((res:any)=>{
-            console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
-            this.loader.dismiss()
-            if(res && res.status == '200'){
-              this.db.open().then(()=>{
-                this.db.transaction( tx1=>{
-                  this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
-                    this.db.transaction(async tx=>{
-                      if(dat.rows.length > 0){
-                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                        [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh']);
-                        this.estadoEnvioAlerta = 'exitoso'
-                        this.deleteImage(this.images[0])
-                        this.volverInicio()
-                        this.openModalEnvio(this.estadoEnvioAlerta)
-                        this.presentToast('Emergencia enviada exitosamente',null,true);
-                      }else{
-                        tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                        [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'doh']);
-                        this.estadoEnvioAlerta = 'exitoso'
-                        this.deleteImage(this.images[0])
-                        this.volverInicio()
-                        this.openModalEnvio(this.estadoEnvioAlerta)
-                        this.presentToast('Emergencia enviada exitosamente',null,true);
                       }
-                    })
+                      
+                    }
                   })
                 })
               })
-            }else{
+            })
+          }else{
+            this._ds.enviar(data).subscribe((res:any)=>{
+              console.log('**************** RESPUESTA AL ENVIAR FORMULARIO **************', res)
+              this.loader.dismiss()
+              if(res && res.status == '200'){
+                this.db.open().then(()=>{
+                  this.db.transaction( tx1=>{
+                    this.db.executeSql('SELECT * FROM historial', []).then((dat)=>{
+                      this.db.transaction(async tx=>{
+                        if(dat.rows.length > 0){
+                          tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento,destino) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                          [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'doh',data.provincia,data.comuna,data.elemento,data.destino]);
+                          this.estadoEnvioAlerta = 'exitoso'
+                          if(this.picture){
+                            this.deleteImage(this.images[0])
+                          }
+                          this.volverInicio()
+                          this.openModalEnvio(this.estadoEnvioAlerta)
+                          this.presentToast('Emergencia enviada exitosamente',null,true);
+                        }else{
+                          tx.executeSql('insert into historial (id, titulo, descripcion, usuario, lat, lng, nivelalerta,competencia, operatividad,region, name, date,location,error,provincia,comuna,elemento,destino) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                          [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad, data.region,data.name,data.date,data.locations,'doh',data.provincia,data.comuna,data.elemento,data.destino]);
+                          this.estadoEnvioAlerta = 'exitoso'
+                          if(this.picture){
+                            this.deleteImage(this.images[0])
+                          }
+                          this.volverInicio()
+                          this.openModalEnvio(this.estadoEnvioAlerta)
+                          this.presentToast('Emergencia enviada exitosamente',null,true);
+                        }
+                      })
+                    })
+                  })
+                })
+              }else{
+                this.intento++
+                this.estadoEnvioAlerta = 'fallido'
+                this.openModalEnvio(this.estadoEnvioAlerta)
+                if(this.intento > 1){
+                  this.guardarAlerta(data)
+                }else{
+                  this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
+                }
+                console.log('******************** ERROR ENVIAR ******************** ')
+              }
+            },err=>{
+              this.loader.dismiss()
               this.intento++
               this.estadoEnvioAlerta = 'fallido'
               this.openModalEnvio(this.estadoEnvioAlerta)
@@ -1832,22 +1871,12 @@ export class HomePage implements OnInit {
               }else{
                 this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
               }
-              console.log('******************** ERROR ENVIAR ******************** ')
-            }
-          },err=>{
-            this.loader.dismiss()
-            this.intento++
-            this.estadoEnvioAlerta = 'fallido'
-            this.openModalEnvio(this.estadoEnvioAlerta)
-            if(this.intento > 1){
-              this.guardarAlerta(data)
-            }else{
-              this.presentToast('La emergencia no pudo ser enviada, favor interlo nuevamente',null,true);
-            }
-            console.log('******************** ERROR ENVIAR ******************** ',err)
-          })
-        }
-      })
+              console.log('******************** ERROR ENVIAR ******************** ',err)
+            })
+          }
+        })
+      }
+     
       // this.stepper.reset()
     })
   }
@@ -1873,8 +1902,8 @@ export class HomePage implements OnInit {
                 this.db.executeSql('SELECT * FROM alerta', []).then((dat)=>{
                   this.db.transaction(async tx=>{
                     if(dat.rows.length > 0){
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta ,competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta ,competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento,destino) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [(dat.rows.length + 1), data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido',data.provincia,data.comuna,data.elemento,data.destino]);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
@@ -1889,8 +1918,8 @@ export class HomePage implements OnInit {
                         this._us.nextmessage('pendiente') 
                       })
                     }else{
-                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
-                      [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido']);
+                      tx.executeSql('insert into alerta (id, titulo, descripcion, usuario, lat, lng, nivelalerta, competencia,operatividad, region, name, date,location,error,provincia,comuna,elemento,destino) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
+                      [1, data.titulo, data.descripcion, data.usuario, data.lat, data.lng,data.nivelalerta,data.competencia,data.operatividad,data.region,data.name,data.date,data.locations,'desconocido',data.provincia,data.comuna,data.elemento,data.destino]);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 
                         path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
@@ -1935,6 +1964,15 @@ export class HomePage implements OnInit {
     this.toast.dismiss()
   }
 
+  verAyuda() {
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        nomostrar:true            
+      }
+    }
+    this._navCtrl.navigateForward('/help',navigationExtras)
+  }
+
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
       header: 'Límite de alertas',
@@ -1952,6 +1990,7 @@ export class HomePage implements OnInit {
     this.secondFormGroup.controls['competencia'].setValue('Si')
     // this.stepper.reset();
     this.intento = 0;
+    this.picture = null;
     this.tab = 0;
     this._us.cargar_storage().then(()=>{
       if(this._us.conexion == 'si'){

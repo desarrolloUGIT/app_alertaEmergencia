@@ -19,8 +19,8 @@
           {{usuario.GROUPUSER}}
           <br>
           {{usuario.PERSON.STATEPROVINCE}} -->
-          <!-- <br>
-          Región - {{usuario.PERSON.STATEPROVINCE}} -->
+          <br>
+          Región - {{(usuario.PERSON.STATEPROVINCE == '20') ? 'Nivel Central' : usuario.PERSON.STATEPROVINCE}}
         </div>
       </div>
       <ion-list class="animated fadeInLeft" style="margin-top: 5%;background: #7f7f7f59;" lines="none">

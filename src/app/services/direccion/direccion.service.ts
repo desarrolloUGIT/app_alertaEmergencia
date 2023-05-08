@@ -100,10 +100,10 @@ export class DireccionService {
           <max:MOP_SR_EMER_DOHSet>
              <!--Zero or more repetitions:-->
              <max:SR action="Add">
-             <max:ASSETSITEID>`+this._us.usuario.DEFSITE+`</max:ASSETSITEID>
+             <max:ASSETSITEID>`+data.destino+`</max:ASSETSITEID>
                 <max:STATUS maxvalue="?">NUEVO</max:STATUS>
                 <max:SRTIPO maxvalue="?">E</max:SRTIPO>
-                <max:LOCATION maxvalue="?">`+(data.locations ? data.locations : '')+`</max:LOCATION>
+                <max:LOCATION maxvalue="?">`+((data.destino == 'DOH-RIEG' || data.destino == 'DOH-ALL' || data.destino == 'DOH-CAUC') ? '' : (data.locations ? data.locations : ''))+`</max:LOCATION>
                 <max:ASSETNUM maxvalue="?"></max:ASSETNUM>
                 <max:CLASS maxvalue="?">SR</max:CLASS>
                 <max:DESCRIPTION changed="?">`+data.titulo+`</max:DESCRIPTION>
@@ -111,7 +111,7 @@ export class DireccionService {
                 <max:FECHARE changed="?">`+data.date+`</max:FECHARE>
                 <max:CATEGORIAMOP changed="?">`+data.nivelalerta+`</max:CATEGORIAMOP>
                 <max:REPORTDATE>`+data.date+`</max:REPORTDATE>
-                <max:ELEMENTO changed="?">`+data.elemento+`</max:ELEMENTO>
+                <max:ELEMENTO changed="?">`+((data.destino == 'DOH-CAUC' || data.destino == 'DOH-ALL') ? data.elemento : '')+`</max:ELEMENTO>
                 <max:TRANSITO changed="?"></max:TRANSITO>
                 <max:ESTADOLOC changed="?">`+data.operatividad+`</max:ESTADOLOC>
                 <max:COMPETENCIA changed="?">`+data.competencia+`</max:COMPETENCIA>
@@ -133,12 +133,12 @@ export class DireccionService {
                 <max:TKSERVICEADDRESS action="AddChange">
                     <max:CITY changed="?"></max:CITY>
                     <max:COUNTRY changed="?">CL</max:COUNTRY>
-                    <max:COUNTY changed="?">`+data.comuna+`</max:COUNTY>
+                    <max:COUNTY changed="?"></max:COUNTY>
                     <max:LATITUDEY changed="?">`+data.lat+`</max:LATITUDEY>
                    <max:LONGITUDEX changed="?">`+data.lng+`</max:LONGITUDEX>
                     <max:REFERENCEPOINT changed="?"></max:REFERENCEPOINT>
                     <max:REGIONDISTRICT changed="?">`+data.region+`</max:REGIONDISTRICT>
-                    <max:STATEPROVINCE changed="?">`+data.provincia+`</max:STATEPROVINCE>
+                    <max:STATEPROVINCE changed="?"></max:STATEPROVINCE>
                     <max:STREETADDRESS changed="?"></max:STREETADDRESS>
                     <max:ADDRESSLINE2 changed="?"></max:ADDRESSLINE2>
                     <max:ADDRESSLINE3 changed="?"></max:ADDRESSLINE3>

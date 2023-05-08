@@ -55,7 +55,7 @@ toast;
             }else{
               this.tipo = 'vialidad';
               db.executeSql('SELECT * FROM alertaVialidad', []).then((data)=>{
-                console.log('PENDIENTES ??? ->>>>>>>> ',data.rows.length)
+                // console.log('PENDIENTES ??? ->>>>>>>> ',data.rows.length)
                 if(data.rows.length > 0){
                   for(let i = 0;i<data.rows.length;i++){
                     this.alertas.push(data.rows.item(i))
@@ -130,7 +130,7 @@ toast;
     }
     this.images.forEach(i=>{
       this.alertas.forEach(a=>{
-        if('save_'+a.id+'_foto.jpg' == i.name){
+        if('save_'+(a.date)+'_foto.jpg' == i.name){
           a.foto = i;
         }
       })

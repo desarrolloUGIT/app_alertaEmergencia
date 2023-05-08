@@ -67,17 +67,15 @@
           </ion-col>
         </ion-row>
       </ion-grid>
-      <!-- <div align="center" *ngIf="firstFormGroup.value.activoSeleccionado">
-        <ion-button fill="clear" color="dark" (click)="selectTab(2)">
-          Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
-        </ion-button>
-      </div>       -->
     </ion-card>  
     
   </form>
   <section *ngIf="tab == 1">
     <ion-item lines="none" style="--background: transparent;">
-      <ion-title style="margin-left: -3%;"><div class="ion-text-wrap">Operatividad y Daño</div></ion-title>
+      <ion-button color="botonazul" slot="start" (click)="verAyuda()">
+        <ion-icon name="information-circle-sharp" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-title style="display: contents;"><div class="ion-text-wrap">Operatividad y Daño</div></ion-title>
       <ion-button color="botonazul" (click)="tab = 0;(internet ? mostrarMapa = true : '');" slot="end" fill="outline">
         <ion-icon name="close-outline" slot="icon-only"></ion-icon>
       </ion-button>
@@ -86,51 +84,35 @@
       <ion-card center>
         <ion-label style="font-size: 17px;">Detalle Emergencia</ion-label>
         <ion-list style="margin-top: 3%;margin-bottom: 3%;">
+          <ion-item lines="none" [class.select]="secondFormGroup.value.destino"       >
+            <ion-label >Destino</ion-label>
+            <ion-select mode="ios" interface="alert" placeholder="Selecciona destino" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="destino" (ngModelChange)="elementChange()">
+              <ion-select-option *ngFor="let item of destinosArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
+            </ion-select>
+          </ion-item>
           <ion-item lines="none" [class.select]="secondFormGroup.value.operatividad">
             <ion-label >Operatividad</ion-label>
             <ion-select mode="ios" interface="alert" placeholder="Selecciona operatividad" class="select-text" cancelText="Cancelar" okText="OK" title="Operatividad" formControlName="operatividad">
               <ion-select-option *ngFor="let item of operatividadArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
             </ion-select>
           </ion-item>
-          <!-- <ion-item lines="none" [class.select]="secondFormGroup.value.nivelAlerta" (click)="openSelect('Nivel de alerta','nivelAlerta')">
-            <ion-label >Nivel de alerta</ion-label>
-            <ion-label class="tit-select">{{!secondFormGroup.value.nivelAlerta ? 'Seleccione alerta' : secondFormGroup.value.nivelAlerta}}<ion-icon class="icon-select" slot="end" name="chevron-down-outline"></ion-icon>
-            </ion-label>
-          </ion-item> -->
-          <ion-item lines="none" [class.select]="secondFormGroup.value.nivelAlerta">
+          <ion-item lines="none" [class.select]="secondFormGroup.value.nivelAlerta"       >
             <ion-label >Nivel de alerta</ion-label>
             <ion-select mode="ios" interface="alert" placeholder="Selecciona alerta" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="nivelAlerta">
               <ion-select-option *ngFor="let item of nivelAlertaArray" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-item lines="none" [class.select]="secondFormGroup.value.elemento" *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
+          <ion-item lines="none" [class.select]="secondFormGroup.value.elemento" *ngIf="secondFormGroup.value.destino == 'DOH-CAUC' || secondFormGroup.value.destino == 'DOH-ALL'">
             <ion-label >Elemento</ion-label>
             <ion-select mode="ios" interface="alert" placeholder="Selecciona elemento" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="elemento">
-              <ion-select-option *ngFor="let item of elementos" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
+              <ion-select-option *ngFor="let item of elementFinal" [value]="item.VALUE">{{item.DESCRIPTION}}</ion-select-option>
+              <ion-select-option value="Otro Elemento">Otro Elemento</ion-select-option>
             </ion-select>
           </ion-item>
           <ion-item lines="none" [class.select]="secondFormGroup.value.competencia">
             <ion-label>Competencia</ion-label>
             <ion-select mode="ios" interface="alert" placeholder="Selecciona competencia" class="select-text"  cancelText="Cancelar" okText="OK" title="Competencia" formControlName="competencia">
               <ion-select-option *ngFor="let item of competencia" [value]="item.valor">{{item.valor}} - {{item.descripcion}}</ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item lines="none" [class.select]="secondFormGroup.value.region" *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
-            <ion-label >Región</ion-label>
-            <ion-select mode="ios" interface="alert" placeholder="Selecciona región" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="region" (ngModelChange)="seleccionarProvincia($event)">
-              <ion-select-option *ngFor="let item of regionesAll" [value]="item">{{item.DESCRIPTION}}</ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item lines="none" [class.select]="secondFormGroup.value.provincia" *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
-            <ion-label >Provincia</ion-label>
-            <ion-select [disabled]="!secondFormGroup.value.region" mode="ios" interface="alert" placeholder="Selecciona provincia" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="provincia" (ngModelChange)="seleccionarComuna($event)">
-              <ion-select-option *ngFor="let item of provinciaSelect" [value]="item">{{item.DESCRIPTION}}</ion-select-option>
-            </ion-select>
-          </ion-item>
-          <ion-item lines="none" [class.select]="secondFormGroup.value.comuna" *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
-            <ion-label >Comuna</ion-label>
-            <ion-select [disabled]="!secondFormGroup.value.provincia" mode="ios" interface="alert" placeholder="Selecciona comuna" class="select-text" cancelText="Cancelar" okText="OK" title="Alerta" formControlName="comuna">
-              <ion-select-option *ngFor="let item of comunaSelect" [value]="item">{{item.DESCRIPTION}}</ion-select-option>
             </ion-select>
           </ion-item>
         </ion-list>
@@ -146,22 +128,6 @@
     </ion-item>
     <form [formGroup]="thirdFormGroup">
       <ion-card center>
-        <ion-item *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC'">
-          <ion-label position="stacked">Nombre Cauce <span style="color:red;font-size: 10px;">*</span></ion-label>
-          <ion-textarea formControlName="nombre" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
-        </ion-item>
-        <p *ngIf="thirdFormGroup.controls['nombre'].hasError('required') && thirdFormGroup.controls['nombre'].touched" class="p_error">Debes ingresar un nombre de cauce<br></p>
-        <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.nombre ? thirdFormGroup.value.nombre.length : '0'}}/100</span>
-      </ion-card>
-      <ion-card center>
-        <ion-item *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC'">
-          <ion-label position="stacked">Localidad <span style="color:red;font-size: 10px;">*</span></ion-label>
-          <ion-textarea formControlName="localidad" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
-        </ion-item>
-        <p *ngIf="thirdFormGroup.controls['localidad'].hasError('required') && thirdFormGroup.controls['localidad'].touched" class="p_error">Debes ingresar una localidad<br></p>
-        <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.localidad ? thirdFormGroup.value.localidad.length : '0'}}/100</span>
-      </ion-card>   
-      <ion-card center>
         <ion-item>
           <ion-label position="stacked">Resumen <span style="color:red;font-size: 10px;">*</span></ion-label>
           <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
@@ -172,7 +138,7 @@
       <ion-card center>
         <ion-item>
           <ion-label position="stacked">Descripción detallada</ion-label>
-          <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="4" maxlength="300"></ion-textarea>
+          <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="text" style="--placeholder-color:black;" [autoGrow]="true" rows="6" maxlength="300"></ion-textarea>
         </ion-item>
         <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/300</span>
       </ion-card>
@@ -218,36 +184,16 @@
         <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.nivelAlerta}}</ion-label></ion-col>
         <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'green' : 'red'" [name]="(secondFormGroup.value.nivelAlerta != '' && secondFormGroup.value.nivelAlerta) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
       </ion-row>
-      <ion-row align="center"  *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
+      <ion-row align="center"  *ngIf="secondFormGroup.value.destino == 'DOH-CAUC' || secondFormGroup.value.destino == 'DOH-ALL'">
         <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Elemento</ion-label></ion-col>
         <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.elemento}}</ion-label></ion-col>
         <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.elemento != '' && secondFormGroup.value.elemento) ? 'green' : 'red'" [name]="(secondFormGroup.value.elemento != '' && secondFormGroup.value.elemento) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-      </ion-row>
-      <ion-row align="center" style="background: #093f753b;"  *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
-        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Región</ion-label></ion-col>
-        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.region ? secondFormGroup.value.region.DESCRIPTION : ''}}</ion-label></ion-col>
-        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.region != '' && secondFormGroup.value.region) ? 'green' : 'red'" [name]="(secondFormGroup.value.region != '' && secondFormGroup.value.region) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-      </ion-row>
-      <ion-row align="center"  *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
-        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Provincia</ion-label></ion-col>
-        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.provincia ? secondFormGroup.value.provincia.DESCRIPTION : ''}}</ion-label></ion-col>
-        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.provincia != '' && secondFormGroup.value.provincia) ? 'green' : 'red'" [name]="(secondFormGroup.value.provincia != '' && secondFormGroup.value.provincia) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
-      </ion-row>
-      <ion-row align="center" style="background: #093f753b;"  *ngIf="_us.usuario.DEFSITE == 'DOH-CAUC' || _us.usuario.DEFSITE == 'DOH-ALL'">
-        <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Comuna</ion-label></ion-col>
-        <ion-col size="5" class="cierreTabla"><ion-label style="color: black;">{{secondFormGroup.value.comuna ? secondFormGroup.value.comuna.DESCRIPTION : ''}}</ion-label></ion-col>
-        <ion-col size="3" class="cierreTabla"><ion-icon style="font-size: 23px;" [style.color]="(secondFormGroup.value.comuna != '' && secondFormGroup.value.comuna) ? 'green' : 'red'" [name]="(secondFormGroup.value.comuna != '' && secondFormGroup.value.comuna) ? 'checkmark-circle': 'alert-circle'"></ion-icon></ion-col>
       </ion-row>
       <ion-row align="center">
         <ion-col size="4" class="cierreTabla"><ion-label style="color: black;">Mensaje</ion-label></ion-col>
         <ion-col size="8" class="cierreTabla"><p style="color: black;text-align: left;">{{thirdFormGroup.value.descripcion}}</p></ion-col>
       </ion-row>
     </ion-grid>
-    <!-- <div align="center" >
-      <ion-button fill="clear" color="dark" (click)="selectTab(3)">
-        Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
-      </ion-button>
-    </div> -->
     <div align="center" >
       <ion-button expand="block"  color="botonazul" (click)="enviar()" [disabled]="!secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region">
         REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>

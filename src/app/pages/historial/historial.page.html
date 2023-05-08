@@ -21,6 +21,9 @@
             </ion-row>
             <ion-row *ngIf="item.error != 'vialidad'">
               <ion-col size="12" >
+                <ion-row *ngIf="item.destino">
+                  <p><span>Destino:</span> {{item.destino}}</p>
+                </ion-row>
                 <ion-row>
                   <p><span>Fecha de envío:</span> {{ item.name | date:'dd/MM/yyyy HH:mm'}}</p>
                 </ion-row>
@@ -29,6 +32,9 @@
                 </ion-row>
                 <ion-row>
                   <p><span>Nivel de Alerta:</span> {{item.nivelalerta}}</p>
+                </ion-row>
+                <ion-row *ngIf="item.elemento">
+                  <p><span>Elemento:</span> {{item.elemento}}</p>
                 </ion-row>
                 <ion-row>
                   <p><span>Operatividad:</span> {{item.operatividad == 'NOOPERATIVO' ? 'No Operativo' : (item.operatividad == 'OPERATIVO' ? 'Operativo' : 'Operativo con Restricción')}}</p>

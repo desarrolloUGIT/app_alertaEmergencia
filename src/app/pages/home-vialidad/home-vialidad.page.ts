@@ -117,6 +117,7 @@ export class HomeVialidadPage implements OnInit {
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   iconEnviando = false;
   filtro = 'rol';
+  cargoMapa = false;
   constructor(public _vs:VialidadService, private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public _mc:MenuController,private sqlite: SQLite,public storage: NativeStorage,private keyboard: Keyboard,public popoverCtrl:PopoverController,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController) { 
@@ -158,14 +159,6 @@ export class HomeVialidadPage implements OnInit {
         }
       })
       this.keyboard.hideFormAccessoryBar(false)
-      // this.platform.keyboardDidHide.subscribe(r=>{
-      //   // oculta teclado
-      //   this.footer = true;
-      // })
-      // this.platform.keyboardDidShow.subscribe(r=>{
-      //   // muestra teclado
-      //   this.footer = false;
-      // })
     }
 
   ngOnInit() {
@@ -173,28 +166,33 @@ export class HomeVialidadPage implements OnInit {
   }
 
   async reiniciarHome(){
-    const alert = await this.alertctrl.create({
-      header: 'Conexión Establecida',
-      message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
-      // buttons: ['OK'],
-      mode:'ios',
-      buttons: [{
-        text: 'No, lo haré despues',
-        role: 'cancel',
-        cssClass: 'secondary',
-          handler: () => {
-            this._us.nextmessage('buscarPendientes') 
-          }
-        },{
-          text: 'Si, reiniciar',
-          id: 'confirm-button',
-          handler: () => {
-            window.location.reload()
-          }
-        }
-      ]
-    });
-    await alert.present()
+    this.internet = true;
+    this.mostrarMapa = true;
+    this.tab = 0;
+    this.loadMapVialidad()
+    // const alert = await this.alertctrl.create({
+    //   header: 'Conexión Establecida',
+    //   message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
+    //   // buttons: ['OK'],
+    //   mode:'ios',
+    //   buttons: [{
+    //     text: 'No, lo haré despues',
+    //     role: 'cancel',
+    //     cssClass: 'secondary',
+    //       handler: () => {
+    //         this._us.nextmessage('buscarPendientes') 
+    //       }
+    //     },{
+    //       text: 'Si, reiniciar',
+    //       id: 'confirm-button',
+    //       handler: () => {
+    //         window.location.reload()
+    //       }
+    //     }
+    //   ]
+    // });
+    // await alert.present()
+
   }
 
   iniciar(){
@@ -255,7 +253,7 @@ export class HomeVialidadPage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         this.db = db;
         this.nivelAlerta();
-        this.elemento();
+        // this.elemento();
         this.transitos()
         this.restriccioN();
         if(this.region == '20'){
@@ -269,7 +267,7 @@ export class HomeVialidadPage implements OnInit {
       })
     }else{
       this.nivelAlerta();
-      this.elemento();
+      // this.elemento();
       this.transitos()
       this.restriccioN();
       if(this.region == '20'){
@@ -2416,7 +2414,7 @@ export class HomeVialidadPage implements OnInit {
             this.db.executeSql('SELECT * FROM alertaVialidad', []).then((dat)=>{
               this.db.transaction(async tx=>{
                 if(dat.rows.length > 0){
-                  if(dat.rows.length >= 20){
+                  if(dat.rows.length >= 10){
                     this.loader.dismiss()
                     this.alertasMaximas()
                   }else{
@@ -2426,18 +2424,12 @@ export class HomeVialidadPage implements OnInit {
                     this.estadoEnvioAlerta = 'pendiente'
                     this.openModalEnvio(this.estadoEnvioAlerta)
                     this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
-                    console.log('PICTURE PENDIENTE->',this.picture)
-
                     if(this.picture){
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
-                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
-                        this.deleteImage(this.images[0])
-                        this.volverInicio()
-                        this._us.nextmessage('pendiente') 
-                      }).catch(()=>{
                         this.deleteImage(this.images[0])
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
@@ -2454,17 +2446,12 @@ export class HomeVialidadPage implements OnInit {
                   this.estadoEnvioAlerta = 'pendiente'
                   this.openModalEnvio(this.estadoEnvioAlerta)
                   this.presentToast('Se detectó que por el momento no tiene acceso a internet, la emergencia se almacenó y la podrá enviar cuando vuelvas a tener conexión estable de internet, desde el menú de la APP',null,true);
-                  console.log('PICTURE->',this.picture)
                   if(this.picture){
                     const savedFile = await Filesystem.writeFile({
                       directory:Directory.Data,
-                      path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                      path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                       data:this.images[0].data
                       }).then(()=>{
-                      this.deleteImage(this.images[0])
-                      this.volverInicio()
-                      this._us.nextmessage('pendiente') 
-                    }).catch(()=>{
                       this.deleteImage(this.images[0])
                       this.volverInicio()
                       this._us.nextmessage('pendiente') 
@@ -2491,7 +2478,9 @@ export class HomeVialidadPage implements OnInit {
                       tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
                       this.estadoEnvioAlerta = 'exitoso'
-                      this.deleteImage(this.images[0])
+                      if(this.picture){
+                        this.deleteImage(this.images[0])
+                      }
                       this.volverInicio()
                       this.openModalEnvio(this.estadoEnvioAlerta)
                       this.presentToast('La emergencia fue enviada exitosamente',null,true);
@@ -2499,7 +2488,9 @@ export class HomeVialidadPage implements OnInit {
                       tx.executeSql('insert into historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
                       [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'vialidad']);
                       this.estadoEnvioAlerta = 'exitoso'
-                      this.deleteImage(this.images[0])
+                      if(this.picture){
+                        this.deleteImage(this.images[0])
+                      }
                       this.volverInicio()
                       this.openModalEnvio(this.estadoEnvioAlerta)
                       this.presentToast('La emergencia fue enviada exitosamente',null,true);
@@ -2563,7 +2554,7 @@ export class HomeVialidadPage implements OnInit {
                       [(dat.rows.length + 1), data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data,
-                        path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
                         this.deleteImage(this.images[0])
@@ -2579,7 +2570,7 @@ export class HomeVialidadPage implements OnInit {
                       [1, data.titulo, data.descripcion, data.fechaEmergencia, data.usuario, data.lat, data.lng,data.nivelalerta,data.region,data.name,data.date,data.codigo,data.elemento,data.transito,data.restriccion,data.competencia,data.km_i,data.km_f,'desconocido']);
                       const savedFile = await Filesystem.writeFile({
                         directory:Directory.Data, 
-                        path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
+                        path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
                         this.deleteImage(this.images[0])
@@ -2607,7 +2598,7 @@ export class HomeVialidadPage implements OnInit {
   async alertasMaximas() {
     const alert = await this.alertctrl.create({
       header: 'Límite de emergencias',
-      message: 'Se ha llegado al límite de 20 emergencias almacenadas, por lo cual no se pueden guardar más emergencias para enviar con posterioridad',
+      message: 'Se ha llegado al límite de 10 emergencias almacenadas, por lo cual no se pueden guardar más emergencias para enviar con posterioridad',
       buttons: ['OK'],
       mode:'ios'
     });
@@ -2627,9 +2618,11 @@ export class HomeVialidadPage implements OnInit {
       this.mayorF = false;
       this.menorFI = false;
       this.mayorIF = false;
+      this.picture = null;
       this.intento = 0;
       this.km = null;
       this.tab = 0;
+      console.log('internet->',this.internet)
       if(this.internet){
         this.mostrarMapa = true;
         this.view2.graphics.remove(this.camino)
