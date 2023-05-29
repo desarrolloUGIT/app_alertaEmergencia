@@ -33,10 +33,19 @@ db:SQLiteObject;
 tipo = 'novialidad';
 estadoEnvioAlerta = null;
 toast;
+iconEnviando = false;
 
   constructor(private sqlite: SQLite,
     public toastController:ToastController,public loadctrl:LoadingController,public alertController:AlertController,public _modalCtrl:ModalController,private clipboard: Clipboard,
     public platform:Platform,private nativePageTransitions: NativePageTransitions,public _us:UsuarioService,public _vs:VialidadService, public _ds:DireccionService) { 
+       this._us.message.subscribe(res=>{
+        if(res == 'enviando'){
+          this.iconEnviando = true;
+        }
+        if(res == 'termino de enviar'){
+          this.iconEnviando = false;
+        }
+      })
       if(this.platform.is('capacitor')){
         this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
           this.db = db;

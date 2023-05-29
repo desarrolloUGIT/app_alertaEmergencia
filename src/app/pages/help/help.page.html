@@ -7,6 +7,12 @@
       <ion-menu-button style="color: white;" ></ion-menu-button>
     </ion-buttons>
     <ion-title>Ayuda</ion-title>
+    <ion-buttons *ngIf="iconEnviando || this._us.enviando" slot="end">
+      <ion-button disabled size="small" color="light" >
+        <span style="font-size: 15px;">Enviando</span>
+         <ion-spinner color="light" name="dots"></ion-spinner>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -55,6 +61,11 @@
       <div class="ion-padding contenido" slot="content">
         <b>Leve:</b> Tipo de emergencia que produce daño menor y de bajos costos. Es abordable con los propios recursos y personal de la Oficina o Provincia. En algunos casos se utiliza apoyo de personal y maquinaria de empresas contratistas,
         que consideran en su contrato tales usos, para poder superarla. Prácticamente no tiene impacto en la comunidad usuaria. Excepcionalmente puede evolucionar o escalar a emergencia de categoría: moderada.<br><br>
+
+        <b>Moderada</b>: Emergencia cuya gravedad, generalmente, no ocasiona paralización del servicio para el cual fue construida. Es abordable con los propios recursos y personal de la Oficina o Provincia, en algunos casos con apoyo de personal y 
+        maquinaria de la Dirección Regional o de empresas contratistas que contemplan tales usos. Excepcionalmente puede evolucionar o escalar a una emergencia mayor. Su impacto ocasiona daños y costos de relativa importancia en el MOP. 
+        Con escaso o leve impacto en la comunidad usuaria. Generalmente, las emergencias afectan a una o más comunas de la Provincia.<br><br>
+
 
         <b>Grave</b>: Emergencia que provoca daño de importancia en obras. Generalmente comprometerá significativos recursos de las Direcciones Regionales, como por ejemplo; maquinaria de contratos específicos (Globales) que mantienen los
         Servicios, en parte para dar solución transitoria a la emergencia. Eventualmente puede evolucionar o escalar a emergencia de categoría muy grave. De impacto económico y social fuerte o importante para la comunidad de usuarios, por

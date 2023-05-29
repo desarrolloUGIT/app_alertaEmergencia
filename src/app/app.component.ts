@@ -149,18 +149,20 @@ export class AppComponent {
             if(this.alertas.length > 0 && this._us.conexion == 'si'){
               if(!this.enviando){
                 this.enviando = true;
+                this._us.enviando = true;
                 this.loadFiles()
               }
             }else{
               if(this.alertas.length > 0){
                 this.porenviar = this.porenviar.concat(this.alertas)
-                // console.log('TOTAL POR ENVIAR->',this.porenviar.length,this.porenviar,this.alertas.length)
                 if(this.porenviar.length > 0){
                   this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
                 }
               }else{
                 if(this.porenviar.length > 0){
                   this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                }else{
+                  this._us.loadFiles(SAVE_IMAGE_DIR)
                 }
               }             
             }
@@ -168,6 +170,7 @@ export class AppComponent {
               this.pendientes = true;
             }else{
               this.pendientes = false;
+              this._us.loadFiles(SAVE_IMAGE_DIR)
             }
           }else{
             this.pendientes = false;
@@ -175,6 +178,7 @@ export class AppComponent {
               direction:'right',
               duration:500
             }
+            this._us.loadFiles(SAVE_IMAGE_DIR)
             this.nativePageTransitions.fade(options);
             if(this._us.usuario.DEFSITE == 'VIALIDAD' || this._us.usuario.DEFSITE == 'DV'){
               this.navCtrl.navigateRoot('/home_vialidad')
@@ -250,7 +254,7 @@ export class AppComponent {
                   })
                 })
                 if(del){
-                  this.deleteImage(del)
+                  // this.deleteImage(del)
                 }
               }
             }else{
@@ -272,7 +276,7 @@ export class AppComponent {
                   })
                 })
                 if(del){
-                  this.deleteImage(del)
+                  // this.deleteImage(del)
                 }
               }
             }else{
@@ -295,18 +299,20 @@ export class AppComponent {
               enviadas++;
               this._us.nextmessage('termino de enviar') 
               this.enviando = false;
+              this._us.enviando = false;
               if(enviadas > 0){
                 this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
                 this.guardarHistorial('dv')
               }           
                setTimeout(()=>{
-                // this._us.loadFiles(SAVE_IMAGE_DIR)
                 this.alertas = [];
                 if(this.porenviar.length > 0){
                   this.pendientes = true;
                   this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                }else{
+                  this._us.loadFiles(SAVE_IMAGE_DIR)
                 }
-              },4000)
+              },2000)
             }else{
               posicion++;
               enviadas++;
@@ -326,15 +332,15 @@ export class AppComponent {
               }
               setTimeout(()=>{
                 this.alertas = [];
-                // this._us.loadFiles(SAVE_IMAGE_DIR)
                 if(this.porenviar.length > 0){
                   this.pendientes = true;
                   this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                }else{
+                  this._us.loadFiles(SAVE_IMAGE_DIR)
                 }
-              },4000)
+              },2000)
             }else{
               posicion++;
-              // enviadas++;
               this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
             } 
           }
@@ -344,21 +350,22 @@ export class AppComponent {
           if((posicion + 1) >= this.alertas.length){
             this._us.nextmessage('termino de enviar') 
             this.enviando = false;
+            this._us.enviando = false;
             if(enviadas > 0){
               this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
               this.guardarHistorial('dv')
             }
             setTimeout(()=>{
               this.alertas = [];
-              // this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+              }else{
+                this._us.loadFiles(SAVE_IMAGE_DIR)
               }
-            },4000)
+            },2000)
           }else{
             posicion++;
-            // enviadas++;
             this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
           } 
         })
@@ -367,21 +374,22 @@ export class AppComponent {
         if((posicion + 1) >= this.alertas.length){
           this._us.nextmessage('termino de enviar') 
           this.enviando = false;
+          this._us.enviando = false;
           if(enviadas > 0){
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
             this.guardarHistorial('dv')
           }
           setTimeout(()=>{
             this.alertas = [];
-            // this._us.loadFiles(SAVE_IMAGE_DIR)
             if(this.porenviar.length > 0){
               this.pendientes = true;
               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+            }else{
+              this._us.loadFiles(SAVE_IMAGE_DIR)
             }
-          },4000)
+          },2000)
         }else{
           posicion++;
-          // enviadas++;
           this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
         } 
       }
@@ -395,18 +403,20 @@ export class AppComponent {
               enviadas++;
               this._us.nextmessage('termino de enviar') 
               this.enviando = false;
+              this._us.enviando = false;
               if(enviadas > 0){
                 this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
                 this.guardarHistorial('doh')
               }
               setTimeout(()=>{
                 this.alertas = [];
-                // this._us.loadFiles(SAVE_IMAGE_DIR)
                 if(this.porenviar.length > 0){
                   this.pendientes = true;
                   this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                }else{
+                  this._us.loadFiles(SAVE_IMAGE_DIR)
                 }
-              },4000)           
+              },2000)           
             }else{
               posicion++;
               enviadas++;
@@ -418,21 +428,22 @@ export class AppComponent {
             if((posicion + 1) >= this.alertas.length){
               this._us.nextmessage('termino de enviar')
               this.enviando = false; 
+              this._us.enviando = false;
               if(enviadas > 0){
                 this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
                 this.guardarHistorial('doh')
               }
               setTimeout(()=>{
                 this.alertas = [];
-                // this._us.loadFiles(SAVE_IMAGE_DIR)
                 if(this.porenviar.length > 0){
                   this.pendientes = true;
                   this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+                }else{
+                  this._us.loadFiles(SAVE_IMAGE_DIR)
                 }
-              },4000)
+              },2000)
             }else{
               posicion++;
-              // enviadas++;
               this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
             } 
           }
@@ -442,21 +453,22 @@ export class AppComponent {
           if((posicion + 1) >= this.alertas.length){
             this._us.nextmessage('termino de enviar') 
             this.enviando = false;
+            this._us.enviando = false;
             if(enviadas > 0){
               this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
               this.guardarHistorial('doh')
             }
             setTimeout(()=>{
               this.alertas = [];
-              // this._us.loadFiles(SAVE_IMAGE_DIR)
               if(this.porenviar.length > 0){
                 this.pendientes = true;
                 this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+              }else{
+                this._us.loadFiles(SAVE_IMAGE_DIR)
               }
-            },4000)
+            },2000)
           }else{
             posicion++;
-            // enviadas++;
             this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
           } 
         })
@@ -465,21 +477,22 @@ export class AppComponent {
         if((posicion + 1) >= this.alertas.length){
           this._us.nextmessage('termino de enviar') 
           this.enviando = false;
+          this._us.enviando = false;
           if(enviadas > 0){
             this.presentToast('Se han enviado '+enviadas+' emergencias que estaban pendientes',true)
             this.guardarHistorial('doh')
           }
           setTimeout(()=>{
             this.alertas = [];
-            // this._us.loadFiles(SAVE_IMAGE_DIR)
             if(this.porenviar.length > 0){
               this.pendientes = true;
               this.presentToast('Hay '+this.porenviar.length +' emergencias pendientes por enviar')
+            }else{
+              this._us.loadFiles(SAVE_IMAGE_DIR)
             }
-          },4000)
+          },2000)
         }else{
           posicion++;
-          // enviadas++;
           this.enviar(this.alertas[posicion],this.alertas[posicion].id,posicion,posicion,enviadas)
         } 
       }

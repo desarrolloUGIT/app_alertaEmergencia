@@ -4,6 +4,17 @@
       <ion-menu-button style="color: white;" ></ion-menu-button>
     </ion-buttons>
     <ion-title>Historial</ion-title>
+    <ion-buttons *ngIf="iconEnviando || this._us.enviando" slot="end">
+      <ion-button disabled size="small" color="light" >
+        <span style="font-size: 15px;">Enviando</span>
+         <ion-spinner color="light" name="dots"></ion-spinner>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons *ngIf="alertas.length > 0" slot="end" (click)="borrarHistorial()">
+      <ion-button  size="small" color="danger" >
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

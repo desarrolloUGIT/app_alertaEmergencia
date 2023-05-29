@@ -141,6 +141,7 @@ export class UsuarioService {
       lng:-70.65266161399654
     },
   ]
+  enviando = false;
   constructor(public storage: NativeStorage,public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite ) { 
     this.message = new BehaviorSubject(this.messages)
   }

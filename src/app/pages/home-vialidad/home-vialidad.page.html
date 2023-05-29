@@ -6,7 +6,7 @@
     <ion-title>
       Crear Emergencia
     </ion-title>
-    <ion-buttons *ngIf="iconEnviando" slot="end">
+    <ion-buttons *ngIf="iconEnviando || this._us.enviando" slot="end">
       <ion-button disabled size="small" color="light" >
         <span style="font-size: 15px;">Enviando</span>
          <ion-spinner color="light" name="dots"></ion-spinner>
