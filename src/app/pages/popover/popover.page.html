@@ -4,5 +4,6 @@
     <ion-item detail button (click)="redVial()" *ngIf="!novialidad"><ion-icon name="red-vial-black" item-start detail-push></ion-icon>{{redvial ? 'Desactivar Red Vial' : 'Activar Red Vial'}}</ion-item>
     <ion-item detail button (click)="posicion()"><ion-icon name="locate" item-start ></ion-icon>{{posicionT}}</ion-item>
     <ion-item detail button (click)="centrar()"><ion-icon name="location" item-start ></ion-icon>{{centrarT}}</ion-item>
+    <ion-item detail button (click)="actualizar()"><ion-icon name="refresh-outline" item-start ></ion-icon>Actualizar Activos</ion-item>
   </ion-list>
 </ion-content>

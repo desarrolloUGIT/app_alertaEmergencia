@@ -4,7 +4,9 @@
       <ion-menu-button style="color: white;" ></ion-menu-button>
     </ion-buttons>
     <ion-title>
-      Crear Alerta
+      <div class="content">
+        {{_ds.cargandoActivos && _ds.activoRegion  ? 'Actualizando activos de la región '+_ds.activoRegion :  'Crear Emergencia'}}<ion-spinner *ngIf="_ds.cargandoActivos && _ds.activoRegion" color="light" style="margin: 0px 0px -11px 0px;" name="dots"></ion-spinner>
+      </div>
     </ion-title>
     <ion-buttons *ngIf="iconEnviando || this._us.enviando" slot="end">
       <ion-button disabled size="small" color="light" >
@@ -129,8 +131,8 @@
     <form [formGroup]="thirdFormGroup">
       <ion-card center>
         <ion-item>
-          <ion-label position="stacked">Resumen <span style="color:red;font-size: 10px;">*</span></ion-label>
-          <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:black;resize: none;" rows="2" maxlength="100" required></ion-textarea>
+          <ion-label position="stacked">Titulo <span style="color:red;font-size: 10px;">*</span></ion-label>
+          <ion-textarea formControlName="titulo" placeholder="" clearInput="true" type="" style="--placeholder-color:grey;resize: none;" rows="2" maxlength="100" required></ion-textarea>
         </ion-item>
         <p *ngIf="thirdFormGroup.controls['titulo'].hasError('required') && thirdFormGroup.controls['titulo'].touched" class="p_error">Debes ingresar un resumen<br></p>
         <span style="float: right;margin-right: 2%;">{{thirdFormGroup.value.titulo ? thirdFormGroup.value.titulo.length : '0'}}/100</span>
@@ -138,11 +140,59 @@
       <ion-card center>
         <ion-item>
           <ion-label position="stacked">Descripción detallada</ion-label>
-          <ion-textarea formControlName="descripcion" placeholder="" clearInput="true" type="text" style="--placeholder-color:black;" [autoGrow]="true" rows="6" maxlength="300"></ion-textarea>
+          <ion-textarea formControlName="descripcion" placeholder="Descripcción detallada" clearInput="true" type="text" style="--placeholder-color:grey;font-size: 14px;" [autoGrow]="true" rows="4" ></ion-textarea>
         </ion-item>
-        <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/300</span>
+        <!-- <span style="float: right;margin-right: 2%;margin-bottom: 3%;">{{thirdFormGroup.value.descripcion ? thirdFormGroup.value.descripcion.length : '0'}}/300</span> -->
       </ion-card>
-
+      <!-- <ion-card center>
+        <ion-item>
+          <ion-label position="stacked">Infraestructura Afectada</ion-label>
+          <ion-textarea formControlName="infraestructura" placeholder="Agregar infraestructura afectada" clearInput="true" type="text" style="--placeholder-color:grey;font-size: 14px;" [autoGrow]="true" rows="1"></ion-textarea>
+        </ion-item>
+      </ion-card>
+      <ion-card center>
+        <ion-item>
+          <ion-label position="stacked">Acciones a realizar</ion-label>
+          <ion-textarea formControlName="acciones" placeholder="Inidcar acciones a realizar" clearInput="true" type="text" style="--placeholder-color:grey;font-size: 14px;" [autoGrow]="true" rows="1"></ion-textarea>
+        </ion-item>
+      </ion-card> -->
+      <!-- <ion-list style="margin-top: 5%;background: transparent;" lines="none">
+        <ion-item-sliding *ngFor="let file of images;let i = index" >
+          <ion-item style="--background: transparent;">
+            <ion-img [src]="file.data" style="height: 80%;width: 100%;"></ion-img>
+          </ion-item>
+          <ion-item-options  side="end">
+            <ion-item-option expandable color="danger"  (click)="deleteImage(file)"><ion-icon slot="icon-only" name="trash"></ion-icon>Eliminar</ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+      <ion-button expand="block" color="botonazul" (click)="presentActionSheet()">Adjuntar Foto</ion-button> -->
+    </form>
+  </section>
+  <section *ngIf="tab == 3">
+    <ion-item lines="none" style="--background: transparent;">
+      <ion-title style="margin-left: -3%;">
+        <div class="content">
+          Datos complementarios
+        </div>
+      </ion-title>
+      <ion-button color="botonazul" (click)="tab = 0;(internet ? mostrarMapa = true : '');" slot="end" fill="outline">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-item>
+    <form [formGroup]="thirdFormGroup">
+      <ion-card center>
+        <ion-item>
+          <ion-label position="stacked">Infraestructura Afectada</ion-label>
+          <ion-textarea formControlName="infraestructura" placeholder="Agregar infraestructura afectada" clearInput="true" type="text" style="--placeholder-color:grey;font-size: 14px;" [autoGrow]="true" rows="2"></ion-textarea>
+        </ion-item>
+      </ion-card>
+      <ion-card center>
+        <ion-item>
+          <ion-label position="stacked">Acciones a realizar</ion-label>
+          <ion-textarea formControlName="acciones" placeholder="Inidcar acciones a realizar" clearInput="true" type="text" style="--placeholder-color:grey;font-size: 14px;" [autoGrow]="true" rows="2"></ion-textarea>
+        </ion-item>
+      </ion-card>
       <ion-list style="margin-top: 5%;background: transparent;" lines="none">
         <ion-item-sliding *ngFor="let file of images;let i = index" >
           <ion-item style="--background: transparent;">
@@ -156,7 +206,7 @@
       <ion-button expand="block" color="botonazul" (click)="presentActionSheet()">Adjuntar Foto</ion-button>
     </form>
   </section>
-  <section *ngIf="tab == 3">
+  <section *ngIf="tab == 4">
     <ion-item lines="none" style="--background: transparent;">
       <ion-title style="margin-left: -3%;">Resumen</ion-title>
       <ion-button color="botonazul" (click)="tab = 0;(internet ? mostrarMapa = true : '');" slot="end" fill="outline">
@@ -208,7 +258,7 @@
       <ion-button fill="clear" color="light" (click)="selectTab(tab,false,true)" *ngIf="tab > 0">
         Volver <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
       </ion-button>
-      <ion-button fill="clear" color="light" (click)="selectTab(tab,true,false)" *ngIf="tab < 3">
+      <ion-button fill="clear" color="light" (click)="selectTab(tab,true,false)" *ngIf="tab < 4">
         Continuar <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
       </ion-button>
     </div>
@@ -223,6 +273,10 @@
       <ion-icon name="create"></ion-icon>
     </ion-segment-button>
     <ion-segment-button  value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
+      <ion-label>Adicional</ion-label>
+      <ion-icon name="warning"></ion-icon>
+    </ion-segment-button>
+    <ion-segment-button  value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
       <ion-label>Resumen</ion-label>
       <ion-icon name="document-text"></ion-icon>
     </ion-segment-button>

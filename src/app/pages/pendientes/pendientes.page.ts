@@ -91,7 +91,7 @@ iconEnviando = false;
   copyString(data){
     if(this.tipo == 'vialidad'){
       this.clipboard.copy(this._vs.recuperarXML(data));
-      this.presentToast('Se ha copiado en el portapapeles el XML del servicio')
+      this.presentToast('Ahora se puede pegar en un correo o por el medio preferido para informar del problema.',null,null,'Se ha copiado en el portapapeles el XML del servicio')
     }else{
       this.clipboard.copy(this._ds.recuperarXML(data));
       this.presentToast('Se ha copiado en el portapapeles el XML del servicio')
@@ -160,8 +160,9 @@ iconEnviando = false;
     // this.loadFiles()
   }
 
-  async presentToast(message,duration?,cerrar?) {
+  async presentToast(message,duration?,cerrar?,header?) {
     this.toast = await this.toastController.create({
+      header:header ? header : null,
       message: message,
       cssClass: 'toast-custom-class',
       mode:'ios',

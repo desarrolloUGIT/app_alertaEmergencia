@@ -35,6 +35,12 @@ ion-content {
   }
 
 
+  .content {
+    // display: flex;
+    align-items: center;
+    white-space: break-spaces;
+  }
+  
   .select-css {
     --height: 50%;
   --border-radius: 16px;

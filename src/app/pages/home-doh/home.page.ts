@@ -112,6 +112,7 @@ export class HomePage implements OnInit {
   footer = true;
   mostrarMapa = false;
   activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+  activosActualizar = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
   tabActual = 0;
   fechaActualizar = new Date();
   actualizar = false;
@@ -202,31 +203,6 @@ export class HomePage implements OnInit {
     }else{
       this.loadMapNotVialidad()
     }
-
-    // const alert = await this.alertctrl.create({
-    //   header: 'Conexión Establecida',
-    //   message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
-    //   // buttons: ['OK'],
-    //   mode:'ios',
-    //   buttons: [{
-    //     text: 'No, lo haré despues',
-    //     role: 'cancel',
-    //     cssClass: 'secondary',
-    //       handler: () => {
-    //         this.reiniciar = true;
-    //         this._us.nextmessage('buscarPendientes') 
-    //       }
-    //     },{
-    //       text: 'Si, reiniciar',
-    //       id: 'confirm-button',
-    //       handler: () => {
-    //         this.reiniciar = false;
-    //         window.location.reload()
-    //       }
-    //     }
-    //   ]
-    // });
-    // await alert.present()
   }
 
   ngOnInit(){
@@ -239,7 +215,7 @@ export class HomePage implements OnInit {
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region == '20' ? '13' : this.region;
       if(this._us.fechaActualizacion){
-        if((this._us.fechaActualizar(this._us.fechaActualizacion) < this._us.fechaActualizar(this.fechaActualizar))){
+        if((this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(this.fechaActualizar,'fecha'))){
           console.log('La fecha guardada es menor')
           this.actualizar = true;
           this._us.fechaActualizacion = new Date()
@@ -333,7 +309,9 @@ export class HomePage implements OnInit {
     })
     this.thirdFormGroup = this._formBuilder.group({
       titulo: [null,Validators.compose([Validators.maxLength(100),Validators.required])],
-      descripcion: [null,Validators.compose([Validators.maxLength(300)])],
+      descripcion: [null],
+      infraestructura: [null],
+      acciones: [null],
     });  
   }
 
@@ -1062,6 +1040,8 @@ export class HomePage implements OnInit {
             // this.activosVial = arr;
           }else{
             if(region == '20'){
+              this._ds.cargandoActivos = true;
+              this._ds.activoRegion = 1;
               this.activosNacional(1)
             }else{
               this._http.get('assets/doh/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
@@ -1069,7 +1049,7 @@ export class HomePage implements OnInit {
                   if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
                     var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
                     path.forEach(p=>{
-                      this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                      this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
                         "ASSETNUM": p.LOCATION[0],
                         "DESCRIPTION": p.DESCRIPTION[0],
                         "SITEID": p.SITEID[0],
@@ -1080,13 +1060,20 @@ export class HomePage implements OnInit {
                         }
                       })
                     })
+                    this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+                    this.activosPorRegion = this.activosActualizar;
                     this.activosEncontrados = true;
                   }else{
                     this.nohayActivos = true;
                   }
                   if(this.platform.is('capacitor')){
                     if(this.actualizar){
+                      this._ds.cargandoActivos = true;
+                      this._ds.activoRegion = this.region;
                       this.actualizarActivosDOH(this.region)
+                    }else{
+                      this._ds.cargandoActivos = false;
+                      this._ds.activoRegion = null;
                     }
                   }
                 })
@@ -1095,7 +1082,7 @@ export class HomePage implements OnInit {
                   if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
                     var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
                     path.forEach(p=>{
-                      this.activosPorRegion[Number(p.REGION[0] - 1)].push({
+                      this.activosActualizar[Number(p.REGION[0] - 1)].push({
                         "ASSETNUM": p.LOCATION[0],
                         "DESCRIPTION": p.DESCRIPTION[0],
                         "SITEID": p.SITEID[0],
@@ -1106,13 +1093,20 @@ export class HomePage implements OnInit {
                         }
                       })
                     })
+                    this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+                    this.activosPorRegion = this.activosActualizar;
                     this.activosEncontrados = true;
                   }else{
                     this.nohayActivos = true;
                   }
                   if(this.platform.is('capacitor')){
                     if(this.actualizar){
+                      this._ds.cargandoActivos = true;
+                      this._ds.activoRegion = this.region;
                       this.actualizarActivosDOH(this.region)
+                    }else{
+                      this._ds.cargandoActivos = false;
+                      this._ds.activoRegion = null;
                     }
                   }
                 })
@@ -1123,14 +1117,18 @@ export class HomePage implements OnInit {
       })
     }else{
       if(region == '20'){
+        this._ds.cargandoActivos = true;
+        this._ds.activoRegion = 1;
         this.activosNacional(1)
       }else{
+        this._ds.cargandoActivos = true;
+        this._ds.activoRegion = this.region;
         this._http.get('assets/doh/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
           this._us.xmlToJson(res).then((result:any)=>{
             if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
               path.forEach(p=>{
-                this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
                   "ASSETNUM": p.LOCATION[0],
                   "DESCRIPTION": p.DESCRIPTION[0],
                   "SITEID": p.SITEID[0],
@@ -1141,6 +1139,8 @@ export class HomePage implements OnInit {
                   }
                 })
               })
+              this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+              this.activosPorRegion = this.activosActualizar;
               this.activosEncontrados = true;
             }else{
               this.nohayActivos = true;
@@ -1149,6 +1149,9 @@ export class HomePage implements OnInit {
               if(this.actualizar){
                 this.actualizarActivosDOH(this.region)
               }
+            }else{
+              this._ds.cargandoActivos = false;
+              this._ds.activoRegion = null;
             }
           })
         },err=>{
@@ -1156,7 +1159,7 @@ export class HomePage implements OnInit {
             if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
               path.forEach(p=>{
-                this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
                   "ASSETNUM": p.LOCATION[0],
                   "DESCRIPTION": p.DESCRIPTION[0],
                   "SITEID": p.SITEID[0],
@@ -1167,6 +1170,8 @@ export class HomePage implements OnInit {
                   }
                 })
               })
+              this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+              this.activosPorRegion = this.activosActualizar;
               this.activosEncontrados = true;
             }else{
               this.nohayActivos = true;
@@ -1175,6 +1180,9 @@ export class HomePage implements OnInit {
               if(this.actualizar){
                 this.actualizarActivosDOH(this.region)
               }
+            }else{
+              this._ds.cargandoActivos = false;
+              this._ds.activoRegion = null;
             }
           })
         })
@@ -1188,7 +1196,7 @@ export class HomePage implements OnInit {
        if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
         var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
         path.forEach(p=>{
-          this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+          this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
             "ASSETNUM": p.LOCATION[0],
             "DESCRIPTION": p.DESCRIPTION[0],
             "SITEID": p.SITEID[0],
@@ -1202,13 +1210,19 @@ export class HomePage implements OnInit {
        }
         const newVuelta = vuelta + 1;
         if(newVuelta > 16){
+          this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+          this.activosPorRegion = this.activosActualizar;
           this.activosEncontrados = true;      
           if(this.platform.is('capacitor')){
             if(this.actualizar){
               this.actualizarActivosDOH(this.region,1)
             }
+          }else{
+            this._ds.cargandoActivos = false;
+            this._ds.activoRegion = null;
           }
         }else{
+          this._ds.activoRegion = newVuelta;
           this.activosNacional(newVuelta)
         }
         
@@ -1218,7 +1232,7 @@ export class HomePage implements OnInit {
         if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
           path.forEach(p=>{
-            this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+            this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
               "ASSETNUM": p.LOCATION[0],
               "DESCRIPTION": p.DESCRIPTION[0],
               "SITEID": p.SITEID[0],
@@ -1232,13 +1246,19 @@ export class HomePage implements OnInit {
         }
         const newVuelta = vuelta + 1;
         if(newVuelta > 16){
+          this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+          this.activosPorRegion = this.activosActualizar;
           this.activosEncontrados = true;      
           if(this.platform.is('capacitor')){
             if(this.actualizar){
               this.actualizarActivosDOH(this.region,1)
             }
+          }else{
+            this._ds.cargandoActivos = false;
+            this._ds.activoRegion = null;
           }
         }else{
+          this._ds.activoRegion = newVuelta;
           this.activosNacional(newVuelta)
         }
       })
@@ -1254,7 +1274,7 @@ export class HomePage implements OnInit {
               if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
                 path.forEach(p=>{
-                  this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                  this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
                     "ASSETNUM": p.LOCATION[0],
                     "DESCRIPTION": p.DESCRIPTION[0],
                     "SITEID": p.SITEID[0],
@@ -1268,6 +1288,10 @@ export class HomePage implements OnInit {
               }
               const newVuelta = vuelta + 1;
               if(newVuelta > 16){
+                this._ds.cargandoActivos = false;
+                this._ds.activoRegion = null;
+                this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+                this.activosPorRegion = this.activosActualizar;
                 this.db.open().then(()=>{
                   this.db.transaction(rx=>{
                     rx.executeSql('delete from activos', [], ()=>{
@@ -1279,13 +1303,12 @@ export class HomePage implements OnInit {
                         })
                       })
                     })
-                  }).then(()=>{
-                    // Termina de ingresar nivelAlerta
                   }).catch(()=>{
                     this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
                       if(data.rows.length > 0){
                         var arr = []
                         var AR = Array.from({length: data.rows.length}, (x, i) => i);
+                        this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                         AR.forEach(i=>{
                           var tmp = {
                             ASSETNUM:data.rows.item(i).id,
@@ -1305,12 +1328,17 @@ export class HomePage implements OnInit {
                   })
                 })
               }else{
-                this.actualizarActivosDOH(region,vuelta+1)
+                this._ds.activoRegion = newVuelta
+                this.actualizarActivosDOH(region,newVuelta)
               }
             })
           }else{
             const newVuelta = vuelta + 1;
             if(newVuelta > 16){
+              this._ds.cargandoActivos = false;
+              this._ds.activoRegion = null;
+              this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+              this.activosPorRegion = this.activosActualizar;
               this.db.open().then(()=>{
                 this.db.transaction(rx=>{
                   rx.executeSql('delete from activos', [], ()=>{
@@ -1322,12 +1350,11 @@ export class HomePage implements OnInit {
                       })
                     })
                   })
-                }).then(()=>{
-                  // Termina de ingresar nivelAlerta
                 }).catch(()=>{
                   this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
                     if(data.rows.length > 0){
                       var arr = []
+                      this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                       var AR = Array.from({length: data.rows.length}, (x, i) => i);
                       AR.forEach(i=>{
                         var tmp = {
@@ -1350,11 +1377,16 @@ export class HomePage implements OnInit {
                 })
               })
             }else{
+              this._ds.activoRegion = newVuelta
               this.actualizarActivosDOH(region,vuelta+1)
             }
           }
         })
       }else{
+        this._ds.cargandoActivos = false;
+        this._ds.activoRegion = null;
+        this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+        this.activosPorRegion = this.activosActualizar;
         this.db.open().then(()=>{
           this.db.transaction(rx=>{
             rx.executeSql('delete from activos', [], ()=>{
@@ -1372,6 +1404,7 @@ export class HomePage implements OnInit {
             this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
               if(data.rows.length > 0){
                 var arr = []
+                this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                 var AR = Array.from({length: data.rows.length}, (x, i) => i);
                 AR.forEach(i=>{
                   var tmp = {
@@ -1400,7 +1433,7 @@ export class HomePage implements OnInit {
             if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
               path.forEach(p=>{
-                this.activosPorRegion[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
                   "ASSETNUM": p.LOCATION[0],
                   "DESCRIPTION": p.DESCRIPTION[0],
                   "SITEID": p.SITEID[0],
@@ -1411,6 +1444,10 @@ export class HomePage implements OnInit {
                   }
                 })
               })
+              this._ds.cargandoActivos = false;
+              this._ds.activoRegion = null;
+              this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+              this.activosPorRegion = this.activosActualizar;
               this.db.open().then(()=>{
                 this.db.transaction(rx=>{
                   rx.executeSql('delete from activos', [], ()=>{
@@ -1428,6 +1465,7 @@ export class HomePage implements OnInit {
                   this.db.executeSql('SELECT * FROM activos', []).then((data)=>{
                     if(data.rows.length > 0){
                       var arr = []
+                      this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                       var AR = Array.from({length: data.rows.length}, (x, i) => i);
                       AR.forEach(i=>{
                         var tmp = {
@@ -1731,7 +1769,7 @@ export class HomePage implements OnInit {
      this._us.cargar_storage().then(()=>{
       let data = {
         titulo:this.thirdFormGroup.value.titulo,
-        descripcion:this.thirdFormGroup.value.descripcion ? this.thirdFormGroup.value.descripcion : '',
+        descripcion:this.thirdFormGroup.value.descripcion ? 'Descripción:\n'+this.thirdFormGroup.value.descripcion : '',
         usuario:this._us.user.user,
         lat:this.dataPosicion.lat,
         lng:this.dataPosicion.lng,
@@ -1748,6 +1786,8 @@ export class HomePage implements OnInit {
         elemento:this.secondFormGroup.value.elemento ? this.secondFormGroup.value.elemento : '',
         destino:this.secondFormGroup.value.destino
       }
+      data.descripcion = this.thirdFormGroup.value.infraestructura ? data.descripcion+'\n\nInfraestructura Comprometida:\n'+this.thirdFormGroup.value.infraestructura : data.descripcion;
+      data.descripcion = this.thirdFormGroup.value.acciones ? data.descripcion+'\n\nAcciones:\n'+this.thirdFormGroup.value.acciones : data.descripcion;
       if(this.firstFormGroup.value.activoSeleccionado){
         data.locations = this.firstFormGroup.value.activoSeleccionado.ASSETNUM
       }else{ 
@@ -1909,12 +1949,18 @@ export class HomePage implements OnInit {
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(dat.rows.length + 1)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
-                        this.deleteImage(this.images[0])
+                          console.log('ACA GUARDO')
+                        if(this.picture){
+                          this.deleteImage(this.images[0])
+                        }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
-                      }).catch(()=>{
-                        this.deleteImage(this.images[0])
-                        this.volverInicio()
+                      }).catch((err)=>{
+                        console.log('NO GUARDO ->',JSON.stringify(err))
+                if(this.picture){
+                  this.deleteImage(this.images[0])
+                }
+                                this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       })
                     }else{
@@ -1925,11 +1971,15 @@ export class HomePage implements OnInit {
                         path:SAVE_IMAGE_DIR+"/"+'save_1_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
-                        this.deleteImage(this.images[0])
+                          if(this.picture){
+                            this.deleteImage(this.images[0])
+                          }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       }).catch(()=>{
-                        this.deleteImage(this.images[0])
+                        if(this.picture){
+                          this.deleteImage(this.images[0])
+                        }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       })

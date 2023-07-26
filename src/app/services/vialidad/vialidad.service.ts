@@ -17,6 +17,8 @@ import { HttpClient } from '@angular/common/http';
 })
 export class VialidadService {
 
+  cargandoActivos = false;
+  activoRegion;
   constructor(public _us:UsuarioService, public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite,public http:HttpClient) { }
 
   dominios(tipo){
@@ -149,7 +151,7 @@ export class VialidadService {
                     <!--Optional:-->
                     <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
                     <!--Optional:-->
-                    <max:DOCUMENT changed="?">`+data.titulo+`</max:DOCUMENT>
+                    <max:DOCUMENT changed="?">FOTO</max:DOCUMENT>
                     <!--Optional:-->
                     <max:DOCUMENTDATA changed="?">`+data.picture+`</max:DOCUMENTDATA>
                     <!--Optional:-->
@@ -157,7 +159,7 @@ export class VialidadService {
                     <!--Optional:-->
                     <max:UPLOAD changed="?">1</max:UPLOAD>
                     <!--Optional:-->
-                    <max:URLNAME changed="?">`+data.titulo+`</max:URLNAME>
+                    <max:URLNAME changed="?">FOTO</max:URLNAME>
                     <!--Optional:-->
                     <max:URLTYPE changed="?">FILE</max:URLTYPE>
                   </max:DOCLINKS>
@@ -259,7 +261,7 @@ export class VialidadService {
                     <!--Optional:-->
                     <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
                     <!--Optional:-->
-                    <max:DOCUMENT changed="?">`+data.titulo+`</max:DOCUMENT>
+                    <max:DOCUMENT changed="?">FOTO</max:DOCUMENT>
                     <!--Optional:-->
                     <max:DOCUMENTDATA changed="?">`+data.picture+`</max:DOCUMENTDATA>
                     <!--Optional:-->
@@ -267,7 +269,7 @@ export class VialidadService {
                     <!--Optional:-->
                     <max:UPLOAD changed="?">1</max:UPLOAD>
                     <!--Optional:-->
-                    <max:URLNAME changed="?">`+data.titulo+`</max:URLNAME>
+                    <max:URLNAME changed="?">FOTO</max:URLNAME>
                     <!--Optional:-->
                     <max:URLTYPE changed="?">FILE</max:URLTYPE>
                   </max:DOCLINKS>

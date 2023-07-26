@@ -4,7 +4,9 @@
       <ion-menu-button style="color: white;" ></ion-menu-button>
     </ion-buttons>
     <ion-title>
-      Crear Emergencia
+      <div class="content">
+        {{_vs.cargandoActivos && _vs.activoRegion  ? 'Actualizando activos de la región '+_vs.activoRegion :  'Crear Emergencia'}}<ion-spinner *ngIf="_vs.cargandoActivos && _vs.activoRegion" color="light" style="margin: 0px 0px -11px 0px;" name="dots"></ion-spinner>
+      </div>
     </ion-title>
     <ion-buttons *ngIf="iconEnviando || this._us.enviando" slot="end">
       <ion-button disabled size="small" color="light" >
@@ -13,7 +15,7 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar mode="ios"  *ngIf="(mostrarMapa) || (!internet && tab == 0)">
+  <ion-toolbar mode="ios"  *ngIf="(mostrarMapa && !_vs.cargandoActivos) || (!internet && tab == 0)">
     <ion-searchbar mode="ios" color="light"  search-icon="red-vial-black" [disabled]="!regionSelec" placeholder="Buscar camino o rol" style="margin-top: 0%;" (ionCancel)="buscandoActivos = []" autoclomplete="'on'" (ionInput)="buscarActivos($event)"></ion-searchbar>
     <ion-buttons  slot="end">
       <ion-button size="small" color="light" (click)="presentPopoverFiltro($event)">
@@ -60,7 +62,7 @@
       </ion-accordion-group>
     </div>
     <div   id="container" [style.height]="mostrarMapa? '100%' : '0'"> 
-      <img class="pinCenter" src="assets/img/pin.png" alt="" *ngIf="mostrarMapa && internet">
+      <img class="pinCenter" src="assets/img/pin.png" style="pointer-events: none;" alt="" *ngIf="mostrarMapa && internet">
       <ion-button expand="block" class="buscarCamino" mode="ios" [disabled]="buscando"  color="botonazul" shape="round" size="small" (click)="buscarCamino()" *ngIf="mostrarMapa && internet">
         Buscar Camino <ion-icon *ngIf="!buscando" slot="end" name="chevron-forward-outline"></ion-icon><ion-spinner slot="end" *ngIf="buscando" name="circles"></ion-spinner>
       </ion-button>   

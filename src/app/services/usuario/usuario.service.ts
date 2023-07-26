@@ -52,6 +52,8 @@ export class UsuarioService {
     'Accept': "text/plain",
     'Content-Type': "text/plain",
   };
+  horas = ['08:00','12:00','16:00','20:00']
+  puntero = 0;
   images = [];
   seleccionMapa = 'si';
   coordenadasRegion = [
@@ -165,6 +167,11 @@ export class UsuarioService {
               this.seleccionMapa = seleccionMapa;
             }
           });
+          this.storage.getItem("puntero").then(puntero=>{
+            if(puntero){
+              this.puntero = Number(puntero);
+            }
+          });
           this.storage.getItem("user").then(user=>{
             if(user){
               this.user =JSON.parse(user);
@@ -204,6 +211,7 @@ export class UsuarioService {
           this.conexion = localStorage.getItem("conexion");
           this.token_user = localStorage.getItem("token_user");
           this.menuType = localStorage.getItem("menuType");
+          this.puntero = Number(localStorage.getItem("puntero"));
           this.fechaActualizacion = JSON.parse(localStorage.getItem("fechaActualizacion"));
           this.tokenESRI = Number(localStorage.getItem("tokenESRI"));
           this.user = JSON.parse(localStorage.getItem("user"));
@@ -266,6 +274,7 @@ export class UsuarioService {
     this.storage.setItem('user', JSON.stringify(usuario));
     this.storage.setItem('tokenESRI', String(226));
     this.storage.setItem('seleccionMapa', 'si');
+    this.storage.setItem('puntero', '0');
     var menuType = '';
     // if (res.DEFSITE == "APR" || res.DEFSITE == "DOH-ALL" || res.DEFSITE == "DOH-CAUC" || res.DEFSITE == "DOH-RIEG") {
     //   menuType = "APR";
@@ -277,6 +286,7 @@ export class UsuarioService {
     localStorage.setItem('usuario', JSON.stringify(res));
     localStorage.setItem('conexion', 'si');
     localStorage.setItem('seleccionMapa', 'si');
+    localStorage.setItem('puntero', '0');
     localStorage.setItem('user', JSON.stringify(usuario));
     localStorage.setItem('tokenESRI', String(226));
     localStorage.setItem('menuType', menuType);
@@ -297,6 +307,7 @@ export class UsuarioService {
           this.storage.remove('usuario');
           this.storage.remove('menuType');
           this.storage.remove('fechaActualizacion');
+          this.storage.remove('puntero');
         }else{
           localStorage.removeItem('token_user');
           localStorage.removeItem('conexion');
@@ -304,6 +315,7 @@ export class UsuarioService {
           localStorage.removeItem('usuario');
           localStorage.removeItem('menuType');
           localStorage.removeItem('fechaActualizacion');
+          localStorage.removeItem('puntero');
         }
         this.usuario = {
           DEFSITE:'',
@@ -322,7 +334,11 @@ export class UsuarioService {
           },
           STATUS:'',
           USERID:''
-         };
+         }
+         this.fechaActualizacion = null;
+         this.puntero = null;
+         this.enviando = false;
+
          if(this.platform.is('capacitor')){
           this.sqlite.deleteDatabase({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((re)=>{
             this.loadFiles(IMAGE_DIR)
@@ -374,9 +390,6 @@ export class UsuarioService {
     });
   }
 
-
-  
-
   fecha(fech){
     var now = new Date(fech);
     var month = JSON.stringify(now.getMonth() + 1);
@@ -396,7 +409,7 @@ export class UsuarioService {
     return fec;
   }
 
-  fechaActualizar(fech){
+  fechaActualizar(fech,type){
     var now = new Date(fech);
     var month = JSON.stringify(now.getMonth() + 1);
     var horaN = JSON.stringify(now.getHours());
@@ -411,7 +424,12 @@ export class UsuarioService {
     }if(minutos.length == 1){
       minutos = "0"+minutos;
     }         
-    var fec = now.getFullYear()+'-'+month+'-'+dia;
+    if(type == 'hora'){
+      var fec = now.getFullYear()+'-'+month+'-'+dia+' '+horaN+':'+minutos;
+    }else{
+      var fec = now.getFullYear()+'-'+month+'-'+dia;
+    }
+    // var fec = horaN+':'+minutos;
     return fec;
   }
 

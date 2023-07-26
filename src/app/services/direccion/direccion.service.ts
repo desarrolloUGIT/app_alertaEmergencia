@@ -20,6 +20,8 @@ export class DireccionService {
     'Accept': "text/plain",
     'Content-Type': "text/plain",
   };
+  cargandoActivos = false;
+  activoRegion;
   constructor(public _us:UsuarioService, public platform:Platform,public network:Network,public toastController: ToastController,private sqlite: SQLite) { }
 
   activos_(){ 
@@ -154,7 +156,7 @@ export class DireccionService {
                    <!--Optional:-->
                    <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
                    <!--Optional:-->
-                   <max:DOCUMENT changed="?">`+data.titulo+`</max:DOCUMENT>
+                   <max:DOCUMENT changed="?">Foto</max:DOCUMENT>
                    <!--Optional:-->
                    <max:DOCUMENTDATA changed="?">`+data.picture+`</max:DOCUMENTDATA>
                    <!--Optional:-->
@@ -162,7 +164,7 @@ export class DireccionService {
                    <!--Optional:-->
                    <max:UPLOAD changed="?">1</max:UPLOAD>
                    <!--Optional:-->
-                   <max:URLNAME changed="?">`+data.titulo+`</max:URLNAME>
+                   <max:URLNAME changed="?">PRUEBA</max:URLNAME>
                    <!--Optional:-->
                    <max:URLTYPE changed="?">FILE</max:URLTYPE>
                 </max:DOCLINKS>
@@ -257,7 +259,7 @@ export class DireccionService {
                    <!--Optional:-->
                    <max:DOCTYPE changed="?">Attachments</max:DOCTYPE>
                    <!--Optional:-->
-                   <max:DOCUMENT changed="?">`+data.titulo+`</max:DOCUMENT>
+                   <max:DOCUMENT changed="?">Foto</max:DOCUMENT>
                    <!--Optional:-->
                    <max:DOCUMENTDATA changed="?">`+data.picture+`</max:DOCUMENTDATA>
                    <!--Optional:-->
@@ -265,7 +267,7 @@ export class DireccionService {
                    <!--Optional:-->
                    <max:UPLOAD changed="?">1</max:UPLOAD>
                    <!--Optional:-->
-                   <max:URLNAME changed="?">`+data.titulo+`</max:URLNAME>
+                   <max:URLNAME changed="?">PRUEBA</max:URLNAME>
                    <!--Optional:-->
                    <max:URLTYPE changed="?">FILE</max:URLTYPE>
                 </max:DOCLINKS>

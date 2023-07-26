@@ -53,5 +53,9 @@ export class PopoverPage implements OnInit {
     let data = { red:true };
     this.popctrl.dismiss(data);
   }
+  actualizar() {
+    let data = { actualizar:true };
+    this.popctrl.dismiss(data);
+  }
 
 }
