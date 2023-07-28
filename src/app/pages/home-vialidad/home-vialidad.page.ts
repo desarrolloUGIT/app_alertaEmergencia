@@ -685,8 +685,8 @@ export class HomeVialidadPage implements OnInit {
                   this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
                   this.buscando = false;
                   this.tab = 1;
-                  const validacionKM = (this.km > this.firstFormGroup.value.km_f) ? this.firstFormGroup.value.km_f : (this.km < this.firstFormGroup.value.km_i ? this.firstFormGroup.value.km_i :this.km)
-                  this.myFunction({target:{value:validacionKM}},'i')
+                  const validacionKM = (Number(this.km) > Number(this.firstFormGroup.value.km_f)) ? this.firstFormGroup.value.km_f : (Number(this.km) < Number(this.firstFormGroup.value.km_i) ? this.firstFormGroup.value.km_i :this.km)
+                  // this.myFunction({target:{value:validacionKM}},'i')
                   this.firstFormGroup.controls['km_i'].setValue(validacionKM)
                   this.mostrarMapa = false;
                   this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
@@ -959,8 +959,9 @@ export class HomeVialidadPage implements OnInit {
         })
         calculos = this.sortJSON(calculos,'kilometro','asc')
         this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-        const validacionKM = (this.km > this.firstFormGroup.value.km_f) ? this.firstFormGroup.value.km_f : (this.km < this.firstFormGroup.value.km_i ? this.firstFormGroup.value.km_i :this.km)
-        this.myFunction({target:{value:validacionKM}},'i')
+        console.log(this.km,this.km_i,this.km_f,Number(this.km) > Number(this.firstFormGroup.value.km_f),Number(this.km) < Number(this.firstFormGroup.value.km_i))
+        const validacionKM = (Number(this.km) > Number(this.firstFormGroup.value.km_f)) ? this.firstFormGroup.value.km_f : (Number(this.km) < Number(this.firstFormGroup.value.km_i) ? this.firstFormGroup.value.km_i :this.km)
+        // this.myFunction({target:{value:validacionKM}},'i')
         this.firstFormGroup.controls['km_i'].setValue(validacionKM)
         this.buscando = false;
         this._us.seleccionMapa = 'si';
