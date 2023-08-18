@@ -258,7 +258,7 @@ export class HomePage implements OnInit {
         this.geolocate()
       },1000)
       if(this.platform.is('capacitor')){
-        this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+        this.sqlite.create({name:'mydbAlertaTempranaPROD',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
           db.executeSql('CREATE TABLE IF NOT EXISTS activos (id unique, name, cod, lugar,lat,lng)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS operatividad (id unique, name)',[])
           db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name,condition)',[]);
@@ -274,6 +274,9 @@ export class HomePage implements OnInit {
           }else{
             this.activosDOH(this.region);
           }
+          // this._ds.activos('16').subscribe((res:any)=>{
+          //   console.log('ACTIVOS->>>',res)
+          // })
           this.elemento()
         })
       }else{

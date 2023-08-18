@@ -164,29 +164,6 @@ export class HomeVialidadPage implements OnInit {
     this.mostrarMapa = true;
     this.tab = 0;
     this.loadMapVialidad()
-    // const alert = await this.alertctrl.create({
-    //   header: 'Conexión Establecida',
-    //   message: 'Se recomienda reiniciar la aplicación para reactiviar todos sus componentes de manera correcta, ¿deseas realizarlo automaticamente?',
-    //   // buttons: ['OK'],
-    //   mode:'ios',
-    //   buttons: [{
-    //     text: 'No, lo haré despues',
-    //     role: 'cancel',
-    //     cssClass: 'secondary',
-    //       handler: () => {
-    //         this._us.nextmessage('buscarPendientes') 
-    //       }
-    //     },{
-    //       text: 'Si, reiniciar',
-    //       id: 'confirm-button',
-    //       handler: () => {
-    //         window.location.reload()
-    //       }
-    //     }
-    //   ]
-    // });
-    // await alert.present()
-
   }
 
   iniciar(){
@@ -220,7 +197,6 @@ export class HomeVialidadPage implements OnInit {
           }
         })
       }else{
-        // console.log('FECHA EN EL SERVICIO 2 ->',(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(this.fechaActualizar,'fecha')),this._us.fechaActualizar(this._us.fechaActualizacion,'fecha'),this._us.fechaActualizar(this.fechaActualizar,'fecha'))
         if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(this.fechaActualizar,'fecha')){
           // ultima actualización fue el dia anterior
           this.actualizar = true;
@@ -246,10 +222,8 @@ export class HomeVialidadPage implements OnInit {
             }
           })
         }else{
-          // console.log('FECHA EN EL SERVICIO 3 ->',(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') == this._us.fechaActualizar(this.fechaActualizar,'fecha')),(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha'), this._us.fechaActualizar(this.fechaActualizar,'fecha')))
           if((this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') == this._us.fechaActualizar(this.fechaActualizar,'fecha'))){
           // buscar si hay hora disponible para actualziar el día actual
-          // console.log('FECHA EN EL SERVICIO 4 ->',this._us.fechaActualizar(this.fechaActualizar,'hora') > (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+this._us.horas[this._us.puntero]),this._us.fechaActualizar(this.fechaActualizar,'hora'), (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+this._us.horas[this._us.puntero]))
             if(this._us.fechaActualizar(this.fechaActualizar,'hora') > (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+this._us.horas[this._us.puntero])){
               // le toca actualizar
               this.actualizar = true;
@@ -302,7 +276,7 @@ export class HomeVialidadPage implements OnInit {
         this.obtenerGeolocalizacion()
       },1000)
     if(this.platform.is('capacitor')){
-      this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+      this.sqlite.create({name:'mydbAlertaTempranaPROD',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
         db.executeSql('CREATE TABLE IF NOT EXISTS nivelAlerta (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS transito (id unique, name)',[]);
         db.executeSql('CREATE TABLE IF NOT EXISTS elemento (id unique, name)',[]);
@@ -312,7 +286,6 @@ export class HomeVialidadPage implements OnInit {
         db.executeSql('CREATE TABLE IF NOT EXISTS historial (id, titulo, descripcion, fechaEmergencia, usuario, lat, lng, nivelalerta, region, name, date,codigo,elemento,transito,restriccion,competencia,km_i,km_f,error)',[]);
         this.db = db;
         this.nivelAlerta();
-        // this.elemento();
         this.transitos()
         this.restriccioN();
         if(this.region == '20'){
@@ -322,11 +295,15 @@ export class HomeVialidadPage implements OnInit {
           this.regionSelec = this.region;
           this.activosVialidad(this.region);
         }
+        // this._vs.activosVialidad('16').subscribe((res:any)=>{
+        //   if(res && res.status == '200'){
+        //     console.log('ACTIVOSS ->>>>>',res)
+        //   }
+        // })
         this.competencia = this.sortJSON(this.competencia,'VALUE','asc')
       })
     }else{
       this.nivelAlerta();
-      // this.elemento();
       this.transitos()
       this.restriccioN();
       if(this.region == '20'){

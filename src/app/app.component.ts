@@ -57,7 +57,7 @@ export class AppComponent {
     public _ds:DireccionService
   ) {
     if(this.platform.is('capacitor')){
-      this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
+      this.sqlite.create({name:'mydbAlertaTempranaPROD',location:'default'}).then((db:SQLiteObject)=>{
         this.db = db;
         if(this.network.type != 'unknown' && this.network.type != 'none'){
           console.log('ESTA CONECTADO A INTERNET')

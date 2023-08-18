@@ -47,7 +47,7 @@ iconEnviando = false;
         }
       })
       if(this.platform.is('capacitor')){
-        this.sqlite.create({name:'mydbAlertaTemprana',location:'default'}).then((db:SQLiteObject)=>{
+        this.sqlite.create({name:'mydbAlertaTempranaPROD',location:'default'}).then((db:SQLiteObject)=>{
           this.db = db;
           this._us.cargar_storage().then(()=>{
             if(this._us.usuario.DEFSITE != 'DV' && this._us.usuario.DEFSITE != 'VIALIDAD'){

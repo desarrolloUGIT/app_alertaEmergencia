@@ -340,7 +340,7 @@ export class UsuarioService {
          this.enviando = false;
 
          if(this.platform.is('capacitor')){
-          this.sqlite.deleteDatabase({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((re)=>{
+          this.sqlite.deleteDatabase({name:'mydbAlertaTempranaPROD',location:'default',createFromLocation:1}).then((re)=>{
             this.loadFiles(IMAGE_DIR)
             this.loadFiles(SAVE_IMAGE_DIR)
             resolve(true)

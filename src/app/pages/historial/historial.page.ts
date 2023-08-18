@@ -46,7 +46,7 @@ iconEnviando = false;
       })
       if(this.platform.is('capacitor')){
         this.presentLoader('Cargando historial ...').then(()=>{
-          this.sqlite.create({name:'mydbAlertaTemprana',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
+          this.sqlite.create({name:'mydbAlertaTempranaPROD',location:'default',createFromLocation:1}).then((db:SQLiteObject)=>{
             this.db = db;
             this._us.cargar_storage().then(()=>{
                 db.executeSql('SELECT * FROM historial', []).then((data)=>{
