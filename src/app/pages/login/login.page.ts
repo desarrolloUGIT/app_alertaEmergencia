@@ -124,9 +124,14 @@ export class LoginPage implements OnInit {
                         this._us.nextmessage('usuario_logeado') 
                         this.navctrl.navigateRoot('/home')
                       }else{
-                        this._us.cerrarSesion()           
-                        this.form.enable()             
-                        this.presentAlert('¡Atención!','La dirección asignada a tu usuario no esta disponible')
+                        if(this._us.usuario.DEFSITE == 'DAP'){
+                          this._us.nextmessage('usuario_logeado') 
+                          this.navctrl.navigateRoot('/home_dap')
+                        }else{
+                          this._us.cerrarSesion()           
+                          this.form.enable()             
+                          this.presentAlert('¡Atención!','La dirección asignada a tu usuario no esta disponible')
+                        }
                       }
                     }
                  })

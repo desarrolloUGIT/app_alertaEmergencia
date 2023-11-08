@@ -59,6 +59,10 @@ const routes: Routes = [
   {
     path: 'popover-filtro',
     loadChildren: () => import('./pages/popover-filtro/popover-filtro.module').then( m => m.PopoverFiltroPageModule)
+  },
+  {
+    path: 'home-dap',
+    loadChildren: () => import('./pages/home-dap/home-dap.module').then( m => m.HomeDapPageModule)
   }
 ];
 

@@ -644,13 +644,13 @@ export class HomeVialidadPage implements OnInit {
                 var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
                   return (item.codigo.indexOf(itemNew) > -1);
                 })
-                if(existeMAXIMO.length > 0){
+                if(1==1){
                   this.caminosEncontrados = temp;
                   this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-                  this.km_i = existeMAXIMO[0].km_i;
-                  this.km_f = existeMAXIMO[0].km_f;
-                  this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
-                  this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
+                  this.km_i = this.caminosEncontrados[0].km_i;
+                  this.km_f = this.caminosEncontrados[0].km_f;
+                  this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i == 0 ? '0' : this.caminosEncontrados[0].km_i)
+                  this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f == 0 ? '0' : this.caminosEncontrados[0].km_f)
                   this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
                   this.hoy = this._us.fecha(new Date())
                   var calculos = []
@@ -921,12 +921,13 @@ export class HomeVialidadPage implements OnInit {
       var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
         return (item.codigo.indexOf(itemNew) > -1);
       })
-      if(existeMAXIMO.length > 0){
+      // if(existeMAXIMO.length > 0){
+      if(1==1){
         this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-        this.km_i = existeMAXIMO[0].km_i;
-        this.km_f = existeMAXIMO[0].km_f;
-        this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
-        this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f) 
+        this.km_i = data.km_i;
+        this.km_f = data.km_f;
+        this.firstFormGroup.controls['km_i'].setValue( data.km_i == 0 ? '0' : data.km_i)
+        this.firstFormGroup.controls['km_f'].setValue( data.km_f == 0 ? '0' : data.km_f) 
         this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
         this.hoy = this._us.fecha(new Date())
         var calculos = []

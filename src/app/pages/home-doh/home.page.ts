@@ -1905,6 +1905,7 @@ export class HomePage implements OnInit {
                 console.log('******************** ERROR ENVIAR ******************** ')
               }
             },err=>{
+              console.log('ERROR DOH-> ',err)
               this.loader.dismiss()
               this.intento++
               this.estadoEnvioAlerta = 'fallido'
