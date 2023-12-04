@@ -1,6 +1,6 @@
 <ion-content>
   <ion-item mode="ios" *ngIf="region == '20'"  lines="none" style="--background: transparent;">
-    <ion-searchbar [disabled]="!regionSelec" animated mode="ios" placeholder="Buscar Activo" style="margin-top: 0%;" (ionCancel)="inicializar()" autoclomplete="'on'" (ionInput)="getActivos($event)"></ion-searchbar>
+    <ion-searchbar [disabled]="!regionSelec" animated mode="ios" placeholder="Buscar por nombre de activo" style="margin-top: 0%;" (ionCancel)="inicializar()" autoclomplete="'on'" (ionInput)="getActivos($event)"></ion-searchbar>
     <ion-buttons  slot="end">
       <ion-button size="small" color="medium" (click)="presentPopoverRegion($event)">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
@@ -8,7 +8,7 @@
     </ion-buttons>
   </ion-item>
   <ion-searchbar *ngIf="region != '20'" style="margin-top: 5%;" (ionCancel)="inicializar()" autoclomplete="'on'" (ionInput)="getActivos($event)"
-   showCancelButton="focus" cancelButtonText="Cancelar" animated placeholder="Buscar Activo"></ion-searchbar>
+   showCancelButton="focus" cancelButtonText="Cancelar" animated placeholder="Buscar por nombre de activo"></ion-searchbar>
 
   <ion-label>Activos mas cercanos según ubicación del marcador</ion-label>
   <div *ngIf="activosShow[0]">
@@ -29,10 +29,10 @@
               <ion-icon name="server" slot="start"></ion-icon>
               <ion-label>Infraestructura: {{item.SITEID}}</ion-label>
             </ion-item>
-            <!-- <ion-item>
-              <ion-icon name="map" slot="start"></ion-icon>
-              <ion-label>Región: {{item.activo.SERVICEADDRESS.REGIONDISTRICT}}</ion-label>
-            </ion-item> -->
+            <ion-item>
+              <ion-icon name="bookmark-outline" slot="start"></ion-icon>
+              <ion-label>Código: {{item.ASSETNUM}}</ion-label>
+            </ion-item>
             <ion-item lines="none">
               <ion-button (click)="selectActivo(item)" class="botoninicia" slot="end" size="small">Seleccionar</ion-button>
             </ion-item>

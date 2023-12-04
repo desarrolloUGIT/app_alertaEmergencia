@@ -23,6 +23,7 @@ export class ModalActivosPage implements OnInit {
     this.region = navParams.get('region');
     this.posicion = navParams.get('posicion');
     this.coord = navParams.get('coord');
+    this.regionSelec = navParams.get('regionSelect');
     this.calcularActivos()    
   }
 
@@ -129,7 +130,7 @@ async presentPopoverRegion(myEvent) {
 }
  
 selectActivo(e){
-  this.modalCtrl.dismiss(e)
+  this.modalCtrl.dismiss({data:e,regionSelect:this.regionSelec})
 }
 
 

@@ -51,6 +51,7 @@ export class DireccionService {
                         <max:SITEID operator="=">`+this._us.usuario.DEFSITE+`</max:SITEID>
                         <max:TYPE operator="=">OPERATIVO</max:TYPE>
                         <max:ESOBRA operator="=">1</max:ESOBRA>
+                        <max:STATUS operator="=" >ACTIVA</max:STATUS>
                         <max:SERVICEADDRESS >
                             <max:REGIONDISTRICT >`+(vuelta ? vuelta : this._us.usuario.PERSON.STATEPROVINCE)+`</max:REGIONDISTRICT>
                             <max:STATEPROVINCE >%</max:STATEPROVINCE>

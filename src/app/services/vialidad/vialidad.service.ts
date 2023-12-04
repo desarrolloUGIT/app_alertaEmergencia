@@ -49,7 +49,7 @@ export class VialidadService {
                           <max:DESCRIPTION >%</max:DESCRIPTION>
                           <!--Zero or more repetitions:-->
                           <max:ISLINEAR >1</max:ISLINEAR>
-                          <max:ROL>1</max:ROL>
+                          <max:ROL>%</max:ROL>
                           <!--Zero or more repetitions:-->
                           <max:REGION >`+(vuelta ? vuelta : this._us.usuario.PERSON.STATEPROVINCE)+`</max:REGION>
                           <!--Zero or more repetitions:-->

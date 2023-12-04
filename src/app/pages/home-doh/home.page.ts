@@ -126,6 +126,7 @@ export class HomePage implements OnInit {
   reiniciar = false;
   elementFinal = [];
   cargoMapa = false;
+  regionSelect;
   constructor(public _ds:DireccionService,private _formBuilder: FormBuilder,public _us:UsuarioService, public platform:Platform,public _http:HttpClient,public _modalCtrl:ModalController,public _navCtrl:NavController,
     private geolocation: Geolocation,public loadctrl:LoadingController,public alertController:AlertController,public _mc:MenuController,private sqlite: SQLite,private keyboard: Keyboard,public _vs:VialidadService,
     public toastController:ToastController,public actionSheetController: ActionSheetController,private animationCtrl: AnimationController,public alertctrl:AlertController,public popoverCtrl:PopoverController,
@@ -214,23 +215,28 @@ export class HomePage implements OnInit {
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region == '20' ? '13' : this.region;
-      if(this._us.fechaActualizacion){
-        if((this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(this.fechaActualizar,'fecha'))){
-          console.log('La fecha guardada es menor')
+      if(!this._us.fechaActualizacion){
+        //actualizar activos
+        // comparar fechas y buscar la sgte fecha-hora de actualizacion
+        this.actualizar = true;
+        var next = new Date()
+        next.setDate(next.getDate() +1)
+        this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+        this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+        localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      }else{
+        var hoyFecha = new Date()
+        if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(hoyFecha,'fecha')){
           this.actualizar = true;
-          this._us.fechaActualizacion = new Date()
-          this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
-          localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
+          var next = new Date()
+          next.setDate(next.getDate() +1)
+          this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+          this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+          localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
         }else{
-          console.log('La fecha es mayor o igual')
+          console.log('debe esperar hasta mañana para actualizar')
           this.actualizar = false;
         }
-      }else{
-        console.log('No existe una fecha previa de actualziacion')
-        this.actualizar = true;
-        this._us.fechaActualizacion = new Date()
-        this.storage.setItem('fechaActualizacion', JSON.stringify(new Date()));
-        localStorage.setItem('fechaActualizacion',JSON.stringify(new Date()))
       }
       this._us.coordenadasRegion.forEach(c=>{
         if(c.region == this.region){
@@ -1027,6 +1033,7 @@ export class HomePage implements OnInit {
             var arr = []
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
+              // console.log('ACA??->>>',data.rows.item(i).id)
               var tmp = {
                 ASSETNUM:data.rows.item(i).id,
                 DESCRIPTION:data.rows.item(i).name,
@@ -1052,16 +1059,19 @@ export class HomePage implements OnInit {
                   if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
                     var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
                     path.forEach(p=>{
-                      this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-                        "ASSETNUM": p.LOCATION[0],
-                        "DESCRIPTION": p.DESCRIPTION[0],
-                        "SITEID": p.SITEID[0],
-                        "SERVICEADDRESS": {
-                          "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                          "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                          "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                        }
-                      })
+                      if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+                        this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                          "ASSETNUM": p.LOCATION[0],
+                          "DESCRIPTION": p.DESCRIPTION[0],
+                          "SITEID": p.SITEID[0],
+                          "SERVICEADDRESS": {
+                            "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                            "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                            "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                          }
+                        })
+                      }
+
                     })
                     this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                     this.activosPorRegion = this.activosActualizar;
@@ -1085,16 +1095,19 @@ export class HomePage implements OnInit {
                   if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
                     var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
                     path.forEach(p=>{
-                      this.activosActualizar[Number(p.REGION[0] - 1)].push({
-                        "ASSETNUM": p.LOCATION[0],
-                        "DESCRIPTION": p.DESCRIPTION[0],
-                        "SITEID": p.SITEID[0],
-                        "SERVICEADDRESS": {
-                          "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                          "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                          "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                        }
-                      })
+                      if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+                        this.activosActualizar[Number(p.REGION[0] - 1)].push({
+                          "ASSETNUM": p.LOCATION[0],
+                          "DESCRIPTION": p.DESCRIPTION[0],
+                          "SITEID": p.SITEID[0],
+                          "SERVICEADDRESS": {
+                            "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                            "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                            "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                          }
+                        })
+                      }
+  
                     })
                     this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                     this.activosPorRegion = this.activosActualizar;
@@ -1131,16 +1144,19 @@ export class HomePage implements OnInit {
             if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
               path.forEach(p=>{
-                this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-                  "ASSETNUM": p.LOCATION[0],
-                  "DESCRIPTION": p.DESCRIPTION[0],
-                  "SITEID": p.SITEID[0],
-                  "SERVICEADDRESS": {
-                    "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                    "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                    "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                  }
-                })
+                if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+                  this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                    "ASSETNUM": p.LOCATION[0],
+                    "DESCRIPTION": p.DESCRIPTION[0],
+                    "SITEID": p.SITEID[0],
+                    "SERVICEADDRESS": {
+                      "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                      "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                      "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                    }
+                  })
+                }
+
               })
               this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
               this.activosPorRegion = this.activosActualizar;
@@ -1162,16 +1178,18 @@ export class HomePage implements OnInit {
             if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
               path.forEach(p=>{
-                this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-                  "ASSETNUM": p.LOCATION[0],
-                  "DESCRIPTION": p.DESCRIPTION[0],
-                  "SITEID": p.SITEID[0],
-                  "SERVICEADDRESS": {
-                    "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                    "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                    "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                  }
-                })
+                if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+                  this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                    "ASSETNUM": p.LOCATION[0],
+                    "DESCRIPTION": p.DESCRIPTION[0],
+                    "SITEID": p.SITEID[0],
+                    "SERVICEADDRESS": {
+                      "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                      "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                      "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                    }
+                  })
+                }
               })
               this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
               this.activosPorRegion = this.activosActualizar;
@@ -1199,16 +1217,21 @@ export class HomePage implements OnInit {
        if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
         var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
         path.forEach(p=>{
-          this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-            "ASSETNUM": p.LOCATION[0],
-            "DESCRIPTION": p.DESCRIPTION[0],
-            "SITEID": p.SITEID[0],
-            "SERVICEADDRESS": {
-              "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-              "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-              "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-            }
-          })
+          if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+            // console.log(Number(p.SERVICEADDRESS[0].LATITUDEY[0]),Number(p.SERVICEADDRESS[0].LONGITUDEX[0]))
+            this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+              "ASSETNUM": p.LOCATION[0],
+              "DESCRIPTION": p.DESCRIPTION[0],
+              "SITEID": p.SITEID[0],
+              "SERVICEADDRESS": {
+                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+              }
+            })
+          }
+
+
         })
        }
         const newVuelta = vuelta + 1;
@@ -1235,16 +1258,19 @@ export class HomePage implements OnInit {
         if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
           var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
           path.forEach(p=>{
-            this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-              "ASSETNUM": p.LOCATION[0],
-              "DESCRIPTION": p.DESCRIPTION[0],
-              "SITEID": p.SITEID[0],
-              "SERVICEADDRESS": {
-                "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-              }
-            })
+            if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+              this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                "ASSETNUM": p.LOCATION[0],
+                "DESCRIPTION": p.DESCRIPTION[0],
+                "SITEID": p.SITEID[0],
+                "SERVICEADDRESS": {
+                  "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                  "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                  "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                }
+              })
+            }
+
           })
         }
         const newVuelta = vuelta + 1;
@@ -1277,16 +1303,19 @@ export class HomePage implements OnInit {
               if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
                 var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
                 path.forEach(p=>{
-                  this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-                    "ASSETNUM": p.LOCATION[0],
-                    "DESCRIPTION": p.DESCRIPTION[0],
-                    "SITEID": p.SITEID[0],
-                    "SERVICEADDRESS": {
-                      "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                      "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                      "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                    }
-                  })
+                  if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+                    this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                      "ASSETNUM": p.LOCATION[0],
+                      "DESCRIPTION": p.DESCRIPTION[0],
+                      "SITEID": p.SITEID[0],
+                      "SERVICEADDRESS": {
+                        "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                        "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                        "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                      }
+                    })
+                  }
+
                 })
               }
               const newVuelta = vuelta + 1;
@@ -1436,16 +1465,19 @@ export class HomePage implements OnInit {
             if(result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0]){
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_OPERLOC_DOHRESPONSE[0].MOP_OPERLOC_DOHSET[0].LOCATIONS
               path.forEach(p=>{
-                this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
-                  "ASSETNUM": p.LOCATION[0],
-                  "DESCRIPTION": p.DESCRIPTION[0],
-                  "SITEID": p.SITEID[0],
-                  "SERVICEADDRESS": {
-                    "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
-                    "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
-                    "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
-                  }
-                })
+                if(Number(p.SERVICEADDRESS[0].LATITUDEY[0]) && String(p.LOCATION[0]).includes('SS')){
+                  this.activosActualizar[Number(p.SERVICEADDRESS[0].REGIONDISTRICT[0]) - 1].push({
+                    "ASSETNUM": p.LOCATION[0],
+                    "DESCRIPTION": p.DESCRIPTION[0],
+                    "SITEID": p.SITEID[0],
+                    "SERVICEADDRESS": {
+                      "LATITUDEY": Number(p.SERVICEADDRESS[0].LATITUDEY[0]),
+                      "LONGITUDEX": Number(p.SERVICEADDRESS[0].LONGITUDEX[0]),
+                      "REGIONDISTRICT": p.SERVICEADDRESS[0].REGIONDISTRICT[0],
+                    }
+                  })
+                }
+
               })
               this._ds.cargandoActivos = false;
               this._ds.activoRegion = null;
@@ -1562,18 +1594,20 @@ export class HomePage implements OnInit {
         activos:this.activosPorRegion,
         region:this.region,
         posicion:this.dataPosicion.region,
-        coord:olProj.toLonLat(this.marker.getGeometry().getCoordinates())
+        coord:olProj.toLonLat(this.marker.getGeometry().getCoordinates()),
+        regionSelect:this.regionSelect
       }
     });
     if(this.region == '20' || this.region == this.dataPosicion.region){
       modal.present();
       const { data } = await modal.onWillDismiss();
       if (data) {
-        this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-        this.dataPosicion.lat = data.SERVICEADDRESS.LATITUDEY;
-        this.dataPosicion.lng = data.SERVICEADDRESS.LONGITUDEX;
-        this.dataPosicion.region = data.SERVICEADDRESS.REGIONDISTRICT;
-        this.view.setCenter(olProj.transform([data.SERVICEADDRESS.LONGITUDEX,data.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
+        this.regionSelect = data.regionSelect
+        this.firstFormGroup.controls['activoSeleccionado'].setValue(data.data)
+        this.dataPosicion.lat = data.data.SERVICEADDRESS.LATITUDEY;
+        this.dataPosicion.lng = data.data.SERVICEADDRESS.LONGITUDEX;
+        this.dataPosicion.region = data.data.SERVICEADDRESS.REGIONDISTRICT;
+        this.view.setCenter(olProj.transform([data.data.SERVICEADDRESS.LONGITUDEX,data.data.SERVICEADDRESS.LATITUDEY], 'EPSG:4326', 'EPSG:3857'));
         this.obtenerUbicacionRegion()
         this.view.setZoom(15)
       }

@@ -59,6 +59,7 @@ export class HomeVialidadPage implements OnInit {
   @ViewChild('modal') modal: ElementRef;
   chile = new VectorLayer({})
   vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile/MapServer';
+  // vialidadRedVialURL = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/VIALIDAD/Red_Vial_Chile_/MapServer';
   flVialidad = new MapImageLayer({
     url: this.vialidadRedVialURL
   })
@@ -171,85 +172,122 @@ export class HomeVialidadPage implements OnInit {
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region;
       console.log('FECHA EN EL SERVICIO ->',this._us.fechaActualizacion,this._us.puntero)
+
       if(!this._us.fechaActualizacion){
         //actualizar activos
         // comparar fechas y buscar la sgte fecha-hora de actualizacion
         this.actualizar = true;
-        this._us.horas.forEach((h,i)=>{
-          if(this._us.fechaActualizar(this.fechaActualizar,'hora') < (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+h)){
-            this._us.puntero = i;
-            this._us.fechaActualizacion = (this.fechaActualizar)
-            this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-            localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-            this.storage.setItem('puntero', String(this._us.puntero));
-            localStorage.setItem('puntero',String(this._us.puntero))
-          }else{
-            if((i + 1) > this._us.horas.length){
-              this._us.puntero = 0;
-              var next = new Date()
-              next.setDate(next.getDate() +1)
-              this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
-              this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-              localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-              this.storage.setItem('puntero', String(this._us.puntero));
-              localStorage.setItem('puntero',String(this._us.puntero))
-            }
-          }
-        })
+        var next = new Date()
+        next.setDate(next.getDate() +1)
+        this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+        this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+        localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
       }else{
-        if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(this.fechaActualizar,'fecha')){
-          // ultima actualización fue el dia anterior
+        var hoyFecha = new Date()
+        if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(hoyFecha,'fecha')){
           this.actualizar = true;
-          this._us.horas.forEach((h,i)=>{
-            if(this._us.fechaActualizar(this.fechaActualizar,'hora') < (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+h)){
-              this._us.puntero = i;
-              this._us.fechaActualizacion = (this.fechaActualizar)
-              this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-              localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-              this.storage.setItem('puntero', String(this._us.puntero));
-              localStorage.setItem('puntero',String(this._us.puntero))
-            }else{
-              if((i + 1) > this._us.horas.length){
-                this._us.puntero = 0;
-                var next = new Date()
-                next.setDate(next.getDate() +1)
-                this._us.fechaActualizacion = (next)
-                this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-                localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-                this.storage.setItem('puntero', String(this._us.puntero));
-                localStorage.setItem('puntero',String(this._us.puntero))
-              }
-            }
-          })
+          var next = new Date()
+          next.setDate(next.getDate() +1)
+          this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+          this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+          localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
         }else{
-          if((this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') == this._us.fechaActualizar(this.fechaActualizar,'fecha'))){
-          // buscar si hay hora disponible para actualziar el día actual
-            if(this._us.fechaActualizar(this.fechaActualizar,'hora') > (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+this._us.horas[this._us.puntero])){
-              // le toca actualizar
-              this.actualizar = true;
-              this._us.puntero = (this._us.puntero + 1) >= 4 ? 0 : (this._us.puntero + 1)
-              if(this._us.puntero = 0){
-                var next = new Date()
-                next.setDate(next.getDate() +1)
-                this._us.fechaActualizacion = (next)
-              }else{
-                this._us.fechaActualizacion = (this.fechaActualizar)
-              }
-              this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-              localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-              this.storage.setItem('puntero', String(this._us.puntero));
-              localStorage.setItem('puntero',String(this._us.puntero))
-            }else{
-              console.log('debe esperar sgte horario para actualizar')
-              this.actualizar = false;
-            }
-          }else{
-            // debe esperar hasta mañana para actualizar
-            console.log('debe esperar hasta mañana para actualizar')
-            this.actualizar = false;
-          }
+          console.log('debe esperar hasta mañana para actualizar')
+          this.actualizar = false;
         }
       }
+
+
+
+      // if(!this._us.fechaActualizacion){
+      //   //actualizar activos
+      //   // comparar fechas y buscar la sgte fecha-hora de actualizacion
+      //   this.actualizar = true;
+      //   var next = new Date()
+      //   next.setDate(next.getDate() +1)
+      //   this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+      //   this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //   localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+
+
+
+
+
+      //   this._us.horas.forEach((h,i)=>{
+      //     if(this._us.fechaActualizar(this.fechaActualizar,'hora') < (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+h)){
+      //       this._us.puntero = i;
+      //       this._us.fechaActualizacion = (this.fechaActualizar)
+      //       this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //       localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      //       this.storage.setItem('puntero', String(this._us.puntero));
+      //       localStorage.setItem('puntero',String(this._us.puntero))
+      //     }else{
+      //       if((i + 1) > this._us.horas.length){
+      //         this._us.puntero = 0;
+      //         var next = new Date()
+      //         next.setDate(next.getDate() +1)
+      //         this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+      //         this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //         localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      //         this.storage.setItem('puntero', String(this._us.puntero));
+      //         localStorage.setItem('puntero',String(this._us.puntero))
+      //       }
+      //     }
+      //   })
+      // }else{
+      //   if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(this.fechaActualizar,'fecha')){
+      //     // ultima actualización fue el dia anterior
+      //     this.actualizar = true;
+      //     this._us.horas.forEach((h,i)=>{
+      //       if(this._us.fechaActualizar(this.fechaActualizar,'hora') < (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+h)){
+      //         this._us.puntero = i;
+      //         this._us.fechaActualizacion = (this.fechaActualizar)
+      //         this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //         localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      //         this.storage.setItem('puntero', String(this._us.puntero));
+      //         localStorage.setItem('puntero',String(this._us.puntero))
+      //       }else{
+      //         if((i + 1) > this._us.horas.length){
+      //           this._us.puntero = 0;
+      //           var next = new Date()
+      //           next.setDate(next.getDate() +1)
+      //           this._us.fechaActualizacion = (next)
+      //           this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //           localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      //           this.storage.setItem('puntero', String(this._us.puntero));
+      //           localStorage.setItem('puntero',String(this._us.puntero))
+      //         }
+      //       }
+      //     })
+      //   }else{
+      //     if((this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') == this._us.fechaActualizar(this.fechaActualizar,'fecha'))){
+      //     // buscar si hay hora disponible para actualziar el día actual
+      //       if(this._us.fechaActualizar(this.fechaActualizar,'hora') > (this._us.fechaActualizar(this.fechaActualizar,'fecha')+' '+this._us.horas[this._us.puntero])){
+      //         // le toca actualizar
+      //         this.actualizar = true;
+      //         this._us.puntero = (this._us.puntero + 1) >= 4 ? 0 : (this._us.puntero + 1)
+      //         if(this._us.puntero = 0){
+      //           var next = new Date()
+      //           next.setDate(next.getDate() +1)
+      //           this._us.fechaActualizacion = (next)
+      //         }else{
+      //           this._us.fechaActualizacion = (this.fechaActualizar)
+      //         }
+      //         this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //         localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      //         this.storage.setItem('puntero', String(this._us.puntero));
+      //         localStorage.setItem('puntero',String(this._us.puntero))
+      //       }else{
+      //         console.log('debe esperar sgte horario para actualizar')
+      //         this.actualizar = false;
+      //       }
+      //     }else{
+      //       // debe esperar hasta mañana para actualizar
+      //       console.log('debe esperar hasta mañana para actualizar')
+      //       this.actualizar = false;
+      //     }
+      //   }
+      // }
       this._us.nextmessage('usuario_logeado') 
       if(this._us.conexion == 'si'){
         this.mostrarMapa = true;
@@ -558,7 +596,7 @@ export class HomeVialidadPage implements OnInit {
     }
   }
   
- async centrarInicial(){
+  async centrarInicial(){
   const [Graphic]:any = await loadModules([
     'esri/Graphic',
   ])
@@ -644,13 +682,13 @@ export class HomeVialidadPage implements OnInit {
                 var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
                   return (item.codigo.indexOf(itemNew) > -1);
                 })
-                if(1==1){
+                if(existeMAXIMO.length > 0){
                   this.caminosEncontrados = temp;
                   this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-                  this.km_i = this.caminosEncontrados[0].km_i;
-                  this.km_f = this.caminosEncontrados[0].km_f;
-                  this.firstFormGroup.controls['km_i'].setValue( this.caminosEncontrados[0].km_i == 0 ? '0' : this.caminosEncontrados[0].km_i)
-                  this.firstFormGroup.controls['km_f'].setValue( this.caminosEncontrados[0].km_f == 0 ? '0' : this.caminosEncontrados[0].km_f)
+                  this.km_i = existeMAXIMO[0].km_i;
+                  this.km_f = existeMAXIMO[0].km_f;
+                  this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+                  this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
                   this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
                   this.hoy = this._us.fecha(new Date())
                   var calculos = []
@@ -754,7 +792,7 @@ export class HomeVialidadPage implements OnInit {
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     var d = R * c;
     return d.toFixed(5); //Retorna tres decimales
- }
+  }
 
   reverseRegion(CAMPO){
     if (CAMPO=='Región de Arica y Parinacota'){
@@ -922,12 +960,12 @@ export class HomeVialidadPage implements OnInit {
         return (item.codigo.indexOf(itemNew) > -1);
       })
       // if(existeMAXIMO.length > 0){
-      if(1==1){
+      if(existeMAXIMO.length > 0){
         this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-        this.km_i = data.km_i;
-        this.km_f = data.km_f;
-        this.firstFormGroup.controls['km_i'].setValue( data.km_i == 0 ? '0' : data.km_i)
-        this.firstFormGroup.controls['km_f'].setValue( data.km_f == 0 ? '0' : data.km_f) 
+        this.km_i = existeMAXIMO[0].km_i;
+        this.km_f = existeMAXIMO[0].km_f;
+        this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+        this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f) 
         this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
         this.hoy = this._us.fecha(new Date())
         var calculos = []
@@ -1064,6 +1102,7 @@ export class HomeVialidadPage implements OnInit {
   buscarActivos(ev: any) {
     const val = ev.target.value;
     if (this.filtro == 'nombre' ? (val && val.trim() != '' && val.length >= 3 ) : (val && val.trim() != '' && val.length >= 2 )) {
+      // console.log(this.activosPorRegion[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)])
       this.buscandoActivos = this.activosPorRegion[this.region == '20' ? this.regionSelec : (Number(this.region) - 1)].filter((item) => {
         return (this.filtro == 'nombre' ? (item.nombre.toLowerCase().indexOf(val.toLowerCase()) > -1) : item.rol.toLowerCase().indexOf(val.toLowerCase()) > -1);
       })
@@ -2022,8 +2061,10 @@ export class HomeVialidadPage implements OnInit {
       this.db.open().then(()=>{
         this.db.executeSql('SELECT * FROM activosVialidad', []).then((data)=>{
           if(data.rows.length > 0){
+            this._vs.cargandoActivos = true;
             var AR = Array.from({length: data.rows.length}, (x, i) => i);
             AR.forEach(i=>{
+              this._vs.activoRegion = Number(data.rows.item(i).region)
               var tmp = {
                 codigo:data.rows.item(i).id,
                 nombre:data.rows.item(i).nombre,
@@ -2034,16 +2075,18 @@ export class HomeVialidadPage implements OnInit {
               }
               this.activosPorRegion[Number(data.rows.item(i).region) - 1].push(tmp)
             })
+            this._vs.activoRegion = null;
+            this._vs.cargandoActivos = false;
             this._us.cargar_storage().then(()=>{
               if(this._us.conexion == 'si'){
                 if(region == '20'){
-                  if(this.actualizar || manual){
+                  if(manual){
                     this._vs.cargandoActivos = true;
                     this._vs.activoRegion = 1;
                     this.actualizarActivosVialidad(this.region,1)
                   }
                 }else{
-                  if(this.actualizar || manual){
+                  if(manual){
                     this._vs.cargandoActivos = true;
                     this._vs.activoRegion = this.region;
                     this.actualizarActivosVialidad(this.region)
@@ -2055,22 +2098,71 @@ export class HomeVialidadPage implements OnInit {
             this._us.cargar_storage().then(()=>{
               if(this._us.conexion == 'si'){
                 if(region == '20'){
-                  if(this.actualizar || manual){
+                  
                     this._vs.cargandoActivos = true;
                     this._vs.activoRegion = 1;
-                    this.actualizarActivosVialidad(this.region,1)
-                  }                
+                    this.activosNacional(1)
+                    // this.actualizarActivosVialidad(this.region,1)
+                                  
                 }else{
                   if(this.platform.is('capacitor')){
-                    if(this.actualizar || manual){
                       this._vs.cargandoActivos = true;
                       this._vs.activoRegion = this.region;
-                      this.actualizarActivosVialidad(this.region)
-                    }
+                      // this.actualizarActivosVialidad(this.region)
+                      this._http.get('assets/vialidad/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
+                        this._us.xmlToJson(res).then((result:any)=>{
+                          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+                          path.forEach(f=>{
+                            this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
+                          })
+                          this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+                          this.activosPorRegion = this.activosActualizar;
+                          this.db.open().then(()=>{
+                            this.db.transaction(rx=>{
+                              rx.executeSql('delete from activosVialidad', [], ()=>{
+                                this.activosActualizar.forEach((a,i)=>{
+                                  this.activosActualizar[i].forEach(activo=>{
+                                    this.db.transaction(tx=>{
+                                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                                    })
+                                  })
+                                })
+                              })
+                            })
+                          })
+                          this.actualizarActivosVialidad(this.region)
+                        })
+                      },err=>{
+                        this._us.xmlToJson(err.error.text).then((result:any)=>{
+                          var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+                          path.forEach(f=>{
+                            this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
+                          })
+                          this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
+                          this.activosPorRegion = this.activosActualizar;
+                          this.db.open().then(()=>{
+                            this.db.transaction(rx=>{
+                              rx.executeSql('delete from activosVialidad', [], ()=>{
+                                this.activosActualizar.forEach((a,i)=>{
+                                  this.activosActualizar[i].forEach(activo=>{
+                                    this.db.transaction(tx=>{
+                                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                                    })
+                                  })
+                                })
+                              })
+                            })
+                          })
+                          this.actualizarActivosVialidad(this.region)
+                        })
+                      })
+                    
                   }
                 }
               }else{
                 if(region == '20'){
+                  this._vs.cargandoActivos = true;
+                  this._vs.activoRegion = 1;
                   this.activosNacional(1)
                 }else{
                   this._http.get('assets/vialidad/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
@@ -2081,6 +2173,19 @@ export class HomeVialidadPage implements OnInit {
                       })
                       this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                       this.activosPorRegion = this.activosActualizar;
+                      this.db.open().then(()=>{
+                        this.db.transaction(rx=>{
+                          rx.executeSql('delete from activosVialidad', [], ()=>{
+                            this.activosActualizar.forEach((a,i)=>{
+                              this.activosActualizar[i].forEach(activo=>{
+                                this.db.transaction(tx=>{
+                                  tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                                })
+                              })
+                            })
+                          })
+                        })
+                      })
                     })
                   },err=>{
                     this._us.xmlToJson(err.error.text).then((result:any)=>{
@@ -2090,6 +2195,19 @@ export class HomeVialidadPage implements OnInit {
                       })
                       this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                       this.activosPorRegion = this.activosActualizar;
+                      this.db.open().then(()=>{
+                        this.db.transaction(rx=>{
+                          rx.executeSql('delete from activosVialidad', [], ()=>{
+                            this.activosActualizar.forEach((a,i)=>{
+                              this.activosActualizar[i].forEach(activo=>{
+                                this.db.transaction(tx=>{
+                                  tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                                })
+                              })
+                            })
+                          })
+                        })
+                      })
                     })
                   })
                 }
@@ -2099,15 +2217,14 @@ export class HomeVialidadPage implements OnInit {
         })
       })
     }else{
-      if(this.actualizar || manual){
         if(region == '20'){
-          if(this.actualizar || manual){
+          
             this._vs.cargandoActivos = true;
             this._vs.activoRegion = 1;
             this.activosNacional(1)
-          }
+          
         }else{
-          if(this.actualizar || manual){
+          
             this._vs.cargandoActivos = true;
             this._vs.activoRegion = this.region;
             this._http.get('assets/vialidad/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
@@ -2118,6 +2235,8 @@ export class HomeVialidadPage implements OnInit {
                 })
                 this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                 this.activosPorRegion = this.activosActualizar;
+                this._vs.cargandoActivos = false;
+                this._vs.activoRegion = null;
               })
             },err=>{
               this._us.xmlToJson(err.error.text).then((result:any)=>{
@@ -2127,11 +2246,13 @@ export class HomeVialidadPage implements OnInit {
                 })
                 this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                 this.activosPorRegion = this.activosActualizar;
+                this._vs.cargandoActivos = false;
+                this._vs.activoRegion = null;
               })
             })
-          }
+          
         }
-      }
+      
 
 
     }
@@ -2141,6 +2262,7 @@ export class HomeVialidadPage implements OnInit {
     this._http.get('assets/vialidad/'+(String(vuelta).length == 1 ? '0'+vuelta : vuelta)+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
       this._us.xmlToJson(res).then((result:any)=>{
         var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+
         path.forEach(f=>{
           this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
         })
@@ -2152,7 +2274,23 @@ export class HomeVialidadPage implements OnInit {
           this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
           this.activosPorRegion = this.activosActualizar;
           this._vs.activoRegion = null;
-          this._vs.cargandoActivos = false;
+          if(this.platform.is('capacitor')){
+            this.db.open().then(()=>{
+              this.db.transaction(rx=>{
+                rx.executeSql('delete from activosVialidad', [], ()=>{
+                  this.activosActualizar.forEach((a,i)=>{
+                    this.activosActualizar[i].forEach(activo=>{
+                      this.db.transaction(tx=>{
+                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                      })
+                    })
+                  })
+                })
+              })
+            })
+            this.actualizarActivosVialidad(this.region,1)
+          }
+          // this._vs.cargandoActivos = false;
         }
       })
     },err=>{
@@ -2169,7 +2307,23 @@ export class HomeVialidadPage implements OnInit {
           this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
           this.activosPorRegion = this.activosActualizar;
           this._vs.activoRegion = null;
-          this._vs.cargandoActivos = false;
+          // this._vs.cargandoActivos = false;
+          this.db.open().then(()=>{
+            this.db.transaction(rx=>{
+              rx.executeSql('delete from activosVialidad', [], ()=>{
+                this.activosActualizar.forEach((a,i)=>{
+                  this.activosActualizar[i].forEach(activo=>{
+                    this.db.transaction(tx=>{
+                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                    })
+                  })
+                })
+              })
+            })
+          })
+          if(this.platform.is('capacitor')){
+            this.actualizarActivosVialidad(this.region,1)
+          }
         }
       })
     })
@@ -2178,14 +2332,22 @@ export class HomeVialidadPage implements OnInit {
   actualizarActivosVialidad(region,vuelta?){
     if(region == '20'){
       if(vuelta && vuelta < 16){
-        // console.log('ACTUALIZANDO ACTIVOS DE LA REGIÓN '+vuelta)
+        console.log('ACTUALIZANDO ACTIVOS DE LA REGIÓN '+(String(vuelta).length == 1 ? '0'+vuelta : vuelta))
         this._vs.activosVialidad((String(vuelta).length == 1 ? '0'+vuelta : vuelta)).subscribe((res:any)=>{
           if(res && res.status == '200'){
+         
             this._us.xmlToJson(res).then((result:any)=>{
               var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
-              path.forEach(f=>{
+              
+              path.forEach((f,k)=>{
+                // if((String(vuelta).length == 1 ? '0'+vuelta : vuelta) == '13' ){
+                //   console.log('ACAA->'+k, f)
+                // }
                 this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
               })
+              // if((String(vuelta).length == 1 ? '0'+vuelta : vuelta) == 13){
+              //   console.log(this.activosActualizar[12])
+              // }
               const newVuelta = vuelta + 1;
               if(newVuelta > 16){
                 this._vs.cargandoActivos = false;
@@ -2668,11 +2830,15 @@ export class HomeVialidadPage implements OnInit {
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
-                        this.deleteImage(this.images[0])
+                        if(this.picture){
+                          this.deleteImage(this.images[0])
+                        }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       }).catch(()=>{
-                        this.deleteImage(this.images[0])
+                        if(this.picture){
+                          this.deleteImage(this.images[0])
+                        }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       })
@@ -2684,11 +2850,15 @@ export class HomeVialidadPage implements OnInit {
                         path:SAVE_IMAGE_DIR+"/"+'save_'+(data.date)+'_foto.jpg',
                         data:this.images[0].data
                         }).then(()=>{
-                        this.deleteImage(this.images[0])
+                        if(this.picture){
+                          this.deleteImage(this.images[0])
+                        }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       }).catch(()=>{
-                        this.deleteImage(this.images[0])
+                        if(this.picture){
+                          this.deleteImage(this.images[0])
+                        }
                         this.volverInicio()
                         this._us.nextmessage('pendiente') 
                       })

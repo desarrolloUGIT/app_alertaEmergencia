@@ -299,8 +299,11 @@
         </ion-button>
       </div>
       <div align="center" >
-        <ion-button expand="block"  color="botonazul" (click)="enviar()"  [disabled]="!firstFormGroup.valid  || !secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region || mayorI || mayorF || menorI || menorF || menorFI || mayorIF">
+        <ion-button expand="block" *ngIf="!_vs.cargandoActivos && !_vs.activoRegion"  color="botonazul" (click)="enviar()"  [disabled]="!firstFormGroup.valid  || !secondFormGroup.valid || !thirdFormGroup.valid || !dataPosicion.lat || !dataPosicion.lng || !dataPosicion.region || mayorI || mayorF || menorI || menorF || menorFI || mayorIF">
           REPORTAR <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+        </ion-button>
+        <ion-button expand="block"  color="botonazul" *ngIf="_vs.cargandoActivos && _vs.activoRegion" disabled>
+          ACTUALIZANDO CAMINOS <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
         </ion-button>
       </div>
     </section>
@@ -326,20 +329,20 @@
 <ion-footer *ngIf="footer">
   <ion-segment [value]="tab" mode="ios" swipeGesture="false" >
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 && !firstFormGroup.value.activoSeleccionado" value="1" (click)="selectTab(1)" [ngClass]="tab == 1 ? 'selectTab' : ''">
-      <ion-label>Activo</ion-label>
-      <ion-icon name="red-vial-white"></ion-icon>
+      <ion-label color="light">Activo</ion-label>
+      <ion-icon color="light" name="red-vial-white"></ion-icon>
     </ion-segment-button>
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="2" (click)="selectTab(2)" [ngClass]="tab == 2 ? 'selectTab' : ''">
-      <ion-label>Operatividad</ion-label>
-      <ion-icon name="construct"></ion-icon>
+      <ion-label color="light">Operatividad</ion-label>
+      <ion-icon color="light" name="construct"></ion-icon>
     </ion-segment-button>
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="3" (click)="selectTab(3)" [ngClass]="tab == 3 ? 'selectTab' : ''">
-      <ion-label>Datos</ion-label>
-      <ion-icon name="create"></ion-icon>
+      <ion-label color="light">Datos</ion-label>
+      <ion-icon color="light" name="create"></ion-icon>
     </ion-segment-button>
     <ion-segment-button [disabled]="caminosEncontrados.length <= 0 || !firstFormGroup.value.activoSeleccionado" value="4" (click)="selectTab(4)" [ngClass]="tab == 4 ? 'selectTab' : ''">
-      <ion-label>Resumen</ion-label>
-      <ion-icon name="document-text"></ion-icon>
+      <ion-label color="light">Resumen</ion-label>
+      <ion-icon color="light" name="document-text"></ion-icon>
     </ion-segment-button>
   </ion-segment>
 </ion-footer>

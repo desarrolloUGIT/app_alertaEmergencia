@@ -52,7 +52,7 @@ export class UsuarioService {
     'Accept': "text/plain",
     'Content-Type': "text/plain",
   };
-  horas = ['08:00','12:00','16:00','20:00']
+  horas = ['08:00']
   puntero = 0;
   images = [];
   seleccionMapa = 'si';
