@@ -71,6 +71,44 @@ export class VialidadService {
     return from(Http.post(options))
   }
 
+  activoEspecificoVialidad(data){
+    this._us.headers['Authorization'] = "Basic " + btoa((this._us.getUser().user + ':' + this._us.getUser().password));
+    let sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">
+              <soapenv:Header/>
+              <soapenv:Body>
+                <max:QueryMOP_ASSET_DOH >
+                    <max:MOP_ASSET_DOHQuery operandMode="AND">
+                      <!--Optional:-->
+                      <max:ASSET>
+                          <!--Zero or more repetitions:-->
+                          <max:ASSETNUM >`+data.codigo+`</max:ASSETNUM>
+                          <!--Zero or more repetitions:-->
+                          <max:DESCRIPTION >%</max:DESCRIPTION>
+                          <!--Zero or more repetitions:-->
+                          <max:ISLINEAR >1</max:ISLINEAR>
+                          <max:ROL>%</max:ROL>
+                          <!--Zero or more repetitions:-->
+                          <max:REGION >`+data.region+`</max:REGION>
+                          <!--Zero or more repetitions:-->
+                          <max:SITEID operator="=" >`+this._us.usuario.DEFSITE+`</max:SITEID>
+                          <!--Zero or more repetitions:-->
+                          <max:STATUS operator="=" >ACTIVA</max:STATUS>
+                      </max:ASSET>
+                    </max:MOP_ASSET_DOHQuery>
+                </max:QueryMOP_ASSET_DOH>
+              </soapenv:Body>
+          </soapenv:Envelope>
+          `
+          // console.log(sr)
+    let url = URL_SERVICIOS+'MOP_WS_MOP_ASSET_DOH';
+    const options: HttpOptions = {
+      url:url,
+      data:sr,
+      headers:this._us.headers
+    };
+    return from(Http.post(options))
+  }
+
   enviarAlerta(data){
     this._us.headers['Authorization'] = "Basic " + btoa((this._us.getUser().user + ':' + this._us.getUser().password));
     let sr = `<soapenv:Envelope [env]:soapenv="http://schemas.xmlsoap.org/soap/envelope/" [env]:max="http://www.ibm.com/maximo">

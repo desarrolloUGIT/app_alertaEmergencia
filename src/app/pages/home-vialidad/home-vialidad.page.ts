@@ -171,31 +171,31 @@ export class HomeVialidadPage implements OnInit {
     this._us.cargar_storage().then(()=>{
       this.region = this._us.usuario.PERSON.STATEPROVINCE
       this.dataPosicion.region = this.region;
-      console.log('FECHA EN EL SERVICIO ->',this._us.fechaActualizacion,this._us.puntero)
+      // console.log('FECHA EN EL SERVICIO ->',this._us.fechaActualizacion,this._us.puntero)
 
-      if(!this._us.fechaActualizacion){
-        //actualizar activos
-        // comparar fechas y buscar la sgte fecha-hora de actualizacion
-        this.actualizar = true;
-        var next = new Date()
-        next.setDate(next.getDate() +1)
-        this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
-        this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-        localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-      }else{
-        var hoyFecha = new Date()
-        if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(hoyFecha,'fecha')){
-          this.actualizar = true;
-          var next = new Date()
-          next.setDate(next.getDate() +1)
-          this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
-          this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
-          localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
-        }else{
-          console.log('debe esperar hasta mañana para actualizar')
-          this.actualizar = false;
-        }
-      }
+      // if(!this._us.fechaActualizacion){
+      //   //actualizar activos
+      //   // comparar fechas y buscar la sgte fecha-hora de actualizacion
+      //   this.actualizar = true;
+      //   var next = new Date()
+      //   next.setDate(next.getDate() +1)
+      //   this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+      //   this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //   localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      // }else{
+      //   var hoyFecha = new Date()
+      //   if(this._us.fechaActualizar(this._us.fechaActualizacion,'fecha') < this._us.fechaActualizar(hoyFecha,'fecha')){
+      //     this.actualizar = true;
+      //     var next = new Date()
+      //     next.setDate(next.getDate() +1)
+      //     this._us.fechaActualizacion = this._us.fechaActualizar(next,'fecha')
+      //     this.storage.setItem('fechaActualizacion', JSON.stringify(this._us.fechaActualizacion));
+      //     localStorage.setItem('fechaActualizacion',JSON.stringify(this._us.fechaActualizacion))
+      //   }else{
+      //     console.log('debe esperar hasta mañana para actualizar')
+      //     this.actualizar = false;
+      //   }
+      // }
 
 
 
@@ -679,78 +679,99 @@ export class HomeVialidadPage implements OnInit {
               if(temp.length == 1){
                 var itemNew = temp[0].codigo
                 const reg = Number(temp[0].region);
-                var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
-                  return (item.codigo.indexOf(itemNew) > -1);
-                })
-                if(existeMAXIMO.length > 0){
-                  this.caminosEncontrados = temp;
-                  this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
-                  this.km_i = existeMAXIMO[0].km_i;
-                  this.km_f = existeMAXIMO[0].km_f;
-                  this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
-                  this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
-                  this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-                  this.hoy = this._us.fecha(new Date())
-                  var calculos = []
-                  this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
-                    var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
-                    calculos.push({vertice:p,kilometro:kilometro,posicion:i})
-                  })
-                  calculos = this.sortJSON(calculos,'kilometro','asc')
-                  this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-                  this.buscando = false;
-                  this.tab = 1;
-                  const validacionKM = (Number(this.km) > Number(this.firstFormGroup.value.km_f)) ? this.firstFormGroup.value.km_f : (Number(this.km) < Number(this.firstFormGroup.value.km_i) ? this.firstFormGroup.value.km_i :this.km)
-                  // this.myFunction({target:{value:validacionKM}},'i')
-                  this.firstFormGroup.controls['km_i'].setValue(validacionKM)
-                  this.mostrarMapa = false;
-                  this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
-                  this.view2.graphics.remove(this.camino)
-                  var layer = new FeatureLayer( {
-                    url:this.vialidadRedVialURL+'/3',
-                    definitionExpression:'',
-                    outFields : [ '*' ],		});
-                  let query = {
-                    outFields:[],
-                    returnGeometry:true,
-                    where:''
-                  }
-                  query.outFields = ['*'];
-                  query.where =  "OBJECTID = '"+this.caminosEncontrados[0].objectid+"'";
-                  query.returnGeometry =  true;
-                  layer.queryFeatures(query).then(result =>{
-                    if(result && result.features[0]){
-                      let symbolTerritory = {
-                        type: "simple-fill",
-                        color: [207, 226, 99, 0],
-                        style: "solid",
-                        outline: {
-                          color: "cyan",
-                          width: 3
+                // var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
+                //   return (item.codigo.indexOf(itemNew) > -1);
+                // })
+                // var existeMAXIMO = temp
+                this._vs.activoEspecificoVialidad(temp[0]).subscribe((res:any)=>{
+                  if(res && res.status == '200'){
+                    this._us.xmlToJson(res).then((result:any)=>{
+                      console.log('**********ENCONTRO CAMINO EN MAXIMO*********')
+                      var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+                      var existeMAXIMO = []
+                      existeMAXIMO.push({nombre:path[0].DESCRIPTION[0],codigo:path[0].ASSETNUM[0],km_i:path[0].STARTMEASURE[0],km_f:path[0].ENDMEASURE[0],region:path[0].REGION[0],rol:path[0].ROL[0]})
+                      if(existeMAXIMO.length > 0){
+                        this.caminosEncontrados = temp;
+                        this.firstFormGroup.controls['activoSeleccionado'].setValue(this.caminosEncontrados[0])
+                        this.km_i = existeMAXIMO[0].km_i;
+                        this.km_f = existeMAXIMO[0].km_f;
+                        this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+                        this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f)
+                        this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+                        this.hoy = this._us.fecha(new Date())
+                        var calculos = []
+                        this.caminosEncontrados[0].puntoInicial.forEach((p,i)=>{
+                          var kilometro = Number(this.getKilometros(p[1],p[0],this.caminosEncontrados[0].latitude,this.caminosEncontrados[0].longitude));
+                          calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+                        })
+                        calculos = this.sortJSON(calculos,'kilometro','asc')
+                        this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+                        this.buscando = false;
+                        this.tab = 1;
+                        const validacionKM = (Number(this.km) > Number(this.firstFormGroup.value.km_f)) ? this.firstFormGroup.value.km_f : (Number(this.km) < Number(this.firstFormGroup.value.km_i) ? this.firstFormGroup.value.km_i :this.km)
+                        // this.myFunction({target:{value:validacionKM}},'i')
+                        this.firstFormGroup.controls['km_i'].setValue(validacionKM)
+                        this.mostrarMapa = false;
+                        this.presentToast('Se encontro un camino, favor ingresar la información complementaria',null,false)
+                        this.view2.graphics.remove(this.camino)
+                        var layer = new FeatureLayer( {
+                          url:this.vialidadRedVialURL+'/3',
+                          definitionExpression:'',
+                          outFields : [ '*' ],		});
+                        let query = {
+                          outFields:[],
+                          returnGeometry:true,
+                          where:''
                         }
-                      };
-                      this.camino = new Graphic({
-                        symbol: symbolTerritory,
-                        geometry: result.features[0].geometry,
-                      });
-                      this.view2.graphics.add(this.camino)
-                      // this.view2.goTo(this.camino.geometry);
-                      this.dibujarCamino = true;
-                    }
-                  })
-                  // this.agregarPuntero(e.mapPoint,Graphic,true)
-                }else{
-                  this.firstFormGroup.reset();
-                  this.secondFormGroup.reset();
-                  this.secondFormGroup.controls['competencia'].setValue('Si')
-                  this.thirdFormGroup.reset();
-                  this.caminosEncontrados = []
-                  this.tab = 0;
-                  this.km = 0;
-                  this.mostrarMapa = true;
-                  this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
-                  // this.agregarPuntero(e.mapPoint,Graphic,false)
-                }
+                        query.outFields = ['*'];
+                        query.where =  "OBJECTID = '"+this.caminosEncontrados[0].objectid+"'";
+                        query.returnGeometry =  true;
+                        layer.queryFeatures(query).then(result =>{
+                          if(result && result.features[0]){
+                            let symbolTerritory = {
+                              type: "simple-fill",
+                              color: [207, 226, 99, 0],
+                              style: "solid",
+                              outline: {
+                                color: "cyan",
+                                width: 3
+                              }
+                            };
+                            this.camino = new Graphic({
+                              symbol: symbolTerritory,
+                              geometry: result.features[0].geometry,
+                            });
+                            this.view2.graphics.add(this.camino)
+                            // this.view2.goTo(this.camino.geometry);
+                            this.dibujarCamino = true;
+                          }
+                        })
+                        // this.agregarPuntero(e.mapPoint,Graphic,true)
+                      }else{
+                        this.firstFormGroup.reset();
+                        this.secondFormGroup.reset();
+                        this.secondFormGroup.controls['competencia'].setValue('Si')
+                        this.thirdFormGroup.reset();
+                        this.caminosEncontrados = []
+                        this.tab = 0;
+                        this.km = 0;
+                        this.mostrarMapa = true;
+                        this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+                        // this.agregarPuntero(e.mapPoint,Graphic,false)
+                      }
+                    })
+                  }else{
+                    this.firstFormGroup.reset();
+                    this.secondFormGroup.reset();
+                    this.secondFormGroup.controls['competencia'].setValue('Si')
+                    this.thirdFormGroup.reset();
+                    this.caminosEncontrados = []
+                    this.tab = 0;
+                    this.km = 0;
+                    this.mostrarMapa = true;
+                    this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+                  }
+                })
               }else{
                 this.caminosEncontrados = temp;
                 this.km = 0;
@@ -956,75 +977,95 @@ export class HomeVialidadPage implements OnInit {
       this.mayorIF = false;
       var itemNew = data.codigo
       const reg = Number(data.region);
-      var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
-        return (item.codigo.indexOf(itemNew) > -1);
-      })
-      // if(existeMAXIMO.length > 0){
-      if(existeMAXIMO.length > 0){
-        this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
-        this.km_i = existeMAXIMO[0].km_i;
-        this.km_f = existeMAXIMO[0].km_f;
-        this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
-        this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f) 
-        this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
-        this.hoy = this._us.fecha(new Date())
-        var calculos = []
-        data.puntoInicial.forEach((p,i)=>{
-          var kilometro = Number(this.getKilometros(p[1],p[0],data.latitude,data.longitude));
-          calculos.push({vertice:p,kilometro:kilometro,posicion:i})
-        })
-        calculos = this.sortJSON(calculos,'kilometro','asc')
-        this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
-        console.log(this.km,this.km_i,this.km_f,Number(this.km) > Number(this.firstFormGroup.value.km_f),Number(this.km) < Number(this.firstFormGroup.value.km_i))
-        const validacionKM = (Number(this.km) > Number(this.firstFormGroup.value.km_f)) ? this.firstFormGroup.value.km_f : (Number(this.km) < Number(this.firstFormGroup.value.km_i) ? this.firstFormGroup.value.km_i :this.km)
-        // this.myFunction({target:{value:validacionKM}},'i')
-        this.firstFormGroup.controls['km_i'].setValue(validacionKM)
-        this.buscando = false;
-        this._us.seleccionMapa = 'si';
-        this.view2.graphics.remove(this.camino)
-        var layer = new FeatureLayer( {
-          url:this.vialidadRedVialURL+'/3',
-          definitionExpression:'',
-          outFields : [ '*' ],		});
-        let query = {
-          outFields:[],
-          returnGeometry:true,
-          where:''
-        }
-        query.outFields = ['*'];
-        query.where =  "OBJECTID = '"+data.objectid+"'";
-        query.returnGeometry =  true;
-        layer.queryFeatures(query).then(result =>{
-          if(result && result.features[0]){
-            let symbolTerritory = {
-              type: "simple-fill",
-              color: [207, 226, 99, 0],
-              style: "solid",
-              outline: {
-                color: "cyan",
-                width: 3
+      // var existeMAXIMO = this.activosPorRegion[reg - 1].filter((item) => {
+      //   return (item.codigo.indexOf(itemNew) > -1);
+      // })
+
+      this._vs.activoEspecificoVialidad(data).subscribe((res:any)=>{
+        if(res && res.status == '200'){
+          this._us.xmlToJson(res).then((result:any)=>{
+            console.log('**********ENCONTRO CAMINO EN MAXIMO*********')
+            var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
+            var existeMAXIMO = []
+            existeMAXIMO.push({nombre:path[0].DESCRIPTION[0],codigo:path[0].ASSETNUM[0],km_i:path[0].STARTMEASURE[0],km_f:path[0].ENDMEASURE[0],region:path[0].REGION[0],rol:path[0].ROL[0]})
+            if(existeMAXIMO.length > 0){
+              this.firstFormGroup.controls['activoSeleccionado'].setValue(data)
+              this.km_i = existeMAXIMO[0].km_i;
+              this.km_f = existeMAXIMO[0].km_f;
+              this.firstFormGroup.controls['km_i'].setValue( existeMAXIMO[0].km_i == 0 ? '0' : existeMAXIMO[0].km_i)
+              this.firstFormGroup.controls['km_f'].setValue( existeMAXIMO[0].km_f == 0 ? '0' : existeMAXIMO[0].km_f) 
+              this.firstFormGroup.controls['fechaEmergencia'].setValue(this._us.fecha(new Date()))
+              this.hoy = this._us.fecha(new Date())
+              var calculos = []
+              data.puntoInicial.forEach((p,i)=>{
+                var kilometro = Number(this.getKilometros(p[1],p[0],data.latitude,data.longitude));
+                calculos.push({vertice:p,kilometro:kilometro,posicion:i})
+              })
+              calculos = this.sortJSON(calculos,'kilometro','asc')
+              this.km = Number(calculos[0].kilometro + Number(calculos[0].vertice[3]/1000)).toFixed(1)
+              // console.log(this.km,this.km_i,this.km_f,Number(this.km) > Number(this.firstFormGroup.value.km_f),Number(this.km) < Number(this.firstFormGroup.value.km_i))
+              const validacionKM = (Number(this.km) > Number(this.firstFormGroup.value.km_f)) ? this.firstFormGroup.value.km_f : (Number(this.km) < Number(this.firstFormGroup.value.km_i) ? this.firstFormGroup.value.km_i :this.km)
+              // this.myFunction({target:{value:validacionKM}},'i')
+              this.firstFormGroup.controls['km_i'].setValue(validacionKM)
+              this.buscando = false;
+              this._us.seleccionMapa = 'si';
+              this.view2.graphics.remove(this.camino)
+              var layer = new FeatureLayer( {
+                url:this.vialidadRedVialURL+'/3',
+                definitionExpression:'',
+                outFields : [ '*' ],		});
+              let query = {
+                outFields:[],
+                returnGeometry:true,
+                where:''
               }
-            };
-            this.camino = new Graphic({
-              symbol: symbolTerritory,
-              geometry: result.features[0].geometry,
-            });
-            this.view2.graphics.add(this.camino)
-            // this.view2.goTo(this.camino.geometry);
-            this.dibujarCamino = true;
-          }
-        })
-        this._us.cargar_storage().then(()=>{})
-      }else{
-        this.firstFormGroup.reset();
-        this.secondFormGroup.reset();
-        this.secondFormGroup.controls['competencia'].setValue('Si')
-        this.thirdFormGroup.reset();
-        this.km = 0;
-        this.view2.graphics.remove(this.camino)
-        this.dibujarCamino = false;
-        this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
-      }      
+              query.outFields = ['*'];
+              query.where =  "OBJECTID = '"+data.objectid+"'";
+              query.returnGeometry =  true;
+              layer.queryFeatures(query).then(result =>{
+                if(result && result.features[0]){
+                  let symbolTerritory = {
+                    type: "simple-fill",
+                    color: [207, 226, 99, 0],
+                    style: "solid",
+                    outline: {
+                      color: "cyan",
+                      width: 3
+                    }
+                  };
+                  this.camino = new Graphic({
+                    symbol: symbolTerritory,
+                    geometry: result.features[0].geometry,
+                  });
+                  this.view2.graphics.add(this.camino)
+                  // this.view2.goTo(this.camino.geometry);
+                  this.dibujarCamino = true;
+                }
+              })
+              this._us.cargar_storage().then(()=>{})
+            }else{
+              this.firstFormGroup.reset();
+              this.secondFormGroup.reset();
+              this.secondFormGroup.controls['competencia'].setValue('Si')
+              this.thirdFormGroup.reset();
+              this.km = 0;
+              this.view2.graphics.remove(this.camino)
+              this.dibujarCamino = false;
+              this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+            }    
+          })
+        }else{
+          this.firstFormGroup.reset();
+          this.secondFormGroup.reset();
+          this.secondFormGroup.controls['competencia'].setValue('Si')
+          this.thirdFormGroup.reset();
+          this.km = 0;
+          this.view2.graphics.remove(this.camino)
+          this.dibujarCamino = false;
+          this.presentToast('El codigo '+itemNew+' del camino seleccionado no se ha encontrado en la base de datos de MAXIMO',null,false,true)
+        }
+      })
+      // var existeMAXIMO =  [data];
     }
   }
 
@@ -2080,32 +2121,28 @@ export class HomeVialidadPage implements OnInit {
             this._us.cargar_storage().then(()=>{
               if(this._us.conexion == 'si'){
                 if(region == '20'){
-                  if(manual){
-                    this._vs.cargandoActivos = true;
-                    this._vs.activoRegion = 1;
-                    this.actualizarActivosVialidad(this.region,1)
-                  }
+                  // if(manual){
+                  //   this._vs.cargandoActivos = true;
+                  //   this._vs.activoRegion = 1;
+                  //   this.actualizarActivosVialidad(this.region,1)
+                  // }
                 }else{
-                  if(manual){
-                    this._vs.cargandoActivos = true;
-                    this._vs.activoRegion = this.region;
-                    this.actualizarActivosVialidad(this.region)
-                  }
+                  // if(manual){
+                  //   this._vs.cargandoActivos = true;
+                  //   this._vs.activoRegion = this.region;
+                  //   this.actualizarActivosVialidad(this.region)
+                  // }
                 }
               }
             })
           }else{ 
             this._us.cargar_storage().then(()=>{
-              if(this._us.conexion == 'si'){
                 if(region == '20'){
-                  
                     this._vs.cargandoActivos = true;
                     this._vs.activoRegion = 1;
                     this.activosNacional(1)
-                    // this.actualizarActivosVialidad(this.region,1)
-                                  
+                    // this.actualizarActivosVialidad(this.region,1)                                 
                 }else{
-                  if(this.platform.is('capacitor')){
                       this._vs.cargandoActivos = true;
                       this._vs.activoRegion = this.region;
                       // this.actualizarActivosVialidad(this.region)
@@ -2117,20 +2154,22 @@ export class HomeVialidadPage implements OnInit {
                           })
                           this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                           this.activosPorRegion = this.activosActualizar;
-                          this.db.open().then(()=>{
-                            this.db.transaction(rx=>{
-                              rx.executeSql('delete from activosVialidad', [], ()=>{
-                                this.activosActualizar.forEach((a,i)=>{
-                                  this.activosActualizar[i].forEach(activo=>{
-                                    this.db.transaction(tx=>{
-                                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
-                                    })
-                                  })
-                                })
-                              })
-                            })
-                          })
-                          this.actualizarActivosVialidad(this.region)
+                          this._vs.activoRegion = null;
+                          this._vs.cargandoActivos = false;
+                          // this.db.open().then(()=>{
+                          //   this.db.transaction(rx=>{
+                          //     rx.executeSql('delete from activosVialidad', [], ()=>{
+                          //       this.activosActualizar.forEach((a,i)=>{
+                          //         this.activosActualizar[i].forEach(activo=>{
+                          //           this.db.transaction(tx=>{
+                          //             tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                          //           })
+                          //         })
+                          //       })
+                          //     })
+                          //   })
+                          // })
+                          // this.actualizarActivosVialidad(this.region)
                         })
                       },err=>{
                         this._us.xmlToJson(err.error.text).then((result:any)=>{
@@ -2140,78 +2179,28 @@ export class HomeVialidadPage implements OnInit {
                           })
                           this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
                           this.activosPorRegion = this.activosActualizar;
-                          this.db.open().then(()=>{
-                            this.db.transaction(rx=>{
-                              rx.executeSql('delete from activosVialidad', [], ()=>{
-                                this.activosActualizar.forEach((a,i)=>{
-                                  this.activosActualizar[i].forEach(activo=>{
-                                    this.db.transaction(tx=>{
-                                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
-                                    })
-                                  })
-                                })
-                              })
-                            })
-                          })
-                          this.actualizarActivosVialidad(this.region)
+                          this._vs.activoRegion = null;
+                          this._vs.cargandoActivos = false;
+                          // this.db.open().then(()=>{
+                          //   this.db.transaction(rx=>{
+                          //     rx.executeSql('delete from activosVialidad', [], ()=>{
+                          //       this.activosActualizar.forEach((a,i)=>{
+                          //         this.activosActualizar[i].forEach(activo=>{
+                          //           this.db.transaction(tx=>{
+                          //             tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+                          //           })
+                          //         })
+                          //       })
+                          //     })
+                          //   })
+                          // })
+                          // this.actualizarActivosVialidad(this.region)
                         })
                       })
                     
-                  }
+                  
                 }
-              }else{
-                if(region == '20'){
-                  this._vs.cargandoActivos = true;
-                  this._vs.activoRegion = 1;
-                  this.activosNacional(1)
-                }else{
-                  this._http.get('assets/vialidad/'+this.region+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
-                    this._us.xmlToJson(res).then((result:any)=>{
-                      var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
-                      path.forEach(f=>{
-                        this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
-                      })
-                      this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
-                      this.activosPorRegion = this.activosActualizar;
-                      this.db.open().then(()=>{
-                        this.db.transaction(rx=>{
-                          rx.executeSql('delete from activosVialidad', [], ()=>{
-                            this.activosActualizar.forEach((a,i)=>{
-                              this.activosActualizar[i].forEach(activo=>{
-                                this.db.transaction(tx=>{
-                                  tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
-                                })
-                              })
-                            })
-                          })
-                        })
-                      })
-                    })
-                  },err=>{
-                    this._us.xmlToJson(err.error.text).then((result:any)=>{
-                      var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
-                      path.forEach(f=>{
-                        this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
-                      })
-                      this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
-                      this.activosPorRegion = this.activosActualizar;
-                      this.db.open().then(()=>{
-                        this.db.transaction(rx=>{
-                          rx.executeSql('delete from activosVialidad', [], ()=>{
-                            this.activosActualizar.forEach((a,i)=>{
-                              this.activosActualizar[i].forEach(activo=>{
-                                this.db.transaction(tx=>{
-                                  tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
-                                })
-                              })
-                            })
-                          })
-                        })
-                      })
-                    })
-                  })
-                }
-              }
+              
             })
           }
         })
@@ -2262,7 +2251,6 @@ export class HomeVialidadPage implements OnInit {
     this._http.get('assets/vialidad/'+(String(vuelta).length == 1 ? '0'+vuelta : vuelta)+'.xml',{ responseType: 'text' }).subscribe((res:any)=>{
       this._us.xmlToJson(res).then((result:any)=>{
         var path = result["SOAPENV:ENVELOPE"]["SOAPENV:BODY"][0].QUERYMOP_ASSET_DOHRESPONSE[0].MOP_ASSET_DOHSET[0].ASSET
-
         path.forEach(f=>{
           this.activosActualizar[Number(f.REGION[0]) - 1].push({nombre:f.DESCRIPTION[0],codigo:f.ASSETNUM[0],km_i:f.STARTMEASURE[0],km_f:f.ENDMEASURE[0],region:f.REGION[0],rol:f.ROL[0]})
         })
@@ -2274,22 +2262,24 @@ export class HomeVialidadPage implements OnInit {
           this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
           this.activosPorRegion = this.activosActualizar;
           this._vs.activoRegion = null;
-          if(this.platform.is('capacitor')){
-            this.db.open().then(()=>{
-              this.db.transaction(rx=>{
-                rx.executeSql('delete from activosVialidad', [], ()=>{
-                  this.activosActualizar.forEach((a,i)=>{
-                    this.activosActualizar[i].forEach(activo=>{
-                      this.db.transaction(tx=>{
-                        tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
-                      })
-                    })
-                  })
-                })
-              })
-            })
-            this.actualizarActivosVialidad(this.region,1)
-          }
+          this._vs.cargandoActivos = false;
+          // if(this.platform.is('capacitor')){
+          //   this.db.open().then(()=>{
+          //     this.db.transaction(rx=>{
+          //       rx.executeSql('delete from activosVialidad', [], ()=>{
+          //         this.activosActualizar.forEach((a,i)=>{
+          //           this.activosActualizar[i].forEach(activo=>{
+          //             this.db.transaction(tx=>{
+          //               tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+          //             })
+          //           })
+          //         })
+          //       })
+          //     })
+          //   })
+          //   this.actualizarActivosVialidad(this.region,1)
+          // }
+          // this.actualizarActivosVialidad(this.region,1)
           // this._vs.cargandoActivos = false;
         }
       })
@@ -2307,23 +2297,23 @@ export class HomeVialidadPage implements OnInit {
           this.activosPorRegion = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]];
           this.activosPorRegion = this.activosActualizar;
           this._vs.activoRegion = null;
-          // this._vs.cargandoActivos = false;
-          this.db.open().then(()=>{
-            this.db.transaction(rx=>{
-              rx.executeSql('delete from activosVialidad', [], ()=>{
-                this.activosActualizar.forEach((a,i)=>{
-                  this.activosActualizar[i].forEach(activo=>{
-                    this.db.transaction(tx=>{
-                      tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
-                    })
-                  })
-                })
-              })
-            })
-          })
-          if(this.platform.is('capacitor')){
-            this.actualizarActivosVialidad(this.region,1)
-          }
+          this._vs.cargandoActivos = false;
+          // this.db.open().then(()=>{
+          //   this.db.transaction(rx=>{
+          //     rx.executeSql('delete from activosVialidad', [], ()=>{
+          //       this.activosActualizar.forEach((a,i)=>{
+          //         this.activosActualizar[i].forEach(activo=>{
+          //           this.db.transaction(tx=>{
+          //             tx.executeSql('insert into activosVialidad (id, nombre,km_i,km_f,region,rol) values (?,?,?,?,?,?)', [activo.codigo, activo.nombre,activo.km_i,activo.km_f,activo.region,activo.rol]);
+          //           })
+          //         })
+          //       })
+          //     })
+          //   })
+          // })
+          // if(this.platform.is('capacitor')){
+          //   this.actualizarActivosVialidad(this.region,1)
+          // }
         }
       })
     })
