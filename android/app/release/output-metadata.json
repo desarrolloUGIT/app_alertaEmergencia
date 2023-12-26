@@ -1,20 +1,18 @@
 {
-  "version": 3,
+  "version": 2,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.mop.alertaemergencia",
+  "applicationId": "eit.alertatempranamop",
   "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
-      "attributes": [],
-      "versionCode": 1,
-      "versionName": "1.0",
+      "versionCode": 3,
+      "versionName": "3.1",
       "outputFile": "app-release.apk"
     }
-  ],
-  "elementType": "File"
+  ]
 }

@@ -1,4 +1,4 @@
-package com.mop.alertaemergencia;
+package eit.alertatempranamop;
 
 import com.getcapacitor.BridgeActivity;
 
